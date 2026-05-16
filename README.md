@@ -18,6 +18,7 @@ Tech-stack planned for the app:
 
 It is not guaranteed but there is a possibility later on that multiple schools will be using this app. So multi-tenant design is implemented in case this does happens.
 
+```
 School
   └── Admin (manages teachers + students per school)
        └── Teacher
@@ -26,3 +27,4 @@ School
                       └── Observation (daily)
                       └── WeeklyNote
   └── Parent (linked to specific Student)
+```
