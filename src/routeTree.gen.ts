@@ -10,33 +10,205 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TenantLoginRouteImport } from './routes/$tenant/login'
+import { Route as TenantOrtuRouteRouteImport } from './routes/$tenant/ortu/route'
+import { Route as TenantGuruRouteRouteImport } from './routes/$tenant/guru/route'
+import { Route as TenantAdminRouteRouteImport } from './routes/$tenant/admin/route'
+import { Route as TenantOrtuIndexRouteImport } from './routes/$tenant/ortu/index'
+import { Route as TenantGuruIndexRouteImport } from './routes/$tenant/guru/index'
+import { Route as TenantAdminIndexRouteImport } from './routes/$tenant/admin/index'
+import { Route as TenantGuruRingkasanRouteImport } from './routes/$tenant/guru/ringkasan'
+import { Route as TenantGuruObservasiMingguanRouteImport } from './routes/$tenant/guru/observasi-mingguan'
+import { Route as TenantGuruCatatObservasiRouteImport } from './routes/$tenant/guru/catat-observasi'
+import { Route as TenantAdminSiswaRouteImport } from './routes/$tenant/admin/siswa'
+import { Route as TenantAdminOrtuRouteImport } from './routes/$tenant/admin/ortu'
+import { Route as TenantAdminKelasRouteImport } from './routes/$tenant/admin/kelas'
+import { Route as TenantAdminGuruRouteImport } from './routes/$tenant/admin/guru'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TenantLoginRoute = TenantLoginRouteImport.update({
+  id: '/$tenant/login',
+  path: '/$tenant/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TenantOrtuRouteRoute = TenantOrtuRouteRouteImport.update({
+  id: '/$tenant/ortu',
+  path: '/$tenant/ortu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TenantGuruRouteRoute = TenantGuruRouteRouteImport.update({
+  id: '/$tenant/guru',
+  path: '/$tenant/guru',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TenantAdminRouteRoute = TenantAdminRouteRouteImport.update({
+  id: '/$tenant/admin',
+  path: '/$tenant/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TenantOrtuIndexRoute = TenantOrtuIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TenantOrtuRouteRoute,
+} as any)
+const TenantGuruIndexRoute = TenantGuruIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TenantGuruRouteRoute,
+} as any)
+const TenantAdminIndexRoute = TenantAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TenantAdminRouteRoute,
+} as any)
+const TenantGuruRingkasanRoute = TenantGuruRingkasanRouteImport.update({
+  id: '/ringkasan',
+  path: '/ringkasan',
+  getParentRoute: () => TenantGuruRouteRoute,
+} as any)
+const TenantGuruObservasiMingguanRoute =
+  TenantGuruObservasiMingguanRouteImport.update({
+    id: '/observasi-mingguan',
+    path: '/observasi-mingguan',
+    getParentRoute: () => TenantGuruRouteRoute,
+  } as any)
+const TenantGuruCatatObservasiRoute =
+  TenantGuruCatatObservasiRouteImport.update({
+    id: '/catat-observasi',
+    path: '/catat-observasi',
+    getParentRoute: () => TenantGuruRouteRoute,
+  } as any)
+const TenantAdminSiswaRoute = TenantAdminSiswaRouteImport.update({
+  id: '/siswa',
+  path: '/siswa',
+  getParentRoute: () => TenantAdminRouteRoute,
+} as any)
+const TenantAdminOrtuRoute = TenantAdminOrtuRouteImport.update({
+  id: '/ortu',
+  path: '/ortu',
+  getParentRoute: () => TenantAdminRouteRoute,
+} as any)
+const TenantAdminKelasRoute = TenantAdminKelasRouteImport.update({
+  id: '/kelas',
+  path: '/kelas',
+  getParentRoute: () => TenantAdminRouteRoute,
+} as any)
+const TenantAdminGuruRoute = TenantAdminGuruRouteImport.update({
+  id: '/guru',
+  path: '/guru',
+  getParentRoute: () => TenantAdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$tenant/admin': typeof TenantAdminRouteRouteWithChildren
+  '/$tenant/guru': typeof TenantGuruRouteRouteWithChildren
+  '/$tenant/ortu': typeof TenantOrtuRouteRouteWithChildren
+  '/$tenant/login': typeof TenantLoginRoute
+  '/$tenant/admin/guru': typeof TenantAdminGuruRoute
+  '/$tenant/admin/kelas': typeof TenantAdminKelasRoute
+  '/$tenant/admin/ortu': typeof TenantAdminOrtuRoute
+  '/$tenant/admin/siswa': typeof TenantAdminSiswaRoute
+  '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
+  '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
+  '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/$tenant/admin/': typeof TenantAdminIndexRoute
+  '/$tenant/guru/': typeof TenantGuruIndexRoute
+  '/$tenant/ortu/': typeof TenantOrtuIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$tenant/login': typeof TenantLoginRoute
+  '/$tenant/admin/guru': typeof TenantAdminGuruRoute
+  '/$tenant/admin/kelas': typeof TenantAdminKelasRoute
+  '/$tenant/admin/ortu': typeof TenantAdminOrtuRoute
+  '/$tenant/admin/siswa': typeof TenantAdminSiswaRoute
+  '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
+  '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
+  '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/$tenant/admin': typeof TenantAdminIndexRoute
+  '/$tenant/guru': typeof TenantGuruIndexRoute
+  '/$tenant/ortu': typeof TenantOrtuIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$tenant/admin': typeof TenantAdminRouteRouteWithChildren
+  '/$tenant/guru': typeof TenantGuruRouteRouteWithChildren
+  '/$tenant/ortu': typeof TenantOrtuRouteRouteWithChildren
+  '/$tenant/login': typeof TenantLoginRoute
+  '/$tenant/admin/guru': typeof TenantAdminGuruRoute
+  '/$tenant/admin/kelas': typeof TenantAdminKelasRoute
+  '/$tenant/admin/ortu': typeof TenantAdminOrtuRoute
+  '/$tenant/admin/siswa': typeof TenantAdminSiswaRoute
+  '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
+  '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
+  '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/$tenant/admin/': typeof TenantAdminIndexRoute
+  '/$tenant/guru/': typeof TenantGuruIndexRoute
+  '/$tenant/ortu/': typeof TenantOrtuIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/$tenant/admin'
+    | '/$tenant/guru'
+    | '/$tenant/ortu'
+    | '/$tenant/login'
+    | '/$tenant/admin/guru'
+    | '/$tenant/admin/kelas'
+    | '/$tenant/admin/ortu'
+    | '/$tenant/admin/siswa'
+    | '/$tenant/guru/catat-observasi'
+    | '/$tenant/guru/observasi-mingguan'
+    | '/$tenant/guru/ringkasan'
+    | '/$tenant/admin/'
+    | '/$tenant/guru/'
+    | '/$tenant/ortu/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/$tenant/login'
+    | '/$tenant/admin/guru'
+    | '/$tenant/admin/kelas'
+    | '/$tenant/admin/ortu'
+    | '/$tenant/admin/siswa'
+    | '/$tenant/guru/catat-observasi'
+    | '/$tenant/guru/observasi-mingguan'
+    | '/$tenant/guru/ringkasan'
+    | '/$tenant/admin'
+    | '/$tenant/guru'
+    | '/$tenant/ortu'
+  id:
+    | '__root__'
+    | '/'
+    | '/$tenant/admin'
+    | '/$tenant/guru'
+    | '/$tenant/ortu'
+    | '/$tenant/login'
+    | '/$tenant/admin/guru'
+    | '/$tenant/admin/kelas'
+    | '/$tenant/admin/ortu'
+    | '/$tenant/admin/siswa'
+    | '/$tenant/guru/catat-observasi'
+    | '/$tenant/guru/observasi-mingguan'
+    | '/$tenant/guru/ringkasan'
+    | '/$tenant/admin/'
+    | '/$tenant/guru/'
+    | '/$tenant/ortu/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TenantAdminRouteRoute: typeof TenantAdminRouteRouteWithChildren
+  TenantGuruRouteRoute: typeof TenantGuruRouteRouteWithChildren
+  TenantOrtuRouteRoute: typeof TenantOrtuRouteRouteWithChildren
+  TenantLoginRoute: typeof TenantLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +220,162 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$tenant/login': {
+      id: '/$tenant/login'
+      path: '/$tenant/login'
+      fullPath: '/$tenant/login'
+      preLoaderRoute: typeof TenantLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$tenant/ortu': {
+      id: '/$tenant/ortu'
+      path: '/$tenant/ortu'
+      fullPath: '/$tenant/ortu'
+      preLoaderRoute: typeof TenantOrtuRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$tenant/guru': {
+      id: '/$tenant/guru'
+      path: '/$tenant/guru'
+      fullPath: '/$tenant/guru'
+      preLoaderRoute: typeof TenantGuruRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$tenant/admin': {
+      id: '/$tenant/admin'
+      path: '/$tenant/admin'
+      fullPath: '/$tenant/admin'
+      preLoaderRoute: typeof TenantAdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$tenant/ortu/': {
+      id: '/$tenant/ortu/'
+      path: '/'
+      fullPath: '/$tenant/ortu/'
+      preLoaderRoute: typeof TenantOrtuIndexRouteImport
+      parentRoute: typeof TenantOrtuRouteRoute
+    }
+    '/$tenant/guru/': {
+      id: '/$tenant/guru/'
+      path: '/'
+      fullPath: '/$tenant/guru/'
+      preLoaderRoute: typeof TenantGuruIndexRouteImport
+      parentRoute: typeof TenantGuruRouteRoute
+    }
+    '/$tenant/admin/': {
+      id: '/$tenant/admin/'
+      path: '/'
+      fullPath: '/$tenant/admin/'
+      preLoaderRoute: typeof TenantAdminIndexRouteImport
+      parentRoute: typeof TenantAdminRouteRoute
+    }
+    '/$tenant/guru/ringkasan': {
+      id: '/$tenant/guru/ringkasan'
+      path: '/ringkasan'
+      fullPath: '/$tenant/guru/ringkasan'
+      preLoaderRoute: typeof TenantGuruRingkasanRouteImport
+      parentRoute: typeof TenantGuruRouteRoute
+    }
+    '/$tenant/guru/observasi-mingguan': {
+      id: '/$tenant/guru/observasi-mingguan'
+      path: '/observasi-mingguan'
+      fullPath: '/$tenant/guru/observasi-mingguan'
+      preLoaderRoute: typeof TenantGuruObservasiMingguanRouteImport
+      parentRoute: typeof TenantGuruRouteRoute
+    }
+    '/$tenant/guru/catat-observasi': {
+      id: '/$tenant/guru/catat-observasi'
+      path: '/catat-observasi'
+      fullPath: '/$tenant/guru/catat-observasi'
+      preLoaderRoute: typeof TenantGuruCatatObservasiRouteImport
+      parentRoute: typeof TenantGuruRouteRoute
+    }
+    '/$tenant/admin/siswa': {
+      id: '/$tenant/admin/siswa'
+      path: '/siswa'
+      fullPath: '/$tenant/admin/siswa'
+      preLoaderRoute: typeof TenantAdminSiswaRouteImport
+      parentRoute: typeof TenantAdminRouteRoute
+    }
+    '/$tenant/admin/ortu': {
+      id: '/$tenant/admin/ortu'
+      path: '/ortu'
+      fullPath: '/$tenant/admin/ortu'
+      preLoaderRoute: typeof TenantAdminOrtuRouteImport
+      parentRoute: typeof TenantAdminRouteRoute
+    }
+    '/$tenant/admin/kelas': {
+      id: '/$tenant/admin/kelas'
+      path: '/kelas'
+      fullPath: '/$tenant/admin/kelas'
+      preLoaderRoute: typeof TenantAdminKelasRouteImport
+      parentRoute: typeof TenantAdminRouteRoute
+    }
+    '/$tenant/admin/guru': {
+      id: '/$tenant/admin/guru'
+      path: '/guru'
+      fullPath: '/$tenant/admin/guru'
+      preLoaderRoute: typeof TenantAdminGuruRouteImport
+      parentRoute: typeof TenantAdminRouteRoute
+    }
   }
 }
 
+interface TenantAdminRouteRouteChildren {
+  TenantAdminGuruRoute: typeof TenantAdminGuruRoute
+  TenantAdminKelasRoute: typeof TenantAdminKelasRoute
+  TenantAdminOrtuRoute: typeof TenantAdminOrtuRoute
+  TenantAdminSiswaRoute: typeof TenantAdminSiswaRoute
+  TenantAdminIndexRoute: typeof TenantAdminIndexRoute
+}
+
+const TenantAdminRouteRouteChildren: TenantAdminRouteRouteChildren = {
+  TenantAdminGuruRoute: TenantAdminGuruRoute,
+  TenantAdminKelasRoute: TenantAdminKelasRoute,
+  TenantAdminOrtuRoute: TenantAdminOrtuRoute,
+  TenantAdminSiswaRoute: TenantAdminSiswaRoute,
+  TenantAdminIndexRoute: TenantAdminIndexRoute,
+}
+
+const TenantAdminRouteRouteWithChildren =
+  TenantAdminRouteRoute._addFileChildren(TenantAdminRouteRouteChildren)
+
+interface TenantGuruRouteRouteChildren {
+  TenantGuruCatatObservasiRoute: typeof TenantGuruCatatObservasiRoute
+  TenantGuruObservasiMingguanRoute: typeof TenantGuruObservasiMingguanRoute
+  TenantGuruRingkasanRoute: typeof TenantGuruRingkasanRoute
+  TenantGuruIndexRoute: typeof TenantGuruIndexRoute
+}
+
+const TenantGuruRouteRouteChildren: TenantGuruRouteRouteChildren = {
+  TenantGuruCatatObservasiRoute: TenantGuruCatatObservasiRoute,
+  TenantGuruObservasiMingguanRoute: TenantGuruObservasiMingguanRoute,
+  TenantGuruRingkasanRoute: TenantGuruRingkasanRoute,
+  TenantGuruIndexRoute: TenantGuruIndexRoute,
+}
+
+const TenantGuruRouteRouteWithChildren = TenantGuruRouteRoute._addFileChildren(
+  TenantGuruRouteRouteChildren,
+)
+
+interface TenantOrtuRouteRouteChildren {
+  TenantOrtuIndexRoute: typeof TenantOrtuIndexRoute
+}
+
+const TenantOrtuRouteRouteChildren: TenantOrtuRouteRouteChildren = {
+  TenantOrtuIndexRoute: TenantOrtuIndexRoute,
+}
+
+const TenantOrtuRouteRouteWithChildren = TenantOrtuRouteRoute._addFileChildren(
+  TenantOrtuRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TenantAdminRouteRoute: TenantAdminRouteRouteWithChildren,
+  TenantGuruRouteRoute: TenantGuruRouteRouteWithChildren,
+  TenantOrtuRouteRoute: TenantOrtuRouteRouteWithChildren,
+  TenantLoginRoute: TenantLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

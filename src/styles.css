@@ -1,8 +1,7 @@
-
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -31,6 +30,19 @@ body {
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-hover: var(--brand-navy-hover);
+  --color-brand-navy-foreground: var(--brand-navy-foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-foreground: var(--brand-orange-foreground);
+  --color-brand-panel: var(--brand-panel);
+  --color-brand-table-header: var(--brand-table-header);
+  --color-brand-pill-teal: var(--brand-pill-teal);
+  --color-brand-pill-teal-foreground: var(--brand-pill-teal-foreground);
+  --color-chart-respons: var(--chart-respons);
+  --color-chart-interaksi: var(--chart-interaksi);
+  --color-chart-partisipasi: var(--chart-partisipasi);
+  --color-chart-regulasi: var(--chart-regulasi);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -70,7 +82,7 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.28 0.09 260);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -88,14 +100,33 @@ body {
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* brand palette */
+  --brand-navy: oklch(0.28 0.09 260);
+  --brand-navy-hover: oklch(0.36 0.09 260);
+  --brand-navy-foreground: oklch(0.985 0 0);
+  --brand-orange: oklch(0.74 0.16 55);
+  --brand-orange-foreground: oklch(0.2 0 0);
+  --brand-panel: oklch(0.96 0 0);
+  --brand-table-header: oklch(0.22 0.08 260);
+  --brand-pill-teal: oklch(0.78 0.05 215);
+  --brand-pill-teal-foreground: oklch(0.22 0.08 260);
+
+  /* per-indicator chart colors for radar / KPIs */
+  --chart-respons: oklch(0.3 0.08 260);
+  --chart-interaksi: oklch(0.72 0.1 220);
+  --chart-partisipasi: oklch(0.65 0.2 5);
+  --chart-regulasi: oklch(0.55 0.1 175);
+
+  /* sidebar */
+  --sidebar: var(--brand-navy);
+  --sidebar-foreground: var(--brand-navy-foreground);
+  --sidebar-primary: var(--brand-orange);
+  --sidebar-primary-foreground: var(--brand-orange-foreground);
+  --sidebar-accent: var(--brand-navy-hover);
+  --sidebar-accent-foreground: var(--brand-navy-foreground);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--brand-orange);
 }
 
 .dark {

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"D:\\\\Personal\\\\code\\\\habits-plus\" -Force | Where-Object { $_.Name -notmatch \"node_modules|\\\\.git\" } | Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem \"D:\\\\Personal\\\\code\\\\habits-plus\" -Force -Name | Where-Object { $_ -notmatch \"node_modules\" })"
+    ]
+  }
+}
