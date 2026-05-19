@@ -6,18 +6,26 @@ import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
 import { SummaryRadarPlaceholder } from '#/components/guru/summary-radar-placeholder'
 import { ProgressStripCard } from '#/components/guru/progress-strip-card'
-import { getLatestSummary, indicatorLabels } from '#/data'
-import type { Indicator } from '#/data'
+import { indicatorLabels } from '#/lib/domain'
+import { loadLatestSummary } from '#/server/loaders'
+import type { Indicator } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/$tenant/guru/ringkasan')({
+  loader: ({ params }) =>
+    loadLatestSummary({ data: { tenant: params.tenant } }),
   component: LihatRingkasan,
   staticData: { title: 'Lihat Ringkasan' },
 })
 
-const ORDER: Array<Indicator> = ['respons', 'interaksi', 'partisipasi', 'regulasi']
+const ORDER: Array<Indicator> = [
+  'respons',
+  'interaksi',
+  'partisipasi',
+  'regulasi',
+]
 
 function LihatRingkasan() {
-  const summary = getLatestSummary()
+  const summary = Route.useLoaderData()
   const [month, setMonth] = useState(summary.monthLabel)
 
   return (
@@ -48,7 +56,7 @@ function LihatRingkasan() {
                 key={ind}
                 indicator={ind}
                 label={indicatorLabels[ind]}
-                trend={summary.trends[ind]}
+                trend={summary.trends[ind] ?? 'tidak-terlihat'}
               />
             ))}
           </div>

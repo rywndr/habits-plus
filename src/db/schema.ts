@@ -1,0 +1,6 @@
+export * from './schema/enums'
+export * from './schema/schools'
+export * from './schema/auth'
+export * from './schema/academics'
+export * from './schema/observations'
+export * from './schema/relations'

@@ -16,9 +16,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
-import { weeklyNotes } from '#/data'
+import type { WeeklyNote } from '#/server/tenant-data'
 
-export function WeeklyNotesTable() {
+type Props = {
+  weeklyNotes: Array<WeeklyNote>
+}
+
+export function WeeklyNotesTable({ weeklyNotes }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5">
@@ -36,7 +40,9 @@ export function WeeklyNotesTable() {
               <TableHead className="text-center text-brand-navy-foreground">
                 No.
               </TableHead>
-              <TableHead className="text-brand-navy-foreground">Tanggal</TableHead>
+              <TableHead className="text-brand-navy-foreground">
+                Tanggal
+              </TableHead>
               <TableHead className="text-brand-navy-foreground">P1</TableHead>
               <TableHead className="text-brand-navy-foreground">P2</TableHead>
               <TableHead className="text-brand-navy-foreground">P3</TableHead>

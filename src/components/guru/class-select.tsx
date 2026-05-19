@@ -3,9 +3,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '#/components/ui/select'
-import type { ClassRoom } from '#/data'
+import type { ClassRoom } from '#/server/tenant-data'
 
 type Props = {
   classes: Array<ClassRoom>
@@ -14,10 +13,17 @@ type Props = {
 }
 
 export function ClassSelect({ classes, value, onChange }: Props) {
+  const selectedClass = classes.find((c) => c.id === value)
+
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={(nextValue) => nextValue && onChange(nextValue)}
+    >
       <SelectTrigger className="w-32 rounded-full bg-card">
-        <SelectValue placeholder="Pilih kelas" />
+        <span className="min-w-0 flex-1 truncate text-left">
+          {selectedClass?.name ?? 'Pilih kelas'}
+        </span>
       </SelectTrigger>
       <SelectContent>
         {classes.map((c) => (

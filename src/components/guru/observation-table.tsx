@@ -15,16 +15,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
-import {
-  
-  
-  
-  
-  dailyObservations,
-  indicatorLabels,
-  students as allStudents
-} from '#/data'
-import type {Frequency, Indicator, ObservationRow, Student} from '#/data';
+import { indicatorLabels } from '#/lib/domain'
+import type {
+  Frequency,
+  Indicator,
+  ObservationRow,
+  Student,
+} from '#/server/tenant-data'
 import { ObservationPillSelect } from './observation-pill-select'
 
 const INDICATORS: Array<Indicator> = [
@@ -34,16 +31,26 @@ const INDICATORS: Array<Indicator> = [
   'regulasi',
 ]
 
-function getStudent(id: string): Student | undefined {
-  return allStudents.find((s) => s.id === id)
+type Props = {
+  students: Array<Student>
+  rows: Array<ObservationRow>
+  onRowsChange: (rows: Array<ObservationRow>) => void
 }
 
-export function ObservationTable() {
-  const [rows, setRows] = useState<Array<ObservationRow>>(dailyObservations)
+function getStudent(id: string, students: Array<Student>): Student | undefined {
+  return students.find((s) => s.id === id)
+}
 
-  function updateCell(studentId: string, indicator: Indicator, value: Frequency) {
-    setRows((prev) =>
-      prev.map((r) =>
+export function ObservationTable({ students, rows, onRowsChange }: Props) {
+  const [page] = useState(1)
+
+  function updateCell(
+    studentId: string,
+    indicator: Indicator,
+    value: Frequency,
+  ) {
+    onRowsChange(
+      rows.map((r) =>
         r.studentId === studentId
           ? { ...r, values: { ...r.values, [indicator]: value } }
           : r,
@@ -57,7 +64,9 @@ export function ObservationTable() {
         <Table>
           <TableHeader>
             <TableRow className="border-0 hover:bg-transparent">
-              <TableHead className="w-12 text-center text-card-foreground">No.</TableHead>
+              <TableHead className="w-12 text-center text-card-foreground">
+                No.
+              </TableHead>
               <TableHead className="text-card-foreground">Nama Siswa</TableHead>
               <TableHead className="text-card-foreground">NISN</TableHead>
               {INDICATORS.map((ind) => (
@@ -74,7 +83,7 @@ export function ObservationTable() {
           </TableHeader>
           <TableBody>
             {rows.map((row, idx) => {
-              const student = getStudent(row.studentId)
+              const student = getStudent(row.studentId, students)
               if (!student) return null
               return (
                 <TableRow key={row.studentId}>
@@ -107,7 +116,7 @@ export function ObservationTable() {
           </PaginationItem>
           {[1, 2, 3, 4, 5].map((n) => (
             <PaginationItem key={n}>
-              <PaginationLink href="#" isActive={n === 1}>
+              <PaginationLink href="#" isActive={n === page}>
                 {n}
               </PaginationLink>
             </PaginationItem>

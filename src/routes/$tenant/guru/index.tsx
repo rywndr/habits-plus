@@ -11,9 +11,11 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { KpiCard } from '#/components/guru/kpi-card'
 import { GenderDistributionCard } from '#/components/guru/gender-distribution-card'
-import { genderDistribution, kpiStats } from '#/data'
+import { loadGuruDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/$tenant/guru/')({
+  loader: ({ params }) =>
+    loadGuruDashboard({ data: { tenant: params.tenant } }),
   component: BerandaGuru,
   staticData: { title: 'Beranda Guru' },
 })
@@ -22,6 +24,7 @@ const icons = [Users, MessageCircle, UsersRound, ShieldCheck]
 
 function BerandaGuru() {
   const { tenant } = Route.useParams()
+  const dashboard = Route.useLoaderData()
   const navigate = useNavigate()
 
   return (
@@ -31,7 +34,7 @@ function BerandaGuru() {
 
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="grid gap-4 sm:grid-cols-2">
-            {kpiStats.map((kpi, idx) => (
+            {dashboard.kpiStats.map((kpi, idx) => (
               <KpiCard
                 key={kpi.indicator}
                 label={kpi.label}
@@ -41,8 +44,8 @@ function BerandaGuru() {
             ))}
           </div>
           <GenderDistributionCard
-            laki={genderDistribution.laki}
-            perempuan={genderDistribution.perempuan}
+            laki={dashboard.genderDistribution.laki}
+            perempuan={dashboard.genderDistribution.perempuan}
           />
         </div>
 

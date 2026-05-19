@@ -3,22 +3,17 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { SummaryTextbox } from '#/components/ortu/summary-textbox'
 import { ProgressGraphicCard } from '#/components/ortu/progress-graphic-card'
-import {
-  getCurrentUser,
-  parentIndicators,
-  parentSummaryText,
-  students,
-} from '#/data'
+import { loadParentProgress } from '#/server/loaders'
 
 export const Route = createFileRoute('/$tenant/ortu/')({
+  loader: ({ params }) =>
+    loadParentProgress({ data: { tenant: params.tenant } }),
   component: LihatProgres,
   staticData: { title: 'Lihat Progres' },
 })
 
 function LihatProgres() {
-  const parent = getCurrentUser('ortu')
-  const child = students.find((s) => s.id === parent.studentId)
-  const childName = child?.name ?? 'Anak'
+  const progress = Route.useLoaderData()
 
   return (
     <ContentPanel>
@@ -26,15 +21,16 @@ function LihatProgres() {
         <PageHeader
           title={
             <>
-              Lihat Progres, <span className="font-bold">{childName}</span>
+              Lihat Progres,{' '}
+              <span className="font-bold">{progress.childName}</span>
             </>
           }
         />
 
-        <SummaryTextbox value={parentSummaryText} />
+        <SummaryTextbox value={progress.summaryText} />
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {parentIndicators.map((ind) => (
+          {progress.indicators.map((ind) => (
             <ProgressGraphicCard
               key={ind.indicator}
               label={ind.label}

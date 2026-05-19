@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
+import { AppErrorPanel } from '#/components/common/app-error-panel'
 import { TooltipProvider } from '#/components/ui/tooltip'
 import appCss from '../styles.css?url'
 
@@ -26,6 +27,9 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  errorComponent: ({ error, reset }) => (
+    <AppErrorPanel error={error} reset={reset} />
+  ),
   shellComponent: RootDocument,
 })
 

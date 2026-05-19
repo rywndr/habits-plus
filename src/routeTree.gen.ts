@@ -17,6 +17,7 @@ import { Route as TenantAdminRouteRouteImport } from './routes/$tenant/admin/rou
 import { Route as TenantOrtuIndexRouteImport } from './routes/$tenant/ortu/index'
 import { Route as TenantGuruIndexRouteImport } from './routes/$tenant/guru/index'
 import { Route as TenantAdminIndexRouteImport } from './routes/$tenant/admin/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as TenantGuruRingkasanRouteImport } from './routes/$tenant/guru/ringkasan'
 import { Route as TenantGuruObservasiMingguanRouteImport } from './routes/$tenant/guru/observasi-mingguan'
 import { Route as TenantGuruCatatObservasiRouteImport } from './routes/$tenant/guru/catat-observasi'
@@ -64,6 +65,11 @@ const TenantAdminIndexRoute = TenantAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TenantAdminRouteRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TenantGuruRingkasanRoute = TenantGuruRingkasanRouteImport.update({
   id: '/ringkasan',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
   '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
   '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$tenant/admin/': typeof TenantAdminIndexRoute
   '/$tenant/guru/': typeof TenantGuruIndexRoute
   '/$tenant/ortu/': typeof TenantOrtuIndexRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
   '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
   '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$tenant/admin': typeof TenantAdminIndexRoute
   '/$tenant/guru': typeof TenantGuruIndexRoute
   '/$tenant/ortu': typeof TenantOrtuIndexRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/$tenant/guru/catat-observasi': typeof TenantGuruCatatObservasiRoute
   '/$tenant/guru/observasi-mingguan': typeof TenantGuruObservasiMingguanRoute
   '/$tenant/guru/ringkasan': typeof TenantGuruRingkasanRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$tenant/admin/': typeof TenantAdminIndexRoute
   '/$tenant/guru/': typeof TenantGuruIndexRoute
   '/$tenant/ortu/': typeof TenantOrtuIndexRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/$tenant/guru/catat-observasi'
     | '/$tenant/guru/observasi-mingguan'
     | '/$tenant/guru/ringkasan'
+    | '/api/auth/$'
     | '/$tenant/admin/'
     | '/$tenant/guru/'
     | '/$tenant/ortu/'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/$tenant/guru/catat-observasi'
     | '/$tenant/guru/observasi-mingguan'
     | '/$tenant/guru/ringkasan'
+    | '/api/auth/$'
     | '/$tenant/admin'
     | '/$tenant/guru'
     | '/$tenant/ortu'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/$tenant/guru/catat-observasi'
     | '/$tenant/guru/observasi-mingguan'
     | '/$tenant/guru/ringkasan'
+    | '/api/auth/$'
     | '/$tenant/admin/'
     | '/$tenant/guru/'
     | '/$tenant/ortu/'
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   TenantGuruRouteRoute: typeof TenantGuruRouteRouteWithChildren
   TenantOrtuRouteRoute: typeof TenantOrtuRouteRouteWithChildren
   TenantLoginRoute: typeof TenantLoginRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -268,6 +281,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$tenant/admin/'
       preLoaderRoute: typeof TenantAdminIndexRouteImport
       parentRoute: typeof TenantAdminRouteRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$tenant/guru/ringkasan': {
       id: '/$tenant/guru/ringkasan'
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   TenantGuruRouteRoute: TenantGuruRouteRouteWithChildren,
   TenantOrtuRouteRoute: TenantOrtuRouteRouteWithChildren,
   TenantLoginRoute: TenantLoginRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
