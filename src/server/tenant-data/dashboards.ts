@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, gte, lt } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
   dailyObservations,
@@ -15,6 +15,11 @@ import { getTenantBySlug } from './tenants'
 import { getTenantUsers } from './users'
 import { getWeeklyNotes } from './weekly-notes'
 import type { Frequency, Indicator, MonthlySummary } from './types'
+import {
+  formatIndonesianMonth,
+  monthStartIso,
+  nextMonthStartIso,
+} from '../date'
 
 export async function getAdminDashboard(slug: string) {
   const [tenant, tenantUsers, tenantClasses, tenantStudents] =
@@ -88,34 +93,79 @@ export async function getGuruDashboard(slug: string) {
   }
 }
 
-export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
-  const [notes, dashboard] = await Promise.all([
-    getWeeklyNotes(slug),
-    getGuruDashboard(slug),
+export async function getMonthlySummary(
+  slug: string,
+  month: string,
+): Promise<MonthlySummary> {
+  const tenant = await getTenantBySlug(slug)
+  const start = monthStartIso(month)
+  const end = nextMonthStartIso(month)
+  const [notes, observationRows] = await Promise.all([
+    getWeeklyNotes(slug).then((items) =>
+      items.filter((note) => note.date >= start && note.date < end),
+    ),
+    getDb()
+      .select({
+        indicator: observationScores.indicator,
+        frequency: observationScores.frequency,
+      })
+      .from(observationScores)
+      .innerJoin(
+        dailyObservations,
+        eq(observationScores.observationId, dailyObservations.id),
+      )
+      .where(
+        and(
+          eq(dailyObservations.schoolId, tenant.id),
+          gte(dailyObservations.observedAt, start),
+          lt(dailyObservations.observedAt, end),
+        ),
+      ),
   ])
+  const averageByIndicator = observationRows.reduce(
+    (acc, row) => {
+      const summary = acc[row.indicator] ?? { total: 0, count: 0 }
+      summary.total += frequencyScore[row.frequency]
+      summary.count += 1
+      acc[row.indicator] = summary
+      return acc
+    },
+    {} as Partial<Record<Indicator, { total: number; count: number }>>,
+  )
   const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
-    dashboard.kpiStats.map((kpi) => {
-      const frequency =
-        (Object.entries(frequencyLabels).find(
-          ([, label]) => label === kpi.frequencyLabel,
-        )?.[0] as Frequency | undefined) ?? 'tidak-terlihat'
-      const trendByFrequency: Record<Frequency, Trend> = {
-        'tidak-terlihat': 'tidak-terlihat',
-        'terlihat-sesekali': 'stabil',
-        sering: 'meningkat',
-      }
+    (['respons', 'interaksi', 'partisipasi', 'regulasi'] as const).map(
+      (indicator) => {
+        const summary = averageByIndicator[indicator]
+        const average = summary ? summary.total / summary.count : 0
+        const frequency =
+          scoreFrequency[Math.max(0, Math.min(2, Math.round(average)))]
+        const trendByFrequency: Record<Frequency, Trend> = {
+          'tidak-terlihat': 'tidak-terlihat',
+          'terlihat-sesekali': 'stabil',
+          sering: 'meningkat',
+        }
 
-      return [kpi.indicator, trendByFrequency[frequency]]
-    }),
+        return [indicator, trendByFrequency[frequency]]
+      },
+    ),
   )
 
   return {
-    monthLabel: notes[0]?.dateLabel?.replace(/^\d+ /, '') ?? 'Belum ada data',
-    text: notes[0]
-      ? `${notes[0].p1} ${notes[0].p2} ${notes[0].p3}`
-      : 'Belum ada catatan mingguan untuk sekolah ini.',
+    month: start.slice(0, 7),
+    monthLabel: formatIndonesianMonth(start),
+    text: notes.length
+      ? notes.map((note) => `${note.p1} ${note.p2} ${note.p3}`).join(' ')
+      : `Belum ada catatan mingguan untuk ${formatIndonesianMonth(start)}.`,
     trends,
   }
+}
+
+export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
+  const latestNote = (await getWeeklyNotes(slug))[0]
+  const month =
+    latestNote?.date.slice(0, 7) ?? new Date().toISOString().slice(0, 7)
+
+  return getMonthlySummary(slug, month)
 }
 
 export async function getParentProgress(slug: string, parentId: string) {

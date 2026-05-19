@@ -5,19 +5,33 @@ import { users } from '#/db/schema'
 import type { Role } from '#/db/schema'
 import {
   getAdminDashboard,
-  getDailyObservationRows,
+  getDailyObservationDay,
   getGuruDashboard,
   getLatestSummary,
+  getMonthlySummary,
   getParentProgress,
   getTenantClasses,
   getTenantStudents,
   getTenantUsers,
   getWeeklyNotes,
 } from './tenant-data'
-import { todayIso } from './date'
+import { todayIso, weekStartIso } from './date'
 
 type TenantInput = {
   tenant?: string
+}
+
+type ObservationPageInput = TenantInput & {
+  classId?: string
+  observedAt?: string
+}
+
+type MonthlySummaryInput = TenantInput & {
+  month?: string
+}
+
+type WeeklyNotesInput = TenantInput & {
+  weekStart?: string
 }
 
 type CurrentUserInput = TenantInput & {
@@ -78,8 +92,13 @@ export const loadGuruDashboard = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => getGuruDashboard(await resolveTenant(data)))
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(async ({ data }) => getLatestSummary(await resolveTenant(data)))
+  .inputValidator((data: MonthlySummaryInput) => data)
+  .handler(async ({ data }) => {
+    const tenant = await resolveTenant(data)
+    return data.month
+      ? getMonthlySummary(tenant, data.month)
+      : getLatestSummary(tenant)
+  })
 
 export const loadParentProgress = createServerFn({ method: 'GET' })
   .inputValidator((data: ParentProgressInput) => data)
@@ -97,19 +116,44 @@ export const loadParentProgress = createServerFn({ method: 'GET' })
   })
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(async ({ data }) => getWeeklyNotes(await resolveTenant(data)))
+  .inputValidator((data: WeeklyNotesInput) => data)
+  .handler(async ({ data }) => {
+    const notes = await getWeeklyNotes(await resolveTenant(data))
+    const selectedWeekStart = weekStartIso(
+      data.weekStart ? new Date(data.weekStart) : new Date(),
+    )
+
+    return {
+      notes,
+      selectedWeekStart,
+      selectedNote:
+        notes.find((note) => note.date === selectedWeekStart) ?? null,
+    }
+  })
 
 export const loadObservationPage = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
+  .inputValidator((data: ObservationPageInput) => data)
   .handler(async ({ data }) => {
     const tenant = await resolveTenant(data)
     const classes = await getTenantClasses(tenant)
-    const classId = classes[0]?.id ?? ''
-    const [students, rows] = await Promise.all([
-      getTenantStudents(tenant),
-      classId ? getDailyObservationRows(tenant, classId) : [],
-    ])
+    const students = await getTenantStudents(tenant)
+    const requestedClass = classes.find((item) => item.id === data.classId)
+    const classWithStudents = classes.find((item) =>
+      students.some((student) => student.classId === item.id),
+    )
+    const classId =
+      requestedClass?.id || classWithStudents?.id || classes[0]?.id || ''
+    const observedAt = data.observedAt || todayIso()
+    const observationDay = classId
+      ? await getDailyObservationDay(tenant, classId, observedAt)
+      : { rows: [], note: '' }
 
-    return { classes, students, rows, observedAt: todayIso() }
+    return {
+      classes,
+      students,
+      rows: observationDay.rows,
+      note: observationDay.note,
+      observedAt,
+      classId,
+    }
   })

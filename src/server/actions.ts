@@ -114,13 +114,15 @@ export const addUser = createServerFn({ method: 'POST' })
       })
       .returning({ id: users.id })
 
-    await getDb().insert(accounts).values({
-      id: `${user.id}:credential`,
-      accountId: user.id,
-      providerId: 'credential',
-      userId: user.id,
-      password: passwordHash,
-    })
+    await getDb()
+      .insert(accounts)
+      .values({
+        id: `${user.id}:credential`,
+        accountId: user.id,
+        providerId: 'credential',
+        userId: user.id,
+        password: passwordHash,
+      })
   })
 
 export const deleteUser = createServerFn({ method: 'POST' })
@@ -211,44 +213,63 @@ export const saveDailyObservations = createServerFn({ method: 'POST' })
     const allowedStudentIds = new Set(
       classStudents.map((student) => student.id),
     )
+    const validRows = data.rows.filter((row) =>
+      allowedStudentIds.has(row.studentId),
+    )
 
-    for (const row of data.rows) {
-      if (!allowedStudentIds.has(row.studentId)) continue
+    if (!validRows.length) return
 
-      const [observation] = await getDb()
-        .insert(dailyObservations)
-        .values({
+    const observations = await getDb()
+      .insert(dailyObservations)
+      .values(
+        validRows.map((row) => ({
           schoolId: tenant.id,
           studentId: row.studentId,
           teacherId: teacher.id,
           observedAt,
           note: data.note?.trim() || null,
-        })
-        .onConflictDoUpdate({
-          target: [dailyObservations.studentId, dailyObservations.observedAt],
-          set: {
-            teacherId: teacher.id,
-            note: data.note?.trim() || null,
-            updatedAt: new Date(),
-          },
-        })
-        .returning({ id: dailyObservations.id })
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [dailyObservations.studentId, dailyObservations.observedAt],
+        set: {
+          teacherId: teacher.id,
+          note: data.note?.trim() || null,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({
+        id: dailyObservations.id,
+        studentId: dailyObservations.studentId,
+      })
 
+    const observationIds = observations.map((observation) => observation.id)
+    const observationIdByStudent = new Map(
+      observations.map((observation) => [
+        observation.studentId,
+        observation.id,
+      ]),
+    )
+    const scores = validRows.flatMap((row) => {
+      const observationId = observationIdByStudent.get(row.studentId)
+      if (!observationId) return []
+      return (Object.entries(row.values) as Array<[Indicator, Frequency]>).map(
+        ([indicator, frequency]) => ({
+          observationId,
+          indicator,
+          frequency,
+        }),
+      )
+    })
+
+    if (observationIds.length) {
       await getDb()
         .delete(observationScores)
-        .where(eq(observationScores.observationId, observation.id))
+        .where(inArray(observationScores.observationId, observationIds))
+    }
 
-      await getDb()
-        .insert(observationScores)
-        .values(
-          (Object.entries(row.values) as Array<[Indicator, Frequency]>).map(
-            ([indicator, frequency]) => ({
-              observationId: observation.id,
-              indicator,
-              frequency,
-            }),
-          ),
-        )
+    if (scores.length) {
+      await getDb().insert(observationScores).values(scores)
     }
   })
 

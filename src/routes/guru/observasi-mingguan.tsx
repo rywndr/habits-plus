@@ -1,19 +1,27 @@
-import { useState } from 'react'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
-import { MonthPicker } from '#/components/guru/month-picker'
+import { WeekPicker } from '#/components/guru/week-picker'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { saveWeeklyNote } from '#/server/actions'
-import { weekStartIso } from '#/server/date'
 import { loadWeeklyNotes } from '#/server/loaders'
 import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
 
 export const Route = createFileRoute('/guru/observasi-mingguan')({
-  loader: ({ context }) =>
-    loadWeeklyNotes({ data: { tenant: context.user.tenantSlug } }),
+  validateSearch: (search = {}) => ({
+    weekStart:
+      typeof search.weekStart === 'string' ? search.weekStart : undefined,
+  }),
+  loaderDeps: ({ search }) => ({
+    weekStart: search.weekStart,
+  }),
+  loader: ({ context, deps }) =>
+    loadWeeklyNotes({
+      data: { tenant: context.user.tenantSlug, weekStart: deps.weekStart },
+    }),
   component: ObservasiMingguan,
   pendingComponent: WeeklyNotesSkeleton,
   staticData: { title: 'Observasi Mingguan' },
@@ -24,15 +32,28 @@ const SAMPLE =
 
 function ObservasiMingguan() {
   const router = useRouter()
+  const navigate = useNavigate()
   const weeklyNotes = Route.useLoaderData()
-  const [month, setMonth] = useState('Januari 2026')
-  const [p1, setP1] = useState(SAMPLE)
-  const [p2, setP2] = useState(SAMPLE)
-  const [p3, setP3] = useState(SAMPLE)
+  const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
+  const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
+  const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+
+  useEffect(() => {
+    setP1(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
+    setP2(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
+    setP3(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+  }, [weeklyNotes.selectedNote])
+
+  async function handleWeekChange(weekStart: string) {
+    await navigate({
+      to: '/guru/observasi-mingguan',
+      search: { weekStart },
+    })
+  }
 
   async function handleSave() {
     await saveWeeklyNote({
-      data: { weekStart: weekStartIso(), p1, p2, p3 },
+      data: { weekStart: weeklyNotes.selectedWeekStart, p1, p2, p3 },
     })
     await router.invalidate()
   }
@@ -43,8 +64,11 @@ function ObservasiMingguan() {
         <PageHeader title="Observasi Mingguan" />
 
         <div className="flex items-center gap-2">
-          <span className="font-heading font-semibold">Tanggal:</span>
-          <MonthPicker value={month} onChange={setMonth} showIcon />
+          <span className="font-heading font-semibold">Minggu:</span>
+          <WeekPicker
+            value={weeklyNotes.selectedWeekStart}
+            onChange={handleWeekChange}
+          />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -80,7 +104,7 @@ function ObservasiMingguan() {
           </Button>
         </div>
 
-        <WeeklyNotesTable weeklyNotes={weeklyNotes} />
+        <WeeklyNotesTable weeklyNotes={weeklyNotes.notes} />
       </div>
     </ContentPanel>
   )

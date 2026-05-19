@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -22,7 +23,20 @@ type Props = {
   weeklyNotes: Array<WeeklyNote>
 }
 
+const PAGE_SIZE = 10
+
 export function WeeklyNotesTable({ weeklyNotes }: Props) {
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(weeklyNotes.length / PAGE_SIZE))
+  const visibleNotes = weeklyNotes.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  )
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages))
+  }, [totalPages])
+
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5">
@@ -52,10 +66,10 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {weeklyNotes.map((note, idx) => (
+            {visibleNotes.map((note, idx) => (
               <TableRow key={note.id} className="align-top">
                 <TableCell className="py-3 text-center text-muted-foreground">
-                  {idx + 1}
+                  {(page - 1) * PAGE_SIZE + idx + 1}
                 </TableCell>
                 <TableCell className="py-3 text-sm whitespace-nowrap">
                   {note.dateLabel}
@@ -95,23 +109,46 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
         </Table>
       </div>
 
-      <Pagination className="justify-end">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <PaginationItem key={n}>
-              <PaginationLink href="#" isActive={n === 1}>
-                {n}
-              </PaginationLink>
+      {totalPages > 1 ? (
+        <Pagination className="justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.max(1, current - 1))
+                }}
+              />
             </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (n) => (
+                <PaginationItem key={n}>
+                  <PaginationLink
+                    href="#"
+                    isActive={n === page}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      setPage(n)
+                    }}
+                  >
+                    {n}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.min(totalPages, current + 1))
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      ) : null}
     </div>
   )
 }

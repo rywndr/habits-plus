@@ -41,6 +41,11 @@ export type ObservationRow = {
   values: Record<Indicator, Frequency>
 }
 
+export type ObservationDay = {
+  rows: Array<ObservationRow>
+  note: string
+}
+
 export type WeeklyNote = {
   id: string
   date: string
@@ -51,6 +56,7 @@ export type WeeklyNote = {
 }
 
 export type MonthlySummary = {
+  month: string
   monthLabel: string
   text: string
   trends: Partial<Record<Indicator, Trend>>

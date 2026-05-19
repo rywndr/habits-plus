@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -30,6 +30,7 @@ const INDICATORS: Array<Indicator> = [
   'partisipasi',
   'regulasi',
 ]
+const PAGE_SIZE = 10
 
 type Props = {
   students: Array<Student>
@@ -42,7 +43,13 @@ function getStudent(id: string, students: Array<Student>): Student | undefined {
 }
 
 export function ObservationTable({ students, rows, onRowsChange }: Props) {
-  const [page] = useState(1)
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages))
+  }, [totalPages])
 
   function updateCell(
     studentId: string,
@@ -82,13 +89,13 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row, idx) => {
+            {visibleRows.map((row, idx) => {
               const student = getStudent(row.studentId, students)
               if (!student) return null
               return (
                 <TableRow key={row.studentId}>
                   <TableCell className="text-center text-muted-foreground">
-                    {idx + 1}
+                    {(page - 1) * PAGE_SIZE + idx + 1}
                   </TableCell>
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -109,23 +116,46 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
         </Table>
       </div>
 
-      <Pagination className="justify-end">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <PaginationItem key={n}>
-              <PaginationLink href="#" isActive={n === page}>
-                {n}
-              </PaginationLink>
+      {totalPages > 1 ? (
+        <Pagination className="justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.max(1, current - 1))
+                }}
+              />
             </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (n) => (
+                <PaginationItem key={n}>
+                  <PaginationLink
+                    href="#"
+                    isActive={n === page}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      setPage(n)
+                    }}
+                  >
+                    {n}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.min(totalPages, current + 1))
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      ) : null}
     </div>
   )
 }
