@@ -3,6 +3,7 @@ import { getDb } from '#/db'
 import {
   dailyObservations,
   frequencyScore,
+  monthlySummaries,
   observationScores,
   scoreFrequency,
   students,
@@ -13,7 +14,6 @@ import { getTenantClasses } from './classes'
 import { getTenantStudents } from './students'
 import { getTenantBySlug } from './tenants'
 import { getTenantUsers } from './users'
-import { getWeeklyNotes } from './weekly-notes'
 import type { Frequency, Indicator, MonthlySummary } from './types'
 import {
   formatIndonesianMonth,
@@ -100,14 +100,18 @@ export async function getMonthlySummary(
   const tenant = await getTenantBySlug(slug)
   const start = monthStartIso(month)
   const end = nextMonthStartIso(month)
-  const [notes, observationRows] = await Promise.all([
-    getWeeklyNotes(slug).then((items) =>
-      items.filter((note) => note.date >= start && note.date < end),
-    ),
+  const [manualSummary, observationRows] = await Promise.all([
+    getDb().query.monthlySummaries.findFirst({
+      where: and(
+        eq(monthlySummaries.schoolId, tenant.id),
+        eq(monthlySummaries.monthStart, start),
+      ),
+    }),
     getDb()
       .select({
         indicator: observationScores.indicator,
         frequency: observationScores.frequency,
+        observedAt: dailyObservations.observedAt,
       })
       .from(observationScores)
       .innerJoin(
@@ -122,6 +126,12 @@ export async function getMonthlySummary(
         ),
       ),
   ])
+  const indicators = [
+    'respons',
+    'interaksi',
+    'partisipasi',
+    'regulasi',
+  ] as const
   const averageByIndicator = observationRows.reduce(
     (acc, row) => {
       const summary = acc[row.indicator] ?? { total: 0, count: 0 }
@@ -132,40 +142,62 @@ export async function getMonthlySummary(
     },
     {} as Partial<Record<Indicator, { total: number; count: number }>>,
   )
-  const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
-    (['respons', 'interaksi', 'partisipasi', 'regulasi'] as const).map(
-      (indicator) => {
-        const summary = averageByIndicator[indicator]
-        const average = summary ? summary.total / summary.count : 0
-        const frequency =
-          scoreFrequency[Math.max(0, Math.min(2, Math.round(average)))]
-        const trendByFrequency: Record<Frequency, Trend> = {
-          'tidak-terlihat': 'tidak-terlihat',
-          'terlihat-sesekali': 'stabil',
-          sering: 'meningkat',
-        }
+  const averages: Partial<Record<Indicator, Frequency>> = Object.fromEntries(
+    indicators.map((indicator) => {
+      const summary = averageByIndicator[indicator]
+      const average = summary ? summary.total / summary.count : 0
+      const score = Math.max(0, Math.min(2, Math.round(average)))
 
-        return [indicator, trendByFrequency[frequency]]
-      },
-    ),
+      return [indicator, scoreFrequency[score]]
+    }),
   )
+  const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
+    indicators.map((indicator) => {
+      const frequency = averages[indicator] ?? 'tidak-terlihat'
+      const trendByFrequency: Record<Frequency, Trend> = {
+        'tidak-terlihat': 'tidak-terlihat',
+        'terlihat-sesekali': 'stabil',
+        sering: 'meningkat',
+      }
+
+      return [indicator, trendByFrequency[frequency]]
+    }),
+  )
+  const weekBuckets = Array.from({ length: 4 }, (_, index) => {
+    const rows = observationRows.filter((row) => {
+      const day = new Date(row.observedAt).getDate()
+      return Math.min(3, Math.floor((day - 1) / 7)) === index
+    })
+
+    return {
+      week: `Minggu ke-${index + 1}`,
+      values: Object.fromEntries(
+        indicators.map((indicator) => {
+          const indicatorRows = rows.filter((row) => row.indicator === indicator)
+          const total = indicatorRows.reduce(
+            (sum, row) => sum + frequencyScore[row.frequency],
+            0,
+          )
+          const average = indicatorRows.length ? total / indicatorRows.length : 0
+
+          return [indicator, Number(average.toFixed(2))]
+        }),
+      ) as Record<Indicator, number>,
+    }
+  })
 
   return {
     month: start.slice(0, 7),
     monthLabel: formatIndonesianMonth(start),
-    text: notes.length
-      ? notes.map((note) => `${note.p1} ${note.p2} ${note.p3}`).join(' ')
-      : `Belum ada catatan mingguan untuk ${formatIndonesianMonth(start)}.`,
+    text: manualSummary?.text ?? '',
     trends,
+    averages,
+    radar: weekBuckets,
   }
 }
 
 export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
-  const latestNote = (await getWeeklyNotes(slug))[0]
-  const month =
-    latestNote?.date.slice(0, 7) ?? new Date().toISOString().slice(0, 7)
-
-  return getMonthlySummary(slug, month)
+  return getMonthlySummary(slug, new Date().toISOString().slice(0, 7))
 }
 
 export async function getParentProgress(slug: string, parentId: string) {

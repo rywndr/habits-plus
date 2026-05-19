@@ -1,6 +1,11 @@
 import { relations } from 'drizzle-orm'
 import { classes, students } from './academics'
-import { dailyObservations, observationScores, weeklyNotes } from './observations'
+import {
+  dailyObservations,
+  monthlySummaries,
+  observationScores,
+  weeklyNotes,
+} from './observations'
 import { schools } from './schools'
 import { users } from './auth'
 
@@ -86,3 +91,17 @@ export const weeklyNotesRelations = relations(weeklyNotes, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+export const monthlySummariesRelations = relations(
+  monthlySummaries,
+  ({ one }) => ({
+    school: one(schools, {
+      fields: [monthlySummaries.schoolId],
+      references: [schools.id],
+    }),
+    teacher: one(users, {
+      fields: [monthlySummaries.teacherId],
+      references: [users.id],
+    }),
+  }),
+)

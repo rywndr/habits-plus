@@ -13,10 +13,17 @@ type Props = {
   indicator: Indicator
   label: string
   trend: Trend
+  valueLabel?: string
   className?: string
 }
 
-export function ProgressStripCard({ indicator, label, trend, className }: Props) {
+export function ProgressStripCard({
+  indicator,
+  label,
+  trend,
+  valueLabel,
+  className,
+}: Props) {
   return (
     <div
       className={cn(
@@ -27,7 +34,13 @@ export function ProgressStripCard({ indicator, label, trend, className }: Props)
       <div className={cn('w-2 shrink-0', stripColor[indicator])} />
       <div className="flex flex-1 flex-col gap-1 p-4">
         <span className="text-sm text-foreground">{label}</span>
-        <StatusBadge trend={trend} />
+        {valueLabel ? (
+          <span className="font-heading text-base font-bold tracking-wide text-brand-navy">
+            {valueLabel.toUpperCase()}
+          </span>
+        ) : (
+          <StatusBadge trend={trend} />
+        )}
       </div>
     </div>
   )

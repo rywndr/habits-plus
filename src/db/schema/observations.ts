@@ -84,3 +84,30 @@ export const weeklyNotes = pgTable(
     ),
   }),
 )
+
+export const monthlySummaries = pgTable(
+  'monthly_summaries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    schoolId: uuid('school_id')
+      .notNull()
+      .references(() => schools.id, { onDelete: 'cascade' }),
+    teacherId: uuid('teacher_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    monthStart: date('month_start').notNull(),
+    text: text('text').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    schoolMonthIdx: uniqueIndex('monthly_summaries_school_month_idx').on(
+      table.schoolId,
+      table.monthStart,
+    ),
+  }),
+)

@@ -5,6 +5,7 @@ import {
   accounts,
   classes,
   dailyObservations,
+  monthlySummaries,
   observationScores,
   students,
   users,
@@ -60,6 +61,12 @@ type SaveWeeklyNoteInput = {
   p1: string
   p2: string
   p3: string
+}
+
+type SaveMonthlySummaryInput = {
+  tenant?: string
+  month: string
+  text: string
 }
 
 function assertText(value: string, label: string) {
@@ -302,6 +309,35 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
           p1: data.p1.trim(),
           p2: data.p2.trim(),
           p3: data.p3.trim(),
+          updatedAt: new Date(),
+        },
+      })
+  })
+
+export const saveMonthlySummary = createServerFn({ method: 'POST' })
+  .inputValidator((data: SaveMonthlySummaryInput) => data)
+  .handler(async ({ data }) => {
+    assertText(data.month, 'Bulan')
+    assertText(data.text, 'Ringkasan')
+
+    const tenant = await resolveTenant(data)
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const teacher = await getAuthenticatedUserByRole('guru')
+    const monthStart = `${data.month.slice(0, 7)}-01`
+
+    await getDb()
+      .insert(monthlySummaries)
+      .values({
+        schoolId: tenant.id,
+        teacherId: teacher.id,
+        monthStart,
+        text: data.text.trim(),
+      })
+      .onConflictDoUpdate({
+        target: [monthlySummaries.schoolId, monthlySummaries.monthStart],
+        set: {
+          teacherId: teacher.id,
+          text: data.text.trim(),
           updatedAt: new Date(),
         },
       })

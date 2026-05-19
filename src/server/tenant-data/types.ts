@@ -60,4 +60,9 @@ export type MonthlySummary = {
   monthLabel: string
   text: string
   trends: Partial<Record<Indicator, Trend>>
+  averages: Partial<Record<Indicator, Frequency>>
+  radar: Array<{
+    week: string
+    values: Record<Indicator, number>
+  }>
 }
