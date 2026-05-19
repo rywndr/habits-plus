@@ -6,8 +6,8 @@ An inclusive app that is made for the purpose of enabling teachers monitor the g
 
 Tech-stack planned for the app:
 
-- Next.js
-- PostgrSQL
+- Tanstack-Start
+- PostgreSQL
 - Drizzle ORM
 - Better Auth
 - Vercel + NeonDB
