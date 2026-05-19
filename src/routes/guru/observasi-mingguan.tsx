@@ -10,8 +10,8 @@ import { saveWeeklyNote } from '#/server/actions'
 import { weekStartIso } from '#/server/date'
 import { loadWeeklyNotes } from '#/server/loaders'
 
-export const Route = createFileRoute('/$tenant/guru/observasi-mingguan')({
-  loader: ({ params }) => loadWeeklyNotes({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/guru/observasi-mingguan')({
+  loader: () => loadWeeklyNotes({ data: {} }),
   component: ObservasiMingguan,
   staticData: { title: 'Observasi Mingguan' },
 })
@@ -21,7 +21,6 @@ const SAMPLE =
 
 function ObservasiMingguan() {
   const router = useRouter()
-  const { tenant } = Route.useParams()
   const weeklyNotes = Route.useLoaderData()
   const [month, setMonth] = useState('Januari 2026')
   const [p1, setP1] = useState(SAMPLE)
@@ -30,7 +29,7 @@ function ObservasiMingguan() {
 
   async function handleSave() {
     await saveWeeklyNote({
-      data: { tenant, weekStart: weekStartIso(), p1, p2, p3 },
+      data: { weekStart: weekStartIso(), p1, p2, p3 },
     })
     await router.invalidate()
   }

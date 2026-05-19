@@ -12,16 +12,14 @@ import { loadObservationPage } from '#/server/loaders'
 import type { Frequency, Indicator } from '#/server/tenant-data'
 import { formatIndonesianDate } from '#/server/date'
 
-export const Route = createFileRoute('/$tenant/guru/catat-observasi')({
-  loader: ({ params }) =>
-    loadObservationPage({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/guru/catat-observasi')({
+  loader: () => loadObservationPage({ data: {} }),
   component: CatatObservasi,
   staticData: { title: 'Catat Observasi' },
 })
 
 function CatatObservasi() {
   const router = useRouter()
-  const { tenant } = Route.useParams()
   const data = Route.useLoaderData()
   const [classId, setClassId] = useState(data.classes[0]?.id ?? '')
   const [rows, setRows] = useState(data.rows)
@@ -46,7 +44,7 @@ function CatatObservasi() {
 
   async function handleSave() {
     await saveDailyObservations({
-      data: { tenant, classId, observedAt: data.observedAt, note, rows },
+      data: { classId, observedAt: data.observedAt, note, rows },
     })
     await router.invalidate()
   }

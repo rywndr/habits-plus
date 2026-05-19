@@ -11,9 +11,8 @@ import { PageHeader } from '#/components/shell/page-header'
 import { StatCard } from '#/components/admin/stat-card'
 import { loadAdminDashboard } from '#/server/loaders'
 
-export const Route = createFileRoute('/$tenant/admin/')({
-  loader: ({ params }) =>
-    loadAdminDashboard({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/admin/')({
+  loader: () => loadAdminDashboard({ data: {} }),
   component: BerandaAdmin,
   staticData: { title: 'Beranda Admin' },
 })

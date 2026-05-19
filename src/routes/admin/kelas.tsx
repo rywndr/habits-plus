@@ -12,11 +12,11 @@ import { addClass, deleteClass } from '#/server/actions'
 import { loadTenantClasses, loadTenantUsers } from '#/server/loaders'
 import type { AppUser, ClassRoom } from '#/server/tenant-data'
 
-export const Route = createFileRoute('/$tenant/admin/kelas')({
-  loader: async ({ params }) => {
+export const Route = createFileRoute('/admin/kelas')({
+  loader: async () => {
     const [classes, users] = await Promise.all([
-      loadTenantClasses({ data: { tenant: params.tenant } }),
-      loadTenantUsers({ data: { tenant: params.tenant } }),
+      loadTenantClasses({ data: {} }),
+      loadTenantUsers({ data: {} }),
     ])
 
     return { classes, users }
@@ -48,12 +48,11 @@ function columns(users: Array<AppUser>): Array<Column<ClassRoom>> {
 
 function KelolaKelas() {
   const router = useRouter()
-  const { tenant } = Route.useParams()
   const data = Route.useLoaderData()
   const [name, setName] = useState('')
 
   async function handleAdd() {
-    await addClass({ data: { tenant, name } })
+    await addClass({ data: { name } })
     setName('')
     await router.invalidate()
   }
@@ -84,7 +83,7 @@ function KelolaKelas() {
           }
           onEdit={() => undefined}
           onDelete={(row) =>
-            void deleteClass({ data: { tenant, id: row.id } }).then(() =>
+            void deleteClass({ data: { id: row.id } }).then(() =>
               router.invalidate(),
             )
           }

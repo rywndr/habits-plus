@@ -19,11 +19,11 @@ import { addStudent, deleteStudent } from '#/server/actions'
 import { loadTenantClasses, loadTenantStudents } from '#/server/loaders'
 import type { ClassRoom, Student } from '#/server/tenant-data'
 
-export const Route = createFileRoute('/$tenant/admin/siswa')({
-  loader: async ({ params }) => {
+export const Route = createFileRoute('/admin/siswa')({
+  loader: async () => {
     const [classes, students] = await Promise.all([
-      loadTenantClasses({ data: { tenant: params.tenant } }),
-      loadTenantStudents({ data: { tenant: params.tenant } }),
+      loadTenantClasses({ data: {} }),
+      loadTenantStudents({ data: {} }),
     ])
 
     return { classes, students }
@@ -56,7 +56,6 @@ function columns(classes: Array<ClassRoom>): Array<Column<Student>> {
 
 function KelolaSiswa() {
   const router = useRouter()
-  const { tenant } = Route.useParams()
   const data = Route.useLoaderData()
   const [nisn, setNisn] = useState('')
   const [name, setName] = useState('')
@@ -64,7 +63,7 @@ function KelolaSiswa() {
   const [gender, setGender] = useState<'L' | 'P'>('L')
 
   async function handleAdd() {
-    await addStudent({ data: { tenant, nisn, name, classId, gender } })
+    await addStudent({ data: { nisn, name, classId, gender } })
     setNisn('')
     setName('')
     await router.invalidate()
@@ -141,7 +140,7 @@ function KelolaSiswa() {
           }
           onEdit={() => undefined}
           onDelete={(row) =>
-            void deleteStudent({ data: { tenant, id: row.id } }).then(() =>
+            void deleteStudent({ data: { id: row.id } }).then(() =>
               router.invalidate(),
             )
           }

@@ -4,7 +4,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { users } from '#/db/schema'
+import { schools, users } from '#/db/schema'
 import { roleLabels } from '#/lib/domain'
 import { hashPassword, verifyPassword } from './password'
 import type { Role } from '#/db/schema'
@@ -105,5 +105,38 @@ export async function getAuthenticatedUser(tenant: string, role: Role) {
     email: user.email,
     role: user.role,
     tenantSlug: user.tenantSlug,
+  }
+}
+
+export async function getAuthenticatedUserByRole(role: Role) {
+  const session = await getSession()
+
+  if (!session) {
+    throw new Error(
+      `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
+    )
+  }
+
+  const user = await getDb().query.users.findFirst({
+    where: and(eq(users.id, session.user.id), eq(users.role, role)),
+  })
+
+  if (!user) {
+    throw new Error(
+      `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
+    )
+  }
+
+  const school = await getDb().query.schools.findFirst({
+    where: eq(schools.id, user.schoolId),
+  })
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    tenantSlug: user.tenantSlug,
+    schoolName: school?.name ?? user.tenantSlug,
   }
 }

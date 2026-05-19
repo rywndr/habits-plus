@@ -15,11 +15,18 @@ import type { NavItem } from './sidebar-nav-item'
 type Props = {
   userName: string
   userEmail: string
+  schoolName: string
   items: Array<NavItem>
   onLogout: () => void
 }
 
-export function AppSidebar({ userName, userEmail, items, onLogout }: Props) {
+export function AppSidebar({
+  userName,
+  userEmail,
+  schoolName,
+  items,
+  onLogout,
+}: Props) {
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -28,6 +35,11 @@ export function AppSidebar({ userName, userEmail, items, onLogout }: Props) {
       <SidebarHeader className="p-0">
         <SidebarBrand name={userName} email={userEmail} />
       </SidebarHeader>
+      <div className="px-4 pb-3 group-data-[collapsible=icon]:hidden">
+        <div className="rounded-lg bg-sidebar-accent/60 px-3 py-2 text-center text-xs font-medium text-sidebar-foreground">
+          {schoolName}
+        </div>
+      </div>
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-1">

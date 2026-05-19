@@ -1,39 +1,25 @@
 import { useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import { BrandLogo } from '#/components/common/brand-logo'
 import { loginWithPassword } from '#/server/auth-context'
-
-type Props = {
-  tenant: string
-  tenantName: string
-}
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Email tidak valid.'),
   password: z.string().min(1, 'Kata sandi wajib diisi.'),
-  role: z.enum(['guru', 'admin', 'ortu']),
 })
 
-export function LoginCard({ tenant, tenantName }: Props) {
+export function LoginCard() {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const form = useForm({
     defaultValues: {
       email: '',
       password: '',
-      role: 'guru',
     },
     validators: {
       onSubmit: loginSchema,
@@ -46,20 +32,17 @@ export function LoginCard({ tenant, tenantName }: Props) {
       formApi.setErrorMap({})
 
       try {
-        await loginWithPassword({
+        const result = await loginWithPassword({
           data: {
-            tenant,
             email: value.email,
             password: value.password,
-            role: value.role,
           },
         })
-      } catch {
-        setSubmitError('Email, kata sandi, atau peran tidak sesuai.')
-        return
-      }
 
-      await navigate({ to: `/$tenant/${value.role}`, params: { tenant } })
+        await navigate({ to: `/${result.role}` })
+      } catch {
+        setSubmitError('Email atau kata sandi tidak sesuai.')
+      }
     },
   })
 
@@ -71,7 +54,9 @@ export function LoginCard({ tenant, tenantName }: Props) {
           <h1 className="font-heading text-2xl font-semibold text-foreground">
             Habits+
           </h1>
-          <p className="text-sm text-muted-foreground">{tenantName}</p>
+          <p className="text-sm text-muted-foreground">
+            Masuk dengan akun sekolah Anda
+          </p>
         </div>
       </div>
 
@@ -84,30 +69,6 @@ export function LoginCard({ tenant, tenantName }: Props) {
         }}
         className="flex flex-col gap-4"
       >
-        <form.Field name="role">
-          {(field) => (
-            <div className="flex flex-col gap-2">
-              <Label>Masuk sebagai</Label>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => {
-                  setSubmitError(null)
-                  if (value) field.handleChange(value)
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="guru">Guru</SelectItem>
-                  <SelectItem value="admin">Admin Sekolah</SelectItem>
-                  <SelectItem value="ortu">Orang Tua</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </form.Field>
-
         <form.Field name="email">
           {(field) => (
             <div className="flex flex-col gap-2">
@@ -142,7 +103,7 @@ export function LoginCard({ tenant, tenantName }: Props) {
                 id={field.name}
                 name={field.name}
                 type="password"
-                placeholder="••••••••"
+                placeholder="********"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
@@ -180,26 +141,6 @@ export function LoginCard({ tenant, tenantName }: Props) {
           )}
         </form.Subscribe>
       </form>
-
-      <div className="flex flex-col items-center gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
-        <span>Lihat tampilan lain (demo):</span>
-        <div className="flex gap-3 text-sm">
-          <Link
-            to="/$tenant/admin"
-            params={{ tenant }}
-            className="text-brand-navy underline-offset-4 hover:underline"
-          >
-            Admin
-          </Link>
-          <Link
-            to="/$tenant/ortu"
-            params={{ tenant }}
-            className="text-brand-navy underline-offset-4 hover:underline"
-          >
-            Orang Tua
-          </Link>
-        </div>
-      </div>
     </div>
   )
 }

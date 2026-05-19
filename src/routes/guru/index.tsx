@@ -13,9 +13,8 @@ import { KpiCard } from '#/components/guru/kpi-card'
 import { GenderDistributionCard } from '#/components/guru/gender-distribution-card'
 import { loadGuruDashboard } from '#/server/loaders'
 
-export const Route = createFileRoute('/$tenant/guru/')({
-  loader: ({ params }) =>
-    loadGuruDashboard({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/guru/')({
+  loader: () => loadGuruDashboard({ data: {} }),
   component: BerandaGuru,
   staticData: { title: 'Beranda Guru' },
 })
@@ -23,7 +22,6 @@ export const Route = createFileRoute('/$tenant/guru/')({
 const icons = [Users, MessageCircle, UsersRound, ShieldCheck]
 
 function BerandaGuru() {
-  const { tenant } = Route.useParams()
   const dashboard = Route.useLoaderData()
   const navigate = useNavigate()
 
@@ -54,8 +52,7 @@ function BerandaGuru() {
           className="h-12 w-full justify-center gap-2 rounded-xl text-sm sm:text-base"
           onClick={() =>
             void navigate({
-              to: '/$tenant/guru/catat-observasi',
-              params: { tenant },
+              to: '/guru/catat-observasi',
             })
           }
         >

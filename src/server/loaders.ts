@@ -1,4 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
+import { eq } from 'drizzle-orm'
+import { getDb } from '#/db'
+import { users } from '#/db/schema'
 import type { Role } from '#/db/schema'
 import {
   getAdminDashboard,
@@ -15,7 +18,7 @@ import {
 import { todayIso } from './date'
 
 type TenantInput = {
-  tenant: string
+  tenant?: string
 }
 
 type CurrentUserInput = TenantInput & {
@@ -34,62 +37,89 @@ export const loadTenant = createServerFn({ method: 'GET' })
 export const loadCurrentUser = createServerFn({ method: 'GET' })
   .inputValidator((data: CurrentUserInput) => data)
   .handler(async ({ data }) => {
-    const { getAuthenticatedUser } = await import('./auth.server')
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
 
-    return getAuthenticatedUser(data.tenant, data.role)
+    return getAuthenticatedUserByRole(data.role)
   })
+
+async function resolveTenant(input?: TenantInput) {
+  if (input?.tenant) return input.tenant
+
+  const { getSession } = await import('./auth.server')
+  const session = await getSession()
+
+  if (!session) {
+    throw new Error('Silakan masuk terlebih dahulu.')
+  }
+
+  const user = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+  })
+
+  if (!user) {
+    throw new Error('Silakan masuk terlebih dahulu.')
+  }
+
+  return user.tenantSlug
+}
 
 export const loadTenantUsers = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getTenantUsers(data.tenant))
+  .handler(async ({ data }) => getTenantUsers(await resolveTenant(data)))
 
 export const loadTenantClasses = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getTenantClasses(data.tenant))
+  .handler(async ({ data }) => getTenantClasses(await resolveTenant(data)))
 
 export const loadTenantStudents = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getTenantStudents(data.tenant))
+  .handler(async ({ data }) => getTenantStudents(await resolveTenant(data)))
 
 export const loadAdminDashboard = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getAdminDashboard(data.tenant))
+  .handler(async ({ data }) => getAdminDashboard(await resolveTenant(data)))
 
 export const loadGuruDashboard = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getGuruDashboard(data.tenant))
+  .handler(async ({ data }) => getGuruDashboard(await resolveTenant(data)))
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getLatestSummary(data.tenant))
+  .handler(async ({ data }) => getLatestSummary(await resolveTenant(data)))
 
 export const loadParentProgress = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
   .handler(async ({ data }) => {
-    const { getAuthenticatedUser } = await import('./auth.server')
-    const parent = await getAuthenticatedUser(data.tenant, 'ortu')
+    const tenant = await resolveTenant(data)
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const parent = await getAuthenticatedUserByRole('ortu')
 
-    return getParentProgress(data.tenant, parent)
+    return getParentProgress(tenant, parent)
   })
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getWeeklyNotes(data.tenant))
+  .handler(async ({ data }) => getWeeklyNotes(await resolveTenant(data)))
 
 export const loadDailyObservationRows = createServerFn({ method: 'GET' })
   .inputValidator((data: ObservationRowsInput) => data)
-  .handler(({ data }) =>
-    getDailyObservationRows(data.tenant, data.classId, data.observedAt),
+  .handler(async ({ data }) =>
+    getDailyObservationRows(
+      await resolveTenant(data),
+      data.classId,
+      data.observedAt,
+    ),
   )
 
 export const loadObservationPage = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
   .handler(async ({ data }) => {
-    const classes = await getTenantClasses(data.tenant)
+    const tenant = await resolveTenant(data)
+    const classes = await getTenantClasses(tenant)
     const classId = classes[0]?.id ?? ''
     const [students, rows] = await Promise.all([
-      getTenantStudents(data.tenant),
-      classId ? getDailyObservationRows(data.tenant, classId) : [],
+      getTenantStudents(tenant),
+      classId ? getDailyObservationRows(tenant, classId) : [],
     ])
 
     return { classes, students, rows, observedAt: todayIso() }

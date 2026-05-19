@@ -9,52 +9,33 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
 import { addUser, deleteUser } from '#/server/actions'
-import { loadTenantStudents, loadTenantUsers } from '#/server/loaders'
-import type { AppUser, Student } from '#/server/tenant-data'
+import { loadTenantUsers } from '#/server/loaders'
+import type { AppUser } from '#/server/tenant-data'
 
-export const Route = createFileRoute('/$tenant/admin/ortu')({
-  loader: async ({ params }) => {
-    const [users, students] = await Promise.all([
-      loadTenantUsers({ data: { tenant: params.tenant } }),
-      loadTenantStudents({ data: { tenant: params.tenant } }),
-    ])
-
-    return {
-      parents: users.filter((user) => user.role === 'ortu'),
-      students,
-    }
-  },
-  component: KelolaOrtu,
-  staticData: { title: 'Kelola Orang Tua' },
+export const Route = createFileRoute('/admin/guru')({
+  loader: () =>
+    loadTenantUsers({ data: {} }).then((users) =>
+      users.filter((user) => user.role === 'guru'),
+    ),
+  component: KelolaGuru,
+  staticData: { title: 'Kelola Guru' },
 })
 
-function childNameOf(parentId: string, students: Array<Student>): string {
-  const student = students.find((s) => s.parentId === parentId)
-  return student?.name ?? '-'
-}
+const columns: Array<Column<AppUser>> = [
+  { key: 'name', header: 'Nama', render: (r) => r.name },
+  { key: 'email', header: 'Email', render: (r) => r.email },
+  { key: 'tenant', header: 'Sekolah', render: (r) => r.tenantSlug },
+]
 
-function columns(students: Array<Student>): Array<Column<AppUser>> {
-  return [
-    { key: 'name', header: 'Nama', render: (r) => r.name },
-    { key: 'email', header: 'Email', render: (r) => r.email },
-    {
-      key: 'child',
-      header: 'Anak',
-      render: (r) => childNameOf(r.id, students),
-    },
-  ]
-}
-
-function KelolaOrtu() {
+function KelolaGuru() {
   const router = useRouter()
-  const { tenant } = Route.useParams()
-  const { parents, students } = Route.useLoaderData()
+  const teachers = Route.useLoaderData()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   async function handleAdd() {
-    await addUser({ data: { tenant, name, email, password, role: 'ortu' } })
+    await addUser({ data: { name, email, password, role: 'guru' } })
     setName('')
     setEmail('')
     setPassword('')
@@ -64,36 +45,39 @@ function KelolaOrtu() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Kelola Orang Tua" />
+        <PageHeader title="Kelola Guru" />
         <DataTable
-          rows={parents}
-          columns={columns(students)}
+          rows={teachers}
+          columns={columns}
           filterKey="name"
           toolbar={
-            <AddEntityDialog title="Tambah Orang Tua">
+            <AddEntityDialog
+              title="Tambah Guru"
+              description="Isi data guru baru."
+            >
               <div className="flex flex-col gap-2">
-                <Label htmlFor="o-name">Nama</Label>
+                <Label htmlFor="g-name">Nama</Label>
                 <Input
-                  id="o-name"
+                  id="g-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="Nama lengkap"
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="o-email">Email</Label>
+                <Label htmlFor="g-email">Email</Label>
                 <Input
-                  id="o-email"
+                  id="g-email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
-                  placeholder="email@contoh.id"
+                  placeholder="nama@sekolah.id"
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="o-password">Kata Sandi Awal</Label>
+                <Label htmlFor="g-password">Kata Sandi Awal</Label>
                 <Input
-                  id="o-password"
+                  id="g-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type="password"
@@ -107,7 +91,7 @@ function KelolaOrtu() {
           }
           onEdit={() => undefined}
           onDelete={(row) =>
-            void deleteUser({ data: { tenant, id: row.id } }).then(() =>
+            void deleteUser({ data: { id: row.id } }).then(() =>
               router.invalidate(),
             )
           }

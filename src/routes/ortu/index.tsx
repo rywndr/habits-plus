@@ -5,9 +5,8 @@ import { SummaryTextbox } from '#/components/ortu/summary-textbox'
 import { ProgressGraphicCard } from '#/components/ortu/progress-graphic-card'
 import { loadParentProgress } from '#/server/loaders'
 
-export const Route = createFileRoute('/$tenant/ortu/')({
-  loader: ({ params }) =>
-    loadParentProgress({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/ortu/')({
+  loader: () => loadParentProgress({ data: {} }),
   component: LihatProgres,
   staticData: { title: 'Lihat Progres' },
 })

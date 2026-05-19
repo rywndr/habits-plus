@@ -9,25 +9,25 @@ import type { NavItem } from './sidebar-nav-item'
 type Props = {
   userName: string
   userEmail: string
+  schoolName: string
   navItems: Array<NavItem>
   mobileTitle: string
-  tenant: string
   children: ReactNode
 }
 
 export function AppShell({
   userName,
   userEmail,
+  schoolName,
   navItems,
   mobileTitle,
-  tenant,
   children,
 }: Props) {
   const navigate = useNavigate()
 
   async function handleLogout() {
     await authClient.signOut()
-    await navigate({ to: '/$tenant/login', params: { tenant } })
+    await navigate({ to: '/login' })
   }
 
   return (
@@ -35,6 +35,7 @@ export function AppShell({
       <AppSidebar
         userName={userName}
         userEmail={userEmail}
+        schoolName={schoolName}
         items={navItems}
         onLogout={() => void handleLogout()}
       />

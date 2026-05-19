@@ -10,9 +10,8 @@ import { indicatorLabels } from '#/lib/domain'
 import { loadLatestSummary } from '#/server/loaders'
 import type { Indicator } from '#/server/tenant-data'
 
-export const Route = createFileRoute('/$tenant/guru/ringkasan')({
-  loader: ({ params }) =>
-    loadLatestSummary({ data: { tenant: params.tenant } }),
+export const Route = createFileRoute('/guru/ringkasan')({
+  loader: () => loadLatestSummary({ data: {} }),
   component: LihatRingkasan,
   staticData: { title: 'Lihat Ringkasan' },
 })

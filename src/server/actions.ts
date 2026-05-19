@@ -16,7 +16,7 @@ import { hashPassword } from './password'
 import { getTenantBySlug } from './tenant-data'
 
 type AddUserInput = {
-  tenant: string
+  tenant?: string
   name: string
   email: string
   password: string
@@ -24,13 +24,13 @@ type AddUserInput = {
 }
 
 type AddClassInput = {
-  tenant: string
+  tenant?: string
   name: string
   teacherId?: string
 }
 
 type AddStudentInput = {
-  tenant: string
+  tenant?: string
   nisn: string
   name: string
   classId: string
@@ -39,12 +39,12 @@ type AddStudentInput = {
 }
 
 type DeleteInput = {
-  tenant: string
+  tenant?: string
   id: string
 }
 
 type SaveDailyObservationsInput = {
-  tenant: string
+  tenant?: string
   classId: string
   observedAt?: string
   note?: string
@@ -55,7 +55,7 @@ type SaveDailyObservationsInput = {
 }
 
 type SaveWeeklyNoteInput = {
-  tenant: string
+  tenant?: string
   weekStart?: string
   p1: string
   p2: string
@@ -73,6 +73,27 @@ async function assertTenantOwnedUser(tenantId: string, id: string) {
   if (!user) throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
 }
 
+async function resolveTenant(input?: { tenant?: string }) {
+  if (input?.tenant) return getTenantBySlug(input.tenant)
+
+  const { getSession } = await import('./auth.server')
+  const session = await getSession()
+
+  if (!session) {
+    throw new Error('Silakan masuk terlebih dahulu.')
+  }
+
+  const user = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+  })
+
+  if (!user) {
+    throw new Error('Silakan masuk terlebih dahulu.')
+  }
+
+  return getTenantBySlug(user.tenantSlug)
+}
+
 export const addUser = createServerFn({ method: 'POST' })
   .inputValidator((data: AddUserInput) => data)
   .handler(async ({ data }) => {
@@ -80,7 +101,7 @@ export const addUser = createServerFn({ method: 'POST' })
     assertText(data.email, 'Email')
     assertText(data.password, 'Kata sandi')
 
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
     const passwordHash = await hashPassword(data.password)
     const [user] = await getDb()
       .insert(users)
@@ -105,7 +126,7 @@ export const addUser = createServerFn({ method: 'POST' })
 export const deleteUser = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
   .handler(async ({ data }) => {
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
     await getDb()
       .delete(users)
       .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
@@ -115,7 +136,7 @@ export const addClass = createServerFn({ method: 'POST' })
   .inputValidator((data: AddClassInput) => data)
   .handler(async ({ data }) => {
     assertText(data.name, 'Nama kelas')
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
 
     if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
 
@@ -131,7 +152,7 @@ export const addClass = createServerFn({ method: 'POST' })
 export const deleteClass = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
   .handler(async ({ data }) => {
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
     await getDb()
       .delete(classes)
       .where(and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)))
@@ -143,7 +164,7 @@ export const addStudent = createServerFn({ method: 'POST' })
     assertText(data.nisn, 'NISN')
     assertText(data.name, 'Nama')
 
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
     const klass = await getDb().query.classes.findFirst({
       where: and(eq(classes.schoolId, tenant.id), eq(classes.id, data.classId)),
     })
@@ -166,7 +187,7 @@ export const addStudent = createServerFn({ method: 'POST' })
 export const deleteStudent = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
   .handler(async ({ data }) => {
-    const tenant = await getTenantBySlug(data.tenant)
+    const tenant = await resolveTenant(data)
     await getDb()
       .delete(students)
       .where(and(eq(students.schoolId, tenant.id), eq(students.id, data.id)))
@@ -175,9 +196,9 @@ export const deleteStudent = createServerFn({ method: 'POST' })
 export const saveDailyObservations = createServerFn({ method: 'POST' })
   .inputValidator((data: SaveDailyObservationsInput) => data)
   .handler(async ({ data }) => {
-    const { getAuthenticatedUser } = await import('./auth.server')
-    const tenant = await getTenantBySlug(data.tenant)
-    const teacher = await getAuthenticatedUser(data.tenant, 'guru')
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const tenant = await resolveTenant(data)
+    const teacher = await getAuthenticatedUserByRole('guru')
     const observedAt = data.observedAt ?? todayIso()
     const studentIds = data.rows.map((row) => row.studentId)
     const classStudents = await getDb().query.students.findMany({
@@ -238,9 +259,9 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
     assertText(data.p2, 'P2')
     assertText(data.p3, 'P3')
 
-    const tenant = await getTenantBySlug(data.tenant)
-    const { getAuthenticatedUser } = await import('./auth.server')
-    const teacher = await getAuthenticatedUser(data.tenant, 'guru')
+    const tenant = await resolveTenant(data)
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const teacher = await getAuthenticatedUserByRole('guru')
     const weekStart = data.weekStart ?? weekStartIso()
 
     await getDb()
