@@ -10,18 +10,21 @@ import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
 import { addClass, deleteClass } from '#/server/actions'
 import { loadTenantClasses, loadTenantUsers } from '#/server/loaders'
+import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import type { AppUser, ClassRoom } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/kelas')({
-  loader: async () => {
+  loader: async ({ context }) => {
+    const tenant = context.user.tenantSlug
     const [classes, users] = await Promise.all([
-      loadTenantClasses({ data: {} }),
-      loadTenantUsers({ data: {} }),
+      loadTenantClasses({ data: { tenant } }),
+      loadTenantUsers({ data: { tenant } }),
     ])
 
     return { classes, users }
   },
   component: KelolaKelas,
+  pendingComponent: () => <DataTableSkeleton columns={3} />,
   staticData: { title: 'Kelola Kelas' },
 })
 

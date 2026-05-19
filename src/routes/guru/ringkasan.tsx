@@ -8,11 +8,14 @@ import { SummaryRadarPlaceholder } from '#/components/guru/summary-radar-placeho
 import { ProgressStripCard } from '#/components/guru/progress-strip-card'
 import { indicatorLabels } from '#/lib/domain'
 import { loadLatestSummary } from '#/server/loaders'
+import { SummaryPageSkeleton } from '#/components/skeletons/summary-page-skeleton'
 import type { Indicator } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/ringkasan')({
-  loader: () => loadLatestSummary({ data: {} }),
+  loader: ({ context }) =>
+    loadLatestSummary({ data: { tenant: context.user.tenantSlug } }),
   component: LihatRingkasan,
+  pendingComponent: SummaryPageSkeleton,
   staticData: { title: 'Lihat Ringkasan' },
 })
 

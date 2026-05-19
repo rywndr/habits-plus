@@ -9,12 +9,15 @@ import { ClassSelect } from '#/components/guru/class-select'
 import { ObservationTable } from '#/components/guru/observation-table'
 import { saveDailyObservations } from '#/server/actions'
 import { loadObservationPage } from '#/server/loaders'
+import { ObservationPageSkeleton } from '#/components/skeletons/observation-page-skeleton'
 import type { Frequency, Indicator } from '#/server/tenant-data'
 import { formatIndonesianDate } from '#/server/date'
 
 export const Route = createFileRoute('/guru/catat-observasi')({
-  loader: () => loadObservationPage({ data: {} }),
+  loader: ({ context }) =>
+    loadObservationPage({ data: { tenant: context.user.tenantSlug } }),
   component: CatatObservasi,
+  pendingComponent: ObservationPageSkeleton,
   staticData: { title: 'Catat Observasi' },
 })
 

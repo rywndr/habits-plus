@@ -14,7 +14,7 @@ import { getTenantStudents } from './students'
 import { getTenantBySlug } from './tenants'
 import { getTenantUsers } from './users'
 import { getWeeklyNotes } from './weekly-notes'
-import type { AppUser, Frequency, Indicator, MonthlySummary } from './types'
+import type { Frequency, Indicator, MonthlySummary } from './types'
 
 export async function getAdminDashboard(slug: string) {
   const [tenant, tenantUsers, tenantClasses, tenantStudents] =
@@ -89,8 +89,10 @@ export async function getGuruDashboard(slug: string) {
 }
 
 export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
-  const notes = await getWeeklyNotes(slug)
-  const dashboard = await getGuruDashboard(slug)
+  const [notes, dashboard] = await Promise.all([
+    getWeeklyNotes(slug),
+    getGuruDashboard(slug),
+  ])
   const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
     dashboard.kpiStats.map((kpi) => {
       const frequency =
@@ -116,15 +118,15 @@ export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
   }
 }
 
-export async function getParentProgress(slug: string, parent: AppUser) {
-  const child = await getDb().query.students.findFirst({
-    where: eq(students.parentId, parent.id),
-  })
-
-  const summary = await getLatestSummary(slug)
+export async function getParentProgress(slug: string, parentId: string) {
+  const [child, summary] = await Promise.all([
+    getDb().query.students.findFirst({
+      where: eq(students.parentId, parentId),
+    }),
+    getLatestSummary(slug),
+  ])
 
   return {
-    parent,
     childName: child?.name ?? 'Anak',
     summaryText: summary.text,
     indicators: (

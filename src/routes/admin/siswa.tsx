@@ -17,18 +17,21 @@ import {
 } from '#/components/ui/select'
 import { addStudent, deleteStudent } from '#/server/actions'
 import { loadTenantClasses, loadTenantStudents } from '#/server/loaders'
+import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import type { ClassRoom, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/siswa')({
-  loader: async () => {
+  loader: async ({ context }) => {
+    const tenant = context.user.tenantSlug
     const [classes, students] = await Promise.all([
-      loadTenantClasses({ data: {} }),
-      loadTenantStudents({ data: {} }),
+      loadTenantClasses({ data: { tenant } }),
+      loadTenantStudents({ data: { tenant } }),
     ])
 
     return { classes, students }
   },
   component: KelolaSiswa,
+  pendingComponent: () => <DataTableSkeleton columns={4} />,
   staticData: { title: 'Kelola Siswa' },
 })
 

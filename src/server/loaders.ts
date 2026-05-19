@@ -9,7 +9,6 @@ import {
   getGuruDashboard,
   getLatestSummary,
   getParentProgress,
-  getTenantBySlug,
   getTenantClasses,
   getTenantStudents,
   getTenantUsers,
@@ -25,14 +24,9 @@ type CurrentUserInput = TenantInput & {
   role: Role
 }
 
-type ObservationRowsInput = TenantInput & {
-  classId: string
-  observedAt?: string
+type ParentProgressInput = TenantInput & {
+  parentId?: string
 }
-
-export const loadTenant = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) => getTenantBySlug(data.tenant))
 
 export const loadCurrentUser = createServerFn({ method: 'GET' })
   .inputValidator((data: CurrentUserInput) => data)
@@ -88,28 +82,23 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => getLatestSummary(await resolveTenant(data)))
 
 export const loadParentProgress = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
+  .inputValidator((data: ParentProgressInput) => data)
   .handler(async ({ data }) => {
     const tenant = await resolveTenant(data)
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const parent = await getAuthenticatedUserByRole('ortu')
+    let parentId = data.parentId
 
-    return getParentProgress(tenant, parent)
+    if (!parentId) {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const parent = await getAuthenticatedUserByRole('ortu')
+      parentId = parent.id
+    }
+
+    return getParentProgress(tenant, parentId)
   })
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
   .handler(async ({ data }) => getWeeklyNotes(await resolveTenant(data)))
-
-export const loadDailyObservationRows = createServerFn({ method: 'GET' })
-  .inputValidator((data: ObservationRowsInput) => data)
-  .handler(async ({ data }) =>
-    getDailyObservationRows(
-      await resolveTenant(data),
-      data.classId,
-      data.observedAt,
-    ),
-  )
 
 export const loadObservationPage = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)

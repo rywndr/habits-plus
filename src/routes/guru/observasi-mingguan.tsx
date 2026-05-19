@@ -9,10 +9,13 @@ import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { saveWeeklyNote } from '#/server/actions'
 import { weekStartIso } from '#/server/date'
 import { loadWeeklyNotes } from '#/server/loaders'
+import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
 
 export const Route = createFileRoute('/guru/observasi-mingguan')({
-  loader: () => loadWeeklyNotes({ data: {} }),
+  loader: ({ context }) =>
+    loadWeeklyNotes({ data: { tenant: context.user.tenantSlug } }),
   component: ObservasiMingguan,
+  pendingComponent: WeeklyNotesSkeleton,
   staticData: { title: 'Observasi Mingguan' },
 })
 

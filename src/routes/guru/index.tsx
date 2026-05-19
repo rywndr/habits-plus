@@ -11,11 +11,14 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { KpiCard } from '#/components/guru/kpi-card'
 import { GenderDistributionCard } from '#/components/guru/gender-distribution-card'
+import { GuruDashboardSkeleton } from '#/components/skeletons/guru-dashboard-skeleton'
 import { loadGuruDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru/')({
-  loader: () => loadGuruDashboard({ data: {} }),
+  loader: ({ context }) =>
+    loadGuruDashboard({ data: { tenant: context.user.tenantSlug } }),
   component: BerandaGuru,
+  pendingComponent: GuruDashboardSkeleton,
   staticData: { title: 'Beranda Guru' },
 })
 
