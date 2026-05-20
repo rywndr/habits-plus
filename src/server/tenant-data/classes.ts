@@ -1,13 +1,11 @@
 import { asc, count, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { classes, schools, students } from '#/db/schema'
-import { getTenantBySlug } from './tenants'
-import type { ClassRoom } from './types'
+import type { ClassRoom, Tenant } from './types'
 
 export async function getTenantClasses(
-  slug: string,
+  tenant: Tenant,
 ): Promise<Array<ClassRoom>> {
-  const tenant = await getTenantBySlug(slug)
   const rows = await getDb()
     .select({
       id: classes.id,

@@ -9,12 +9,14 @@ import {
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { StatCard } from '#/components/admin/stat-card'
+import { AdminDashboardSkeleton } from '#/components/skeletons/admin-dashboard-skeleton'
 import { loadAdminDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/')({
   loader: ({ context }) =>
     loadAdminDashboard({ data: { tenant: context.user.tenantSlug } }),
   component: BerandaAdmin,
+  pendingComponent: AdminDashboardSkeleton,
   staticData: { title: 'Beranda Admin' },
 })
 

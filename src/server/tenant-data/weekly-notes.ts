@@ -2,11 +2,11 @@ import { desc, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { weeklyNotes } from '#/db/schema'
 import { formatIndonesianDate } from '../date'
-import { getTenantBySlug } from './tenants'
-import type { WeeklyNote } from './types'
+import type { Tenant, WeeklyNote } from './types'
 
-export async function getWeeklyNotes(slug: string): Promise<Array<WeeklyNote>> {
-  const tenant = await getTenantBySlug(slug)
+export async function getWeeklyNotes(
+  tenant: Tenant,
+): Promise<Array<WeeklyNote>> {
   const rows = await getDb().query.weeklyNotes.findMany({
     where: eq(weeklyNotes.schoolId, tenant.id),
     orderBy: [desc(weeklyNotes.weekStart)],

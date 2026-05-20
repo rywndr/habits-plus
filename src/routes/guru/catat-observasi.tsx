@@ -7,6 +7,7 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { ClassSelect } from '#/components/guru/class-select'
 import { ObservationTable } from '#/components/guru/observation-table'
+import { ObservationPageSkeleton } from '#/components/skeletons/observation-page-skeleton'
 import { saveDailyObservations } from '#/server/actions'
 import { loadObservationPage } from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
@@ -32,6 +33,7 @@ export const Route = createFileRoute('/guru/catat-observasi')({
       },
     }),
   component: CatatObservasi,
+  pendingComponent: ObservationPageSkeleton,
   staticData: { title: 'Catat Observasi' },
 })
 

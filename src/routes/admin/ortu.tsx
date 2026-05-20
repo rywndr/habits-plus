@@ -5,6 +5,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { DataTable } from '#/components/admin/data-table'
 import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
+import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -26,8 +27,13 @@ export const Route = createFileRoute('/admin/ortu')({
     }
   },
   component: KelolaOrtu,
+  pendingComponent: PendingOrtuTable,
   staticData: { title: 'Kelola Orang Tua' },
 })
+
+function PendingOrtuTable() {
+  return <DataTableSkeleton columns={3} rows={8} />
+}
 
 function childNameOf(parentId: string, students: Array<Student>): string {
   const student = students.find((s) => s.parentId === parentId)

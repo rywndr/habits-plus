@@ -17,6 +17,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
+import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
 import { saveWeeklyNote } from '#/server/actions'
 import { loadWeeklyNotes } from '#/server/loaders'
 import type { SaveStatus } from '#/components/common/save-button'
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
       data: { tenant: context.user.tenantSlug, weekStart: deps.weekStart },
     }),
   component: ObservasiMingguan,
+  pendingComponent: WeeklyNotesSkeleton,
   staticData: { title: 'Observasi Mingguan' },
 })
 

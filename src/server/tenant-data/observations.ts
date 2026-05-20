@@ -2,54 +2,24 @@ import { and, asc, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { dailyObservations, students } from '#/db/schema'
 import { todayIso } from '../date'
-import { getTenantBySlug } from './tenants'
 import type {
   Frequency,
   Indicator,
   ObservationDay,
-  ObservationRow,
+  Tenant,
 } from './types'
 
 export async function getDailyObservationDay(
-  slug: string,
+  tenant: Tenant,
   classId: string,
   observedAt = todayIso(),
 ): Promise<ObservationDay> {
-  const rows = await getDailyObservationRows(slug, classId, observedAt)
-  const tenant = await getTenantBySlug(slug)
-  const classStudents = await getDb().query.students.findMany({
-    where: and(eq(students.schoolId, tenant.id), eq(students.classId, classId)),
-    columns: { id: true },
-  })
-
-  if (!classStudents.length) return { rows, note: '' }
-
-  const observation = await getDb().query.dailyObservations.findFirst({
-    where: and(
-      eq(dailyObservations.schoolId, tenant.id),
-      eq(dailyObservations.observedAt, observedAt),
-      inArray(
-        dailyObservations.studentId,
-        classStudents.map((student) => student.id),
-      ),
-    ),
-  })
-
-  return { rows, note: observation?.note ?? '' }
-}
-
-export async function getDailyObservationRows(
-  slug: string,
-  classId: string,
-  observedAt = todayIso(),
-): Promise<Array<ObservationRow>> {
-  const tenant = await getTenantBySlug(slug)
   const classStudents = await getDb().query.students.findMany({
     where: and(eq(students.schoolId, tenant.id), eq(students.classId, classId)),
     orderBy: [asc(students.name)],
   })
 
-  if (!classStudents.length) return []
+  if (!classStudents.length) return { rows: [], note: '' }
 
   const observations = await getDb().query.dailyObservations.findMany({
     where: and(
@@ -63,7 +33,7 @@ export async function getDailyObservationRows(
     with: { scores: true },
   })
 
-  return classStudents.map((student) => {
+  const rows = classStudents.map((student) => {
     const observation = observations.find(
       (item) => item.studentId === student.id,
     )
@@ -80,4 +50,6 @@ export async function getDailyObservationRows(
 
     return { studentId: student.id, values }
   })
+
+  return { rows, note: observations[0]?.note ?? '' }
 }

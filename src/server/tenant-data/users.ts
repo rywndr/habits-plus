@@ -1,11 +1,9 @@
 import { asc, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { students, users } from '#/db/schema'
-import { getTenantBySlug } from './tenants'
-import type { AppUser } from './types'
+import type { AppUser, Tenant } from './types'
 
-export async function getTenantUsers(slug: string): Promise<Array<AppUser>> {
-  const tenant = await getTenantBySlug(slug)
+export async function getTenantUsers(tenant: Tenant): Promise<Array<AppUser>> {
   const rows = await getDb().query.users.findMany({
     where: eq(users.schoolId, tenant.id),
     orderBy: [asc(users.name)],
@@ -22,7 +20,7 @@ export async function getTenantUsers(slug: string): Promise<Array<AppUser>> {
     name: user.name,
     email: user.email,
     role: user.role,
-    tenantSlug: slug,
+    tenantSlug: tenant.slug,
     studentId: linkedStudents.find((s) => s.parentId === user.id)?.id,
   }))
 }

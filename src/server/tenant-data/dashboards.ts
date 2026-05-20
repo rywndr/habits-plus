@@ -12,23 +12,20 @@ import type { Trend } from '#/data'
 import { frequencyLabels, indicatorLabels } from '#/lib/domain'
 import { getTenantClasses } from './classes'
 import { getTenantStudents } from './students'
-import { getTenantBySlug } from './tenants'
 import { getTenantUsers } from './users'
-import type { Frequency, Indicator, MonthlySummary } from './types'
+import type { Frequency, Indicator, MonthlySummary, Tenant } from './types'
 import {
   formatIndonesianMonth,
   monthStartIso,
   nextMonthStartIso,
 } from '../date'
 
-export async function getAdminDashboard(slug: string) {
-  const [tenant, tenantUsers, tenantClasses, tenantStudents] =
-    await Promise.all([
-      getTenantBySlug(slug),
-      getTenantUsers(slug),
-      getTenantClasses(slug),
-      getTenantStudents(slug),
-    ])
+export async function getAdminDashboard(tenant: Tenant) {
+  const [tenantUsers, tenantClasses, tenantStudents] = await Promise.all([
+    getTenantUsers(tenant),
+    getTenantClasses(tenant),
+    getTenantStudents(tenant),
+  ])
 
   return {
     tenant,
@@ -39,20 +36,21 @@ export async function getAdminDashboard(slug: string) {
   }
 }
 
-export async function getGuruDashboard(slug: string) {
-  const tenant = await getTenantBySlug(slug)
-  const tenantStudents = await getTenantStudents(slug)
-  const observationRows = await getDb()
-    .select({
-      indicator: observationScores.indicator,
-      frequency: observationScores.frequency,
-    })
-    .from(observationScores)
-    .innerJoin(
-      dailyObservations,
-      eq(observationScores.observationId, dailyObservations.id),
-    )
-    .where(eq(dailyObservations.schoolId, tenant.id))
+export async function getGuruDashboard(tenant: Tenant) {
+  const [tenantStudents, observationRows] = await Promise.all([
+    getTenantStudents(tenant),
+    getDb()
+      .select({
+        indicator: observationScores.indicator,
+        frequency: observationScores.frequency,
+      })
+      .from(observationScores)
+      .innerJoin(
+        dailyObservations,
+        eq(observationScores.observationId, dailyObservations.id),
+      )
+      .where(eq(dailyObservations.schoolId, tenant.id)),
+  ])
 
   const distribution = tenantStudents.reduce(
     (acc, student) => {
@@ -94,10 +92,9 @@ export async function getGuruDashboard(slug: string) {
 }
 
 export async function getMonthlySummary(
-  slug: string,
+  tenant: Tenant,
   month: string,
 ): Promise<MonthlySummary> {
-  const tenant = await getTenantBySlug(slug)
   const start = monthStartIso(month)
   const end = nextMonthStartIso(month)
   const [manualSummary, observationRows] = await Promise.all([
@@ -196,16 +193,16 @@ export async function getMonthlySummary(
   }
 }
 
-export async function getLatestSummary(slug: string): Promise<MonthlySummary> {
-  return getMonthlySummary(slug, new Date().toISOString().slice(0, 7))
+export async function getLatestSummary(tenant: Tenant): Promise<MonthlySummary> {
+  return getMonthlySummary(tenant, new Date().toISOString().slice(0, 7))
 }
 
-export async function getParentProgress(slug: string, parentId: string) {
+export async function getParentProgress(tenant: Tenant, parentId: string) {
   const [child, summary] = await Promise.all([
     getDb().query.students.findFirst({
       where: eq(students.parentId, parentId),
     }),
-    getLatestSummary(slug),
+    getLatestSummary(tenant),
   ])
 
   return {

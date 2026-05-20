@@ -5,6 +5,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { DataTable } from '#/components/admin/data-table'
 import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
+import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -18,8 +19,13 @@ export const Route = createFileRoute('/admin/guru')({
       (users) => users.filter((user) => user.role === 'guru'),
     ),
   component: KelolaGuru,
+  pendingComponent: PendingGuruTable,
   staticData: { title: 'Kelola Guru' },
 })
+
+function PendingGuruTable() {
+  return <DataTableSkeleton columns={3} rows={8} />
+}
 
 const columns: Array<Column<AppUser>> = [
   { key: 'name', header: 'Nama', render: (r) => r.name },

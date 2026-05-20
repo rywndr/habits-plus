@@ -8,6 +8,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
 import { SummaryRadarChart } from '#/components/guru/summary-radar-chart'
 import { ProgressStripCard } from '#/components/guru/progress-strip-card'
+import { SummaryPageSkeleton } from '#/components/skeletons/summary-page-skeleton'
 import { frequencyLabels, indicatorLabels } from '#/lib/domain'
 import { loadLatestSummary } from '#/server/loaders'
 import { saveMonthlySummary } from '#/server/actions'
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/guru/ringkasan')({
       data: { tenant: context.user.tenantSlug, month: deps.month },
     }),
   component: LihatRingkasan,
+  pendingComponent: SummaryPageSkeleton,
   staticData: { title: 'Lihat Ringkasan' },
 })
 

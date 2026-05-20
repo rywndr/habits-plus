@@ -14,7 +14,7 @@ import {
 import type { Frequency, Gender, Indicator, Role } from '#/db/schema'
 import { todayIso, weekStartIso } from './date'
 import { hashPassword } from './password'
-import { getTenantBySlug } from './tenant-data'
+import { getTenantBySlug, withTenantCache } from './tenant-data'
 
 type AddUserInput = {
   tenant?: string
@@ -103,242 +103,263 @@ async function resolveTenant(input?: { tenant?: string }) {
 
 export const addUser = createServerFn({ method: 'POST' })
   .inputValidator((data: AddUserInput) => data)
-  .handler(async ({ data }) => {
-    assertText(data.name, 'Nama')
-    assertText(data.email, 'Email')
-    assertText(data.password, 'Kata sandi')
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.name, 'Nama')
+      assertText(data.email, 'Email')
+      assertText(data.password, 'Kata sandi')
 
-    const tenant = await resolveTenant(data)
-    const passwordHash = await hashPassword(data.password)
-    const [user] = await getDb()
-      .insert(users)
-      .values({
-        schoolId: tenant.id,
-        tenantSlug: tenant.slug,
-        name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
-        role: data.role,
-      })
-      .returning({ id: users.id })
+      const tenant = await resolveTenant(data)
+      const passwordHash = await hashPassword(data.password)
+      const [user] = await getDb()
+        .insert(users)
+        .values({
+          schoolId: tenant.id,
+          tenantSlug: tenant.slug,
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          role: data.role,
+        })
+        .returning({ id: users.id })
 
-    await getDb()
-      .insert(accounts)
-      .values({
-        id: `${user.id}:credential`,
-        accountId: user.id,
-        providerId: 'credential',
-        userId: user.id,
-        password: passwordHash,
-      })
-  })
+      await getDb()
+        .insert(accounts)
+        .values({
+          id: `${user.id}:credential`,
+          accountId: user.id,
+          providerId: 'credential',
+          userId: user.id,
+          password: passwordHash,
+        })
+    }),
+  )
 
 export const deleteUser = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
-  .handler(async ({ data }) => {
-    const tenant = await resolveTenant(data)
-    await getDb()
-      .delete(users)
-      .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
-  })
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const tenant = await resolveTenant(data)
+      await getDb()
+        .delete(users)
+        .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
+    }),
+  )
 
 export const addClass = createServerFn({ method: 'POST' })
   .inputValidator((data: AddClassInput) => data)
-  .handler(async ({ data }) => {
-    assertText(data.name, 'Nama kelas')
-    const tenant = await resolveTenant(data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.name, 'Nama kelas')
+      const tenant = await resolveTenant(data)
 
-    if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
+      if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
 
-    await getDb()
-      .insert(classes)
-      .values({
-        schoolId: tenant.id,
-        name: data.name.trim(),
-        teacherId: data.teacherId || null,
-      })
-  })
+      await getDb()
+        .insert(classes)
+        .values({
+          schoolId: tenant.id,
+          name: data.name.trim(),
+          teacherId: data.teacherId || null,
+        })
+    }),
+  )
 
 export const deleteClass = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
-  .handler(async ({ data }) => {
-    const tenant = await resolveTenant(data)
-    await getDb()
-      .delete(classes)
-      .where(and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)))
-  })
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const tenant = await resolveTenant(data)
+      await getDb()
+        .delete(classes)
+        .where(and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)))
+    }),
+  )
 
 export const addStudent = createServerFn({ method: 'POST' })
   .inputValidator((data: AddStudentInput) => data)
-  .handler(async ({ data }) => {
-    assertText(data.nisn, 'NISN')
-    assertText(data.name, 'Nama')
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.nisn, 'NISN')
+      assertText(data.name, 'Nama')
 
-    const tenant = await resolveTenant(data)
-    const klass = await getDb().query.classes.findFirst({
-      where: and(eq(classes.schoolId, tenant.id), eq(classes.id, data.classId)),
-    })
-
-    if (!klass) throw new Error('Kelas tidak ditemukan untuk sekolah ini.')
-    if (data.parentId) await assertTenantOwnedUser(tenant.id, data.parentId)
-
-    await getDb()
-      .insert(students)
-      .values({
-        schoolId: tenant.id,
-        classId: data.classId,
-        parentId: data.parentId || null,
-        nisn: data.nisn.trim(),
-        name: data.name.trim(),
-        gender: data.gender,
+      const tenant = await resolveTenant(data)
+      const klass = await getDb().query.classes.findFirst({
+        where: and(
+          eq(classes.schoolId, tenant.id),
+          eq(classes.id, data.classId),
+        ),
       })
-  })
+
+      if (!klass) throw new Error('Kelas tidak ditemukan untuk sekolah ini.')
+      if (data.parentId) await assertTenantOwnedUser(tenant.id, data.parentId)
+
+      await getDb()
+        .insert(students)
+        .values({
+          schoolId: tenant.id,
+          classId: data.classId,
+          parentId: data.parentId || null,
+          nisn: data.nisn.trim(),
+          name: data.name.trim(),
+          gender: data.gender,
+        })
+    }),
+  )
 
 export const deleteStudent = createServerFn({ method: 'POST' })
   .inputValidator((data: DeleteInput) => data)
-  .handler(async ({ data }) => {
-    const tenant = await resolveTenant(data)
-    await getDb()
-      .delete(students)
-      .where(and(eq(students.schoolId, tenant.id), eq(students.id, data.id)))
-  })
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const tenant = await resolveTenant(data)
+      await getDb()
+        .delete(students)
+        .where(and(eq(students.schoolId, tenant.id), eq(students.id, data.id)))
+    }),
+  )
 
 export const saveDailyObservations = createServerFn({ method: 'POST' })
   .inputValidator((data: SaveDailyObservationsInput) => data)
-  .handler(async ({ data }) => {
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const tenant = await resolveTenant(data)
-    const teacher = await getAuthenticatedUserByRole('guru')
-    const observedAt = data.observedAt ?? todayIso()
-    const studentIds = data.rows.map((row) => row.studentId)
-    const classStudents = await getDb().query.students.findMany({
-      where: and(
-        eq(students.schoolId, tenant.id),
-        eq(students.classId, data.classId),
-        inArray(students.id, studentIds),
-      ),
-    })
-    const allowedStudentIds = new Set(
-      classStudents.map((student) => student.id),
-    )
-    const validRows = data.rows.filter((row) =>
-      allowedStudentIds.has(row.studentId),
-    )
-
-    if (!validRows.length) return
-
-    const observations = await getDb()
-      .insert(dailyObservations)
-      .values(
-        validRows.map((row) => ({
-          schoolId: tenant.id,
-          studentId: row.studentId,
-          teacherId: teacher.id,
-          observedAt,
-          note: data.note?.trim() || null,
-        })),
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const tenant = await resolveTenant(data)
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const observedAt = data.observedAt ?? todayIso()
+      const studentIds = data.rows.map((row) => row.studentId)
+      const classStudents = await getDb().query.students.findMany({
+        where: and(
+          eq(students.schoolId, tenant.id),
+          eq(students.classId, data.classId),
+          inArray(students.id, studentIds),
+        ),
+      })
+      const allowedStudentIds = new Set(
+        classStudents.map((student) => student.id),
       )
-      .onConflictDoUpdate({
-        target: [dailyObservations.studentId, dailyObservations.observedAt],
-        set: {
-          teacherId: teacher.id,
-          note: data.note?.trim() || null,
-          updatedAt: new Date(),
-        },
-      })
-      .returning({
-        id: dailyObservations.id,
-        studentId: dailyObservations.studentId,
-      })
+      const validRows = data.rows.filter((row) =>
+        allowedStudentIds.has(row.studentId),
+      )
 
-    const observationIds = observations.map((observation) => observation.id)
-    const observationIdByStudent = new Map(
-      observations.map((observation) => [
-        observation.studentId,
-        observation.id,
-      ]),
-    )
-    const scores = validRows.flatMap((row) => {
-      const observationId = observationIdByStudent.get(row.studentId)
-      if (!observationId) return []
-      return (Object.entries(row.values) as Array<[Indicator, Frequency]>).map(
-        ([indicator, frequency]) => ({
+      if (!validRows.length) return
+
+      const observations = await getDb()
+        .insert(dailyObservations)
+        .values(
+          validRows.map((row) => ({
+            schoolId: tenant.id,
+            studentId: row.studentId,
+            teacherId: teacher.id,
+            observedAt,
+            note: data.note?.trim() || null,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [dailyObservations.studentId, dailyObservations.observedAt],
+          set: {
+            teacherId: teacher.id,
+            note: data.note?.trim() || null,
+            updatedAt: new Date(),
+          },
+        })
+        .returning({
+          id: dailyObservations.id,
+          studentId: dailyObservations.studentId,
+        })
+
+      const observationIds = observations.map((observation) => observation.id)
+      const observationIdByStudent = new Map(
+        observations.map((observation) => [
+          observation.studentId,
+          observation.id,
+        ]),
+      )
+      const scores = validRows.flatMap((row) => {
+        const observationId = observationIdByStudent.get(row.studentId)
+        if (!observationId) return []
+        return (
+          Object.entries(row.values) as Array<[Indicator, Frequency]>
+        ).map(([indicator, frequency]) => ({
           observationId,
           indicator,
           frequency,
-        }),
-      )
-    })
+        }))
+      })
 
-    if (observationIds.length) {
-      await getDb()
-        .delete(observationScores)
-        .where(inArray(observationScores.observationId, observationIds))
-    }
+      if (observationIds.length) {
+        await getDb()
+          .delete(observationScores)
+          .where(inArray(observationScores.observationId, observationIds))
+      }
 
-    if (scores.length) {
-      await getDb().insert(observationScores).values(scores)
-    }
-  })
+      if (scores.length) {
+        await getDb().insert(observationScores).values(scores)
+      }
+    }),
+  )
 
 export const saveWeeklyNote = createServerFn({ method: 'POST' })
   .inputValidator((data: SaveWeeklyNoteInput) => data)
-  .handler(async ({ data }) => {
-    assertText(data.p1, 'P1')
-    assertText(data.p2, 'P2')
-    assertText(data.p3, 'P3')
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.p1, 'P1')
+      assertText(data.p2, 'P2')
+      assertText(data.p3, 'P3')
 
-    const tenant = await resolveTenant(data)
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const teacher = await getAuthenticatedUserByRole('guru')
-    const weekStart = data.weekStart ?? weekStartIso()
+      const tenant = await resolveTenant(data)
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const weekStart = data.weekStart ?? weekStartIso()
 
-    await getDb()
-      .insert(weeklyNotes)
-      .values({
-        schoolId: tenant.id,
-        teacherId: teacher.id,
-        weekStart,
-        p1: data.p1.trim(),
-        p2: data.p2.trim(),
-        p3: data.p3.trim(),
-      })
-      .onConflictDoUpdate({
-        target: [weeklyNotes.schoolId, weeklyNotes.weekStart],
-        set: {
+      await getDb()
+        .insert(weeklyNotes)
+        .values({
+          schoolId: tenant.id,
           teacherId: teacher.id,
+          weekStart,
           p1: data.p1.trim(),
           p2: data.p2.trim(),
           p3: data.p3.trim(),
-          updatedAt: new Date(),
-        },
-      })
-  })
+        })
+        .onConflictDoUpdate({
+          target: [weeklyNotes.schoolId, weeklyNotes.weekStart],
+          set: {
+            teacherId: teacher.id,
+            p1: data.p1.trim(),
+            p2: data.p2.trim(),
+            p3: data.p3.trim(),
+            updatedAt: new Date(),
+          },
+        })
+    }),
+  )
 
 export const saveMonthlySummary = createServerFn({ method: 'POST' })
   .inputValidator((data: SaveMonthlySummaryInput) => data)
-  .handler(async ({ data }) => {
-    assertText(data.month, 'Bulan')
-    assertText(data.text, 'Ringkasan')
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.month, 'Bulan')
+      assertText(data.text, 'Ringkasan')
 
-    const tenant = await resolveTenant(data)
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const teacher = await getAuthenticatedUserByRole('guru')
-    const monthStart = `${data.month.slice(0, 7)}-01`
+      const tenant = await resolveTenant(data)
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const monthStart = `${data.month.slice(0, 7)}-01`
 
-    await getDb()
-      .insert(monthlySummaries)
-      .values({
-        schoolId: tenant.id,
-        teacherId: teacher.id,
-        monthStart,
-        text: data.text.trim(),
-      })
-      .onConflictDoUpdate({
-        target: [monthlySummaries.schoolId, monthlySummaries.monthStart],
-        set: {
+      await getDb()
+        .insert(monthlySummaries)
+        .values({
+          schoolId: tenant.id,
           teacherId: teacher.id,
+          monthStart,
           text: data.text.trim(),
-          updatedAt: new Date(),
-        },
-      })
-  })
+        })
+        .onConflictDoUpdate({
+          target: [monthlySummaries.schoolId, monthlySummaries.monthStart],
+          set: {
+            teacherId: teacher.id,
+            text: data.text.trim(),
+            updatedAt: new Date(),
+          },
+        })
+    }),
+  )

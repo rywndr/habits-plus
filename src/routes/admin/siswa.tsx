@@ -5,6 +5,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { DataTable } from '#/components/admin/data-table'
 import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
+import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -30,8 +31,13 @@ export const Route = createFileRoute('/admin/siswa')({
     return { classes, students }
   },
   component: KelolaSiswa,
+  pendingComponent: PendingSiswaTable,
   staticData: { title: 'Kelola Siswa' },
 })
+
+function PendingSiswaTable() {
+  return <DataTableSkeleton columns={4} rows={10} />
+}
 
 function classNameOf(id: string, classes: Array<ClassRoom>): string {
   return classes.find((c) => c.id === id)?.name ?? '-'
