@@ -333,6 +333,19 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
     }),
   )
 
+export const deleteWeeklyNote = createServerFn({ method: 'POST' })
+  .inputValidator((data: DeleteInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const tenant = await resolveTenant(data)
+      await getDb()
+        .delete(weeklyNotes)
+        .where(
+          and(eq(weeklyNotes.schoolId, tenant.id), eq(weeklyNotes.id, data.id)),
+        )
+    }),
+  )
+
 export const saveMonthlySummary = createServerFn({ method: 'POST' })
   .inputValidator((data: SaveMonthlySummaryInput) => data)
   .handler(({ data }) =>

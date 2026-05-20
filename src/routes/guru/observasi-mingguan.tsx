@@ -18,9 +18,10 @@ import { WeekPicker } from '#/components/guru/week-picker'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
-import { saveWeeklyNote } from '#/server/actions'
+import { deleteWeeklyNote, saveWeeklyNote } from '#/server/actions'
 import { loadWeeklyNotes } from '#/server/loaders'
 import type { SaveStatus } from '#/components/common/save-button'
+import type { WeeklyNote } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/observasi-mingguan')({
   validateSearch: (search = {}) => ({
@@ -110,6 +111,19 @@ function ObservasiMingguan() {
     }
   }
 
+  async function handleEditNote(
+    note: WeeklyNote,
+    values: Pick<WeeklyNote, 'p1' | 'p2' | 'p3'>,
+  ) {
+    await saveWeeklyNote({ data: { weekStart: note.date, ...values } })
+    await router.invalidate()
+  }
+
+  async function handleDeleteNote(note: WeeklyNote) {
+    await deleteWeeklyNote({ data: { id: note.id } })
+    await router.invalidate()
+  }
+
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
@@ -185,7 +199,11 @@ function ObservasiMingguan() {
         {isDataPending ? (
           <WeeklyNotesTableSkeleton />
         ) : (
-          <WeeklyNotesTable weeklyNotes={weeklyNotes.notes} />
+          <WeeklyNotesTable
+            weeklyNotes={weeklyNotes.notes}
+            onEdit={handleEditNote}
+            onDelete={handleDeleteNote}
+          />
         )}
       </div>
     </ContentPanel>

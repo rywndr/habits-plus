@@ -20,9 +20,18 @@ import {
 } from '#/components/ui/pagination'
 import { useSortableData } from '#/hooks/use-sortable-data'
 import type { WeeklyNote } from '#/server/tenant-data'
+import {
+  WeeklyNoteDeleteDialog,
+  WeeklyNoteEditDialog,
+} from './weekly-note-dialogs'
 
 type Props = {
   weeklyNotes: Array<WeeklyNote>
+  onDelete: (note: WeeklyNote) => Promise<void>
+  onEdit: (
+    note: WeeklyNote,
+    values: Pick<WeeklyNote, 'p1' | 'p2' | 'p3'>,
+  ) => Promise<void>
 }
 
 const PAGE_SIZE = 10
@@ -31,8 +40,10 @@ const dateSorters = {
     left.date.localeCompare(right.date),
 }
 
-export function WeeklyNotesTable({ weeklyNotes }: Props) {
+export function WeeklyNotesTable({ weeklyNotes, onDelete, onEdit }: Props) {
   const [page, setPage] = useState(1)
+  const [editingNote, setEditingNote] = useState<WeeklyNote | null>(null)
+  const [deletingNote, setDeletingNote] = useState<WeeklyNote | null>(null)
   const { getDirection, sortedItems, toggleSort } = useSortableData(
     weeklyNotes,
     dateSorters,
@@ -107,6 +118,7 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
                       variant="ghost"
                       aria-label="Sunting"
                       className="text-brand-orange"
+                      onClick={() => setEditingNote(note)}
                     >
                       <Pencil />
                     </Button>
@@ -115,6 +127,7 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
                       variant="ghost"
                       aria-label="Hapus"
                       className="text-muted-foreground"
+                      onClick={() => setDeletingNote(note)}
                     >
                       <Trash2 />
                     </Button>
@@ -166,6 +179,23 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
           </PaginationContent>
         </Pagination>
       ) : null}
+
+      <WeeklyNoteEditDialog
+        note={editingNote}
+        open={editingNote !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingNote(null)
+        }}
+        onSave={onEdit}
+      />
+      <WeeklyNoteDeleteDialog
+        note={deletingNote}
+        open={deletingNote !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingNote(null)
+        }}
+        onDelete={onDelete}
+      />
     </div>
   )
 }
