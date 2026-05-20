@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react'
 import { z } from 'zod'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -170,10 +170,14 @@ export function LoginCard() {
               <Button
                 type="submit"
                 size="lg"
-                className="mt-2 h-11 w-full"
+                className="mt-2 h-11 w-full gap-2"
                 disabled={!canSubmit || isSubmitting}
+                aria-busy={isSubmitting}
               >
-                {isSubmitting ? 'Memeriksa...' : 'Masuk'}
+                {isSubmitting ? (
+                  <LoaderCircle aria-hidden className="size-4 animate-spin" />
+                ) : null}
+                Masuk
               </Button>
             )}
           </form.Subscribe>

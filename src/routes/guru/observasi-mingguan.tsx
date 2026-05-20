@@ -1,7 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
+import { SaveButton } from '#/components/common/save-button'
 import { Skeleton } from '#/components/ui/skeleton'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
@@ -9,6 +19,7 @@ import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { saveWeeklyNote } from '#/server/actions'
 import { loadWeeklyNotes } from '#/server/loaders'
+import type { SaveStatus } from '#/components/common/save-button'
 
 export const Route = createFileRoute('/guru/observasi-mingguan')({
   validateSearch: (search = {}) => ({
@@ -37,15 +48,25 @@ function ObservasiMingguan() {
   const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
   const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
   const [isDataPending, setIsDataPending] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [isOverwriteOpen, setIsOverwriteOpen] = useState(false)
+  const previousWeekStart = useRef(weeklyNotes.selectedWeekStart)
 
   useEffect(() => {
+    const didWeekChange = previousWeekStart.current !== weeklyNotes.selectedWeekStart
+    previousWeekStart.current = weeklyNotes.selectedWeekStart
+
     setP1(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
     setP2(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
     setP3(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
     setIsDataPending(false)
-  }, [weeklyNotes.selectedNote])
+    if (didWeekChange) {
+      setSaveStatus('idle')
+    }
+  }, [weeklyNotes.selectedNote, weeklyNotes.selectedWeekStart])
 
   async function handleWeekChange(weekStart: string) {
+    setSaveStatus('idle')
     setIsDataPending(true)
     try {
       await navigate({
@@ -58,11 +79,33 @@ function ObservasiMingguan() {
     }
   }
 
-  async function handleSave() {
-    await saveWeeklyNote({
-      data: { weekStart: weeklyNotes.selectedWeekStart, p1, p2, p3 },
-    })
-    await router.invalidate()
+  function handleQuestionChange(setter: (value: string) => void, value: string) {
+    setter(value)
+    setSaveStatus('idle')
+  }
+
+  function handleSave() {
+    if (weeklyNotes.selectedNote) {
+      setIsOverwriteOpen(true)
+      return
+    }
+
+    void saveNote()
+  }
+
+  async function saveNote() {
+    setIsOverwriteOpen(false)
+    setSaveStatus('saving')
+    try {
+      await saveWeeklyNote({
+        data: { weekStart: weeklyNotes.selectedWeekStart, p1, p2, p3 },
+      })
+      await router.invalidate()
+      setSaveStatus('saved')
+    } catch (error) {
+      setSaveStatus('error')
+      throw error
+    }
   }
 
   return (
@@ -87,38 +130,55 @@ function ObservasiMingguan() {
               question="Pendekatan apa yang digunakan minggu ini?"
               code="P1"
               value={p1}
-              onChange={setP1}
+              onChange={(value) => handleQuestionChange(setP1, value)}
             />
             <WeeklyQuestionInput
               index={2}
               question="Apa yang terasa membantu?"
               code="P2"
               value={p2}
-              onChange={setP2}
+              onChange={(value) => handleQuestionChange(setP2, value)}
             />
             <WeeklyQuestionInput
               index={3}
               question="Apa yang perlu disesuaikan?"
               code="P3"
               value={p3}
-              onChange={setP3}
+              onChange={(value) => handleQuestionChange(setP3, value)}
             />
           </div>
         )}
 
         <div className="flex gap-3">
-          <Button
+          <SaveButton
+            status={saveStatus}
             size="lg"
             className="rounded-full px-6"
             onClick={handleSave}
             disabled={isDataPending}
-          >
-            Simpan
-          </Button>
+          />
           <Button size="lg" variant="secondary" className="rounded-full px-6">
             Batal
           </Button>
         </div>
+
+        <Dialog open={isOverwriteOpen} onOpenChange={setIsOverwriteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Timpa observasi minggu ini?</DialogTitle>
+              <DialogDescription>
+                Data observasi untuk minggu yang dipilih sudah ada. Menyimpan
+                akan mengganti catatan lama dengan isi terbaru.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose render={<Button variant="secondary" />}>
+                Batal
+              </DialogClose>
+              <Button onClick={() => void saveNote()}>Timpa</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {isDataPending ? (
           <WeeklyNotesTableSkeleton />

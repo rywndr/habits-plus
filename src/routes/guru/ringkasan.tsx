@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { Save } from 'lucide-react'
 import { Textarea } from '#/components/ui/textarea'
-import { Button } from '#/components/ui/button'
+import { SaveButton } from '#/components/common/save-button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
@@ -12,6 +11,7 @@ import { ProgressStripCard } from '#/components/guru/progress-strip-card'
 import { frequencyLabels, indicatorLabels } from '#/lib/domain'
 import { loadLatestSummary } from '#/server/loaders'
 import { saveMonthlySummary } from '#/server/actions'
+import type { SaveStatus } from '#/components/common/save-button'
 import type { Indicator } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/ringkasan')({
@@ -44,9 +44,7 @@ function LihatRingkasan() {
   const [month, setMonth] = useState(search.month ?? summary.month)
   const [text, setText] = useState(summary.text)
   const [isDataPending, setIsDataPending] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
-    'idle',
-  )
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   useEffect(() => {
     setMonth(search.month ?? summary.month)
@@ -73,7 +71,7 @@ function LihatRingkasan() {
       await router.invalidate()
       setSaveStatus('saved')
     } catch (error) {
-      setSaveStatus('idle')
+      setSaveStatus('error')
       throw error
     }
   }
@@ -105,19 +103,14 @@ function LihatRingkasan() {
                 className="rounded-2xl bg-card"
               />
             )}
-            <Button
+            <SaveButton
+              status={saveStatus}
               size="lg"
-              className="gap-2 rounded-full sm:mt-1"
+              className="rounded-full px-6"
+              wrapperClassName="sm:mt-1"
               onClick={handleSave}
-              disabled={isDataPending || saveStatus === 'saving'}
-            >
-              {saveStatus === 'saving'
-                ? 'MENYIMPAN'
-                : saveStatus === 'saved'
-                  ? 'TERSIMPAN'
-                  : 'SIMPAN'}
-              <Save />
-            </Button>
+              disabled={isDataPending}
+            />
           </div>
         </div>
 

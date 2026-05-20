@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
-import { Button } from '#/components/ui/button'
+import { SaveButton } from '#/components/common/save-button'
 import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -11,6 +10,7 @@ import { ObservationTable } from '#/components/guru/observation-table'
 import { saveDailyObservations } from '#/server/actions'
 import { loadObservationPage } from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
+import type { SaveStatus } from '#/components/common/save-button'
 import type { Frequency, Indicator, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/catat-observasi')({
@@ -58,9 +58,7 @@ function CatatObservasi() {
   const [rows, setRows] = useState(data.rows)
   const [note, setNote] = useState(data.note)
   const [isDataPending, setIsDataPending] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
-    'idle',
-  )
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   useEffect(() => {
     setClassId(data.classId)
@@ -113,7 +111,7 @@ function CatatObservasi() {
       await router.invalidate()
       setSaveStatus('saved')
     } catch (error) {
-      setSaveStatus('idle')
+      setSaveStatus('error')
       throw error
     }
   }
@@ -162,19 +160,15 @@ function CatatObservasi() {
               />
             )}
           </div>
-          <Button
+          <SaveButton
+            status={saveStatus}
             size="lg"
-            className="mt-1 gap-2 self-end rounded-full sm:mt-7"
+            className="rounded-full px-6"
+            statusClassName="self-end"
+            wrapperClassName="mt-1 self-end sm:mt-7"
             onClick={handleSave}
-            disabled={isDataPending || saveStatus === 'saving'}
-          >
-            {saveStatus === 'saving'
-              ? 'MENYIMPAN'
-              : saveStatus === 'saved'
-                ? 'TERSIMPAN'
-                : 'SIMPAN'}
-            <Plus />
-          </Button>
+            disabled={isDataPending}
+          />
         </div>
 
         {isDataPending ? (

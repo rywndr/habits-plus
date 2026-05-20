@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import {
   Users,
   MessageCircle,
   UsersRound,
   ShieldCheck,
   Plus,
+  LoaderCircle,
 } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -27,6 +29,7 @@ const icons = [Users, MessageCircle, UsersRound, ShieldCheck]
 function BerandaGuru() {
   const dashboard = Route.useLoaderData()
   const navigate = useNavigate()
+  const [isNavigating, setIsNavigating] = useState(false)
 
   return (
     <ContentPanel>
@@ -53,13 +56,20 @@ function BerandaGuru() {
         <Button
           size="lg"
           className="h-12 w-full justify-center gap-2 rounded-xl text-sm sm:text-base"
-          onClick={() =>
+          disabled={isNavigating}
+          aria-busy={isNavigating}
+          onClick={() => {
+            setIsNavigating(true)
             void navigate({
               to: '/guru/catat-observasi',
-            })
-          }
+            }).catch(() => setIsNavigating(false))
+          }}
         >
-          <Plus />
+          {isNavigating ? (
+            <LoaderCircle aria-hidden className="size-4 animate-spin" />
+          ) : (
+            <Plus />
+          )}
           CATAT OBSERVASI HARI INI
         </Button>
       </div>
