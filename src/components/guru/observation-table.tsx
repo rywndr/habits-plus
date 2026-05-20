@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
+import { useSortableData } from '#/hooks/use-sortable-data'
 import { indicatorLabels } from '#/lib/domain'
 import type {
   Frequency,
@@ -31,6 +33,12 @@ const INDICATORS: Array<Indicator> = [
   'regulasi',
 ]
 const PAGE_SIZE = 10
+const collator = new Intl.Collator('id-ID', {
+  numeric: true,
+  sensitivity: 'base',
+})
+
+type SortKey = 'name' | 'nisn'
 
 type Props = {
   students: Array<Student>
@@ -44,8 +52,30 @@ function getStudent(id: string, students: Array<Student>): Student | undefined {
 
 export function ObservationTable({ students, rows, onRowsChange }: Props) {
   const [page, setPage] = useState(1)
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
-  const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const sorters = useMemo(
+    () => ({
+      name: (left: ObservationRow, right: ObservationRow) =>
+        collator.compare(
+          getStudent(left.studentId, students)?.name ?? '',
+          getStudent(right.studentId, students)?.name ?? '',
+        ),
+      nisn: (left: ObservationRow, right: ObservationRow) =>
+        collator.compare(
+          getStudent(left.studentId, students)?.nisn ?? '',
+          getStudent(right.studentId, students)?.nisn ?? '',
+        ),
+    }),
+    [students],
+  )
+  const { getDirection, sortedItems, toggleSort } = useSortableData<
+    ObservationRow,
+    SortKey
+  >(rows, sorters)
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE))
+  const visibleRows = sortedItems.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  )
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages))
@@ -74,8 +104,26 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
               <TableHead className="w-12 text-center text-card-foreground">
                 No.
               </TableHead>
-              <TableHead className="text-card-foreground">Nama Siswa</TableHead>
-              <TableHead className="text-card-foreground">NISN</TableHead>
+              <TableHead className="text-card-foreground">
+                <SortableTableHeader
+                  label="Nama Siswa"
+                  direction={getDirection('name')}
+                  onClick={() => {
+                    toggleSort('name')
+                    setPage(1)
+                  }}
+                />
+              </TableHead>
+              <TableHead className="text-card-foreground">
+                <SortableTableHeader
+                  label="NISN"
+                  direction={getDirection('nisn')}
+                  onClick={() => {
+                    toggleSort('nisn')
+                    setPage(1)
+                  }}
+                />
+              </TableHead>
               {INDICATORS.map((ind) => (
                 <TableHead
                   key={ind}

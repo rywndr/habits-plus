@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import {
   Table,
   TableBody,
@@ -17,6 +18,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
+import { useSortableData } from '#/hooks/use-sortable-data'
 import type { WeeklyNote } from '#/server/tenant-data'
 
 type Props = {
@@ -24,11 +26,19 @@ type Props = {
 }
 
 const PAGE_SIZE = 10
+const dateSorters = {
+  date: (left: WeeklyNote, right: WeeklyNote) =>
+    left.date.localeCompare(right.date),
+}
 
 export function WeeklyNotesTable({ weeklyNotes }: Props) {
   const [page, setPage] = useState(1)
-  const totalPages = Math.max(1, Math.ceil(weeklyNotes.length / PAGE_SIZE))
-  const visibleNotes = weeklyNotes.slice(
+  const { getDirection, sortedItems, toggleSort } = useSortableData(
+    weeklyNotes,
+    dateSorters,
+  )
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE))
+  const visibleNotes = sortedItems.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
   )
@@ -55,7 +65,14 @@ export function WeeklyNotesTable({ weeklyNotes }: Props) {
                 No.
               </TableHead>
               <TableHead className="text-brand-navy-foreground">
-                Tanggal
+                <SortableTableHeader
+                  label="Tanggal"
+                  direction={getDirection('date')}
+                  onClick={() => {
+                    toggleSort('date')
+                    setPage(1)
+                  }}
+                />
               </TableHead>
               <TableHead className="text-brand-navy-foreground">P1</TableHead>
               <TableHead className="text-brand-navy-foreground">P2</TableHead>
