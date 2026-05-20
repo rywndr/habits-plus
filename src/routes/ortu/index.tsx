@@ -3,7 +3,6 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { SummaryTextbox } from '#/components/ortu/summary-textbox'
 import { ProgressGraphicCard } from '#/components/ortu/progress-graphic-card'
-import { ParentProgressSkeleton } from '#/components/skeletons/parent-progress-skeleton'
 import { loadParentProgress } from '#/server/loaders'
 
 export const Route = createFileRoute('/ortu/')({
@@ -13,9 +12,8 @@ export const Route = createFileRoute('/ortu/')({
         tenant: context.user.tenantSlug,
         parentId: context.user.id,
       },
-    }),
+  }),
   component: LihatProgres,
-  pendingComponent: ParentProgressSkeleton,
   staticData: { title: 'Lihat Progres' },
 })
 

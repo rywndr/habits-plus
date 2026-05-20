@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
@@ -8,7 +9,6 @@ import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { saveWeeklyNote } from '#/server/actions'
 import { loadWeeklyNotes } from '#/server/loaders'
-import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
 
 export const Route = createFileRoute('/guru/observasi-mingguan')({
   validateSearch: (search = {}) => ({
@@ -23,7 +23,6 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
       data: { tenant: context.user.tenantSlug, weekStart: deps.weekStart },
     }),
   component: ObservasiMingguan,
-  pendingComponent: WeeklyNotesSkeleton,
   staticData: { title: 'Observasi Mingguan' },
 })
 
@@ -37,18 +36,26 @@ function ObservasiMingguan() {
   const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
   const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
   const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+  const [isDataPending, setIsDataPending] = useState(false)
 
   useEffect(() => {
     setP1(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
     setP2(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
     setP3(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+    setIsDataPending(false)
   }, [weeklyNotes.selectedNote])
 
   async function handleWeekChange(weekStart: string) {
-    await navigate({
-      to: '/guru/observasi-mingguan',
-      search: { weekStart },
-    })
+    setIsDataPending(true)
+    try {
+      await navigate({
+        to: '/guru/observasi-mingguan',
+        search: { weekStart },
+      })
+    } catch (error) {
+      setIsDataPending(false)
+      throw error
+    }
   }
 
   async function handleSave() {
@@ -71,32 +78,41 @@ function ObservasiMingguan() {
           />
         </div>
 
-        <div className="flex flex-col gap-4">
-          <WeeklyQuestionInput
-            index={1}
-            question="Pendekatan apa yang digunakan minggu ini?"
-            code="P1"
-            value={p1}
-            onChange={setP1}
-          />
-          <WeeklyQuestionInput
-            index={2}
-            question="Apa yang terasa membantu?"
-            code="P2"
-            value={p2}
-            onChange={setP2}
-          />
-          <WeeklyQuestionInput
-            index={3}
-            question="Apa yang perlu disesuaikan?"
-            code="P3"
-            value={p3}
-            onChange={setP3}
-          />
-        </div>
+        {isDataPending ? (
+          <WeeklyQuestionSkeleton />
+        ) : (
+          <div className="flex flex-col gap-4">
+            <WeeklyQuestionInput
+              index={1}
+              question="Pendekatan apa yang digunakan minggu ini?"
+              code="P1"
+              value={p1}
+              onChange={setP1}
+            />
+            <WeeklyQuestionInput
+              index={2}
+              question="Apa yang terasa membantu?"
+              code="P2"
+              value={p2}
+              onChange={setP2}
+            />
+            <WeeklyQuestionInput
+              index={3}
+              question="Apa yang perlu disesuaikan?"
+              code="P3"
+              value={p3}
+              onChange={setP3}
+            />
+          </div>
+        )}
 
         <div className="flex gap-3">
-          <Button size="lg" className="rounded-full px-6" onClick={handleSave}>
+          <Button
+            size="lg"
+            className="rounded-full px-6"
+            onClick={handleSave}
+            disabled={isDataPending}
+          >
             Simpan
           </Button>
           <Button size="lg" variant="secondary" className="rounded-full px-6">
@@ -104,8 +120,46 @@ function ObservasiMingguan() {
           </Button>
         </div>
 
-        <WeeklyNotesTable weeklyNotes={weeklyNotes.notes} />
+        {isDataPending ? (
+          <WeeklyNotesTableSkeleton />
+        ) : (
+          <WeeklyNotesTable weeklyNotes={weeklyNotes.notes} />
+        )}
       </div>
     </ContentPanel>
+  )
+}
+
+function WeeklyQuestionSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      {[...Array(3).keys()].map((i) => (
+        <div key={i} className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-72 max-w-full" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function WeeklyNotesTableSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
+      <div className="flex items-center gap-4 bg-brand-table-header px-4 py-3">
+        {[...Array(6).keys()].map((i) => (
+          <Skeleton key={i} className="h-3 flex-1 bg-brand-navy-foreground/30" />
+        ))}
+      </div>
+      <div className="flex flex-col divide-y divide-border/40">
+        {[...Array(6).keys()].map((rowIndex) => (
+          <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
+            {[...Array(6).keys()].map((cellIndex) => (
+              <Skeleton key={cellIndex} className="h-3 flex-1" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

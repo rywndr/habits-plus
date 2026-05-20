@@ -10,7 +10,6 @@ import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
 import { addUser, deleteUser } from '#/server/actions'
 import { loadTenantUsers } from '#/server/loaders'
-import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import type { AppUser } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/guru')({
@@ -19,7 +18,6 @@ export const Route = createFileRoute('/admin/guru')({
       (users) => users.filter((user) => user.role === 'guru'),
     ),
   component: KelolaGuru,
-  pendingComponent: () => <DataTableSkeleton columns={3} />,
   staticData: { title: 'Kelola Guru' },
 })
 

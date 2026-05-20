@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Save } from 'lucide-react'
 import { Textarea } from '#/components/ui/textarea'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
@@ -11,7 +12,6 @@ import { ProgressStripCard } from '#/components/guru/progress-strip-card'
 import { frequencyLabels, indicatorLabels } from '#/lib/domain'
 import { loadLatestSummary } from '#/server/loaders'
 import { saveMonthlySummary } from '#/server/actions'
-import { SummaryPageSkeleton } from '#/components/skeletons/summary-page-skeleton'
 import type { Indicator } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/ringkasan')({
@@ -26,7 +26,6 @@ export const Route = createFileRoute('/guru/ringkasan')({
       data: { tenant: context.user.tenantSlug, month: deps.month },
     }),
   component: LihatRingkasan,
-  pendingComponent: SummaryPageSkeleton,
   staticData: { title: 'Lihat Ringkasan' },
 })
 
@@ -44,6 +43,7 @@ function LihatRingkasan() {
   const search = Route.useSearch()
   const [month, setMonth] = useState(search.month ?? summary.month)
   const [text, setText] = useState(summary.text)
+  const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
     'idle',
   )
@@ -51,12 +51,19 @@ function LihatRingkasan() {
   useEffect(() => {
     setMonth(search.month ?? summary.month)
     setText(summary.text)
+    setIsDataPending(false)
     setSaveStatus('idle')
   }, [search.month, summary.month, summary.text])
 
   async function handleMonthChange(nextMonth: string) {
     setMonth(nextMonth)
-    await navigate({ to: '/guru/ringkasan', search: { month: nextMonth } })
+    setIsDataPending(true)
+    try {
+      await navigate({ to: '/guru/ringkasan', search: { month: nextMonth } })
+    } catch (error) {
+      setIsDataPending(false)
+      throw error
+    }
   }
 
   async function handleSave() {
@@ -84,21 +91,25 @@ function LihatRingkasan() {
         <div className="flex flex-col gap-2">
           <span className="text-sm">Ringkasan dalam bulan</span>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <Textarea
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value)
-                setSaveStatus('idle')
-              }}
-              rows={2}
-              placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
-              className="rounded-2xl bg-card"
-            />
+            {isDataPending ? (
+              <Skeleton className="h-20 w-full rounded-2xl" />
+            ) : (
+              <Textarea
+                value={text}
+                onChange={(event) => {
+                  setText(event.target.value)
+                  setSaveStatus('idle')
+                }}
+                rows={2}
+                placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
+                className="rounded-2xl bg-card"
+              />
+            )}
             <Button
               size="lg"
               className="gap-2 rounded-full sm:mt-1"
               onClick={handleSave}
-              disabled={saveStatus === 'saving'}
+              disabled={isDataPending || saveStatus === 'saving'}
             >
               {saveStatus === 'saving'
                 ? 'MENYIMPAN'
@@ -110,25 +121,51 @@ function LihatRingkasan() {
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <SummaryRadarChart data={summary.radar} />
-          <div className="flex flex-col gap-3">
-            {ORDER.map((ind) => (
-              <ProgressStripCard
-                key={ind}
-                indicator={ind}
-                label={indicatorLabels[ind]}
-                trend={summary.trends[ind] ?? 'tidak-terlihat'}
-                valueLabel={
-                  summary.averages[ind]
-                    ? frequencyLabels[summary.averages[ind]]
-                    : 'Tidak Terlihat'
-                }
-              />
-            ))}
+        {isDataPending ? (
+          <SummaryDataSkeleton />
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+            <SummaryRadarChart data={summary.radar} />
+            <div className="flex flex-col gap-3">
+              {ORDER.map((ind) => (
+                <ProgressStripCard
+                  key={ind}
+                  indicator={ind}
+                  label={indicatorLabels[ind]}
+                  trend={summary.trends[ind] ?? 'tidak-terlihat'}
+                  valueLabel={
+                    summary.averages[ind]
+                      ? frequencyLabels[summary.averages[ind]]
+                      : 'Tidak Terlihat'
+                  }
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </ContentPanel>
+  )
+}
+
+function SummaryDataSkeleton() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <Skeleton className="h-72 w-full rounded-2xl" />
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-stretch overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-foreground/5"
+          >
+            <Skeleton className="h-auto w-2 shrink-0 rounded-none" />
+            <div className="flex flex-1 flex-col gap-2 p-4">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

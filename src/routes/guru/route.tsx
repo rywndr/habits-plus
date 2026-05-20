@@ -2,14 +2,12 @@ import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
 import { Home, ClipboardEdit, BarChart3, CalendarRange } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
 import type { NavItem } from '#/components/shell/sidebar-nav-item'
-import { AppShellSkeleton } from '#/components/skeletons/app-shell-skeleton'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru')({
   beforeLoad: () =>
     loadCurrentUser({ data: { role: 'guru' } }).then((user) => ({ user })),
   component: GuruShell,
-  pendingComponent: () => <AppShellSkeleton navItemsCount={4} />,
 })
 
 function GuruShell() {

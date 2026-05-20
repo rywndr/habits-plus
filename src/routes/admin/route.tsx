@@ -2,14 +2,12 @@ import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
 import { Home, GraduationCap, Users, BookOpen, UserCircle2 } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
 import type { NavItem } from '#/components/shell/sidebar-nav-item'
-import { AppShellSkeleton } from '#/components/skeletons/app-shell-skeleton'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: () =>
     loadCurrentUser({ data: { role: 'admin' } }).then((user) => ({ user })),
   component: AdminShell,
-  pendingComponent: () => <AppShellSkeleton navItemsCount={5} />,
 })
 
 function AdminShell() {

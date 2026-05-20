@@ -17,7 +17,6 @@ import {
 } from '#/components/ui/select'
 import { addStudent, deleteStudent } from '#/server/actions'
 import { loadTenantClasses, loadTenantStudents } from '#/server/loaders'
-import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import type { ClassRoom, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/siswa')({
@@ -31,7 +30,6 @@ export const Route = createFileRoute('/admin/siswa')({
     return { classes, students }
   },
   component: KelolaSiswa,
-  pendingComponent: () => <DataTableSkeleton columns={4} />,
   staticData: { title: 'Kelola Siswa' },
 })
 

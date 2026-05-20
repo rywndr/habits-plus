@@ -10,7 +10,6 @@ import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
 import { addUser, deleteUser } from '#/server/actions'
 import { loadTenantStudents, loadTenantUsers } from '#/server/loaders'
-import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import type { AppUser, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/ortu')({
@@ -27,7 +26,6 @@ export const Route = createFileRoute('/admin/ortu')({
     }
   },
   component: KelolaOrtu,
-  pendingComponent: () => <DataTableSkeleton columns={3} />,
   staticData: { title: 'Kelola Orang Tua' },
 })
 

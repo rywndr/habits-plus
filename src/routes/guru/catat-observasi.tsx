@@ -3,13 +3,13 @@ import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
+import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { ClassSelect } from '#/components/guru/class-select'
 import { ObservationTable } from '#/components/guru/observation-table'
 import { saveDailyObservations } from '#/server/actions'
 import { loadObservationPage } from '#/server/loaders'
-import { ObservationPageSkeleton } from '#/components/skeletons/observation-page-skeleton'
 import { DatePicker } from '#/components/guru/date-picker'
 import type { Frequency, Indicator, Student } from '#/server/tenant-data'
 
@@ -32,8 +32,6 @@ export const Route = createFileRoute('/guru/catat-observasi')({
       },
     }),
   component: CatatObservasi,
-  pendingComponent: ObservationPageSkeleton,
-  pendingMs: 60_000,
   staticData: { title: 'Catat Observasi' },
 })
 
@@ -59,6 +57,7 @@ function CatatObservasi() {
   const [observedAt, setObservedAt] = useState(data.observedAt)
   const [rows, setRows] = useState(data.rows)
   const [note, setNote] = useState(data.note)
+  const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
     'idle',
   )
@@ -68,28 +67,41 @@ function CatatObservasi() {
     setObservedAt(data.observedAt)
     setRows(data.rows)
     setNote(data.note)
+    setIsDataPending(false)
   }, [data.classId, data.note, data.observedAt, data.rows])
 
   async function handleClassChange(nextClassId: string) {
     setSaveStatus('idle')
+    setIsDataPending(true)
     setClassId(nextClassId)
     setRows(getEmptyRows(data.students, nextClassId))
     setNote('')
-    await navigate({
-      to: '/guru/catat-observasi',
-      search: { classId: nextClassId, observedAt },
-    })
+    try {
+      await navigate({
+        to: '/guru/catat-observasi',
+        search: { classId: nextClassId, observedAt },
+      })
+    } catch (error) {
+      setIsDataPending(false)
+      throw error
+    }
   }
 
   async function handleDateChange(nextObservedAt: string) {
     setSaveStatus('idle')
+    setIsDataPending(true)
     setObservedAt(nextObservedAt)
     setRows(getEmptyRows(data.students, classId))
     setNote('')
-    await navigate({
-      to: '/guru/catat-observasi',
-      search: { classId, observedAt: nextObservedAt },
-    })
+    try {
+      await navigate({
+        to: '/guru/catat-observasi',
+        search: { classId, observedAt: nextObservedAt },
+      })
+    } catch (error) {
+      setIsDataPending(false)
+      throw error
+    }
   }
 
   async function handleSave() {
@@ -136,21 +148,25 @@ function CatatObservasi() {
             <label className="mb-1 block text-sm">
               Catatan singkat (opsional)
             </label>
-            <Input
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value)
-                setSaveStatus('idle')
-              }}
-              placeholder="Pendekatan instruksi bertahap membantu sebagian siswa mengikuti kegiatan dengan lebih tenang hari ini."
-              className="rounded-full bg-card"
-            />
+            {isDataPending ? (
+              <Skeleton className="h-9 w-full rounded-full" />
+            ) : (
+              <Input
+                value={note}
+                onChange={(e) => {
+                  setNote(e.target.value)
+                  setSaveStatus('idle')
+                }}
+                placeholder="Pendekatan instruksi bertahap membantu sebagian siswa mengikuti kegiatan dengan lebih tenang hari ini."
+                className="rounded-full bg-card"
+              />
+            )}
           </div>
           <Button
             size="lg"
             className="mt-1 gap-2 self-end rounded-full sm:mt-7"
             onClick={handleSave}
-            disabled={saveStatus === 'saving'}
+            disabled={isDataPending || saveStatus === 'saving'}
           >
             {saveStatus === 'saving'
               ? 'MENYIMPAN'
@@ -161,14 +177,47 @@ function CatatObservasi() {
           </Button>
         </div>
 
-        <ObservationTable
-          students={data.students.filter(
-            (student) => student.classId === classId,
-          )}
-          rows={rows}
-          onRowsChange={handleRowsChange}
-        />
+        {isDataPending ? (
+          <ObservationTableSkeleton />
+        ) : (
+          <ObservationTable
+            students={data.students.filter(
+              (student) => student.classId === classId,
+            )}
+            rows={rows}
+            onRowsChange={handleRowsChange}
+          />
+        )}
       </div>
     </ContentPanel>
+  )
+}
+
+function ObservationTableSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
+        <div className="flex items-center gap-4 px-4 py-3">
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-3 flex-1" />
+          <Skeleton className="h-3 w-20" />
+          {[...Array(4).keys()].map((i) => (
+            <Skeleton key={i} className="h-3 w-20 bg-brand-navy/15" />
+          ))}
+        </div>
+        <div className="flex flex-col divide-y divide-border/40">
+          {[...Array(8).keys()].map((rowIndex) => (
+            <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
+              <Skeleton className="h-3 w-8" />
+              <Skeleton className="h-3 flex-1" />
+              <Skeleton className="h-3 w-20" />
+              {[...Array(4).keys()].map((cellIndex) => (
+                <Skeleton key={cellIndex} className="h-6 w-20 rounded-full" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
