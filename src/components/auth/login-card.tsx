@@ -111,7 +111,15 @@ export function LoginCard() {
           <form.Field name="password">
             {(field) => (
               <div className="flex flex-col gap-2">
-                <Label htmlFor={field.name}>Kata Sandi</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={field.name}>Kata Sandi</Label>
+                  <a
+                    href="/forgot-password"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Lupa kata sandi?
+                  </a>
+                </div>
                 <div className="relative">
                   <Lock
                     aria-hidden
