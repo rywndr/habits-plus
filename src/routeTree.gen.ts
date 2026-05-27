@@ -23,6 +23,7 @@ import { Route as GuruCatatObservasiRouteImport } from './routes/guru/catat-obse
 import { Route as AdminSiswaRouteImport } from './routes/admin/siswa'
 import { Route as AdminOrtuRouteImport } from './routes/admin/ortu'
 import { Route as AdminKelasRouteImport } from './routes/admin/kelas'
+import { Route as AdminImporDataRouteImport } from './routes/admin/impor-data'
 import { Route as AdminGuruRouteImport } from './routes/admin/guru'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -96,6 +97,11 @@ const AdminKelasRoute = AdminKelasRouteImport.update({
   path: '/kelas',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminImporDataRoute = AdminImporDataRouteImport.update({
+  id: '/impor-data',
+  path: '/impor-data',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminGuruRoute = AdminGuruRouteImport.update({
   id: '/guru',
   path: '/guru',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/ortu': typeof OrtuRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/guru': typeof AdminGuruRoute
+  '/admin/impor-data': typeof AdminImporDataRoute
   '/admin/kelas': typeof AdminKelasRoute
   '/admin/ortu': typeof AdminOrtuRoute
   '/admin/siswa': typeof AdminSiswaRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/guru': typeof AdminGuruRoute
+  '/admin/impor-data': typeof AdminImporDataRoute
   '/admin/kelas': typeof AdminKelasRoute
   '/admin/ortu': typeof AdminOrtuRoute
   '/admin/siswa': typeof AdminSiswaRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/ortu': typeof OrtuRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/guru': typeof AdminGuruRoute
+  '/admin/impor-data': typeof AdminImporDataRoute
   '/admin/kelas': typeof AdminKelasRoute
   '/admin/ortu': typeof AdminOrtuRoute
   '/admin/siswa': typeof AdminSiswaRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/ortu'
     | '/login'
     | '/admin/guru'
+    | '/admin/impor-data'
     | '/admin/kelas'
     | '/admin/ortu'
     | '/admin/siswa'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/guru'
+    | '/admin/impor-data'
     | '/admin/kelas'
     | '/admin/ortu'
     | '/admin/siswa'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/ortu'
     | '/login'
     | '/admin/guru'
+    | '/admin/impor-data'
     | '/admin/kelas'
     | '/admin/ortu'
     | '/admin/siswa'
@@ -322,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminKelasRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/impor-data': {
+      id: '/admin/impor-data'
+      path: '/impor-data'
+      fullPath: '/admin/impor-data'
+      preLoaderRoute: typeof AdminImporDataRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/guru': {
       id: '/admin/guru'
       path: '/guru'
@@ -341,6 +360,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminGuruRoute: typeof AdminGuruRoute
+  AdminImporDataRoute: typeof AdminImporDataRoute
   AdminKelasRoute: typeof AdminKelasRoute
   AdminOrtuRoute: typeof AdminOrtuRoute
   AdminSiswaRoute: typeof AdminSiswaRoute
@@ -349,6 +369,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminGuruRoute: AdminGuruRoute,
+  AdminImporDataRoute: AdminImporDataRoute,
   AdminKelasRoute: AdminKelasRoute,
   AdminOrtuRoute: AdminOrtuRoute,
   AdminSiswaRoute: AdminSiswaRoute,
