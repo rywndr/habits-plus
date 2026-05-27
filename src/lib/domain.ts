@@ -1,6 +1,7 @@
 import type { Frequency, Indicator, Role } from '#/db/schema'
 
 export const roleLabels: Record<Role, string> = {
+  'super-admin': 'super admin',
   admin: 'admin sekolah',
   guru: 'guru',
   ortu: 'orang tua',

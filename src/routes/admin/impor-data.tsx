@@ -110,7 +110,10 @@ function parseWorkbookRows(
   workbook: XLSX.WorkBook,
   template: Template,
 ): Array<Record<string, string>> {
-  const sheet = workbook.Sheets.Data ?? workbook.Sheets[workbook.SheetNames[0]]
+  const sheetName = workbook.SheetNames.includes('Data')
+    ? 'Data'
+    : workbook.SheetNames[0]
+  const sheet = workbook.Sheets[sheetName]
   const matrix = XLSX.utils.sheet_to_json<Array<string>>(sheet, {
     header: 1,
     defval: '',

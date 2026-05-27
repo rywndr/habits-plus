@@ -14,11 +14,19 @@ type Props = {
   title: string
   description?: string
   children: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function AddEntityDialog({ title, description, children }: Props) {
+export function AddEntityDialog({
+  title,
+  description,
+  children,
+  open,
+  onOpenChange,
+}: Props) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger
         render={
           <Button size="lg" className="gap-2 rounded-full">

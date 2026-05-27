@@ -1,6 +1,11 @@
 import { pgEnum } from 'drizzle-orm/pg-core'
 
-export const roleEnum = pgEnum('role', ['admin', 'guru', 'ortu'])
+export const roleEnum = pgEnum('role', [
+  'super-admin',
+  'admin',
+  'guru',
+  'ortu',
+])
 export const genderEnum = pgEnum('gender', ['L', 'P'])
 export const indicatorEnum = pgEnum('indicator', [
   'respons',

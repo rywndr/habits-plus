@@ -10,13 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SuperAdminRouteRouteImport } from './routes/super-admin/route'
 import { Route as OrtuRouteRouteImport } from './routes/ortu/route'
 import { Route as GuruRouteRouteImport } from './routes/guru/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SuperAdminIndexRouteImport } from './routes/super-admin/index'
 import { Route as OrtuIndexRouteImport } from './routes/ortu/index'
 import { Route as GuruIndexRouteImport } from './routes/guru/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as SuperAdminAdminSekolahRouteImport } from './routes/super-admin/admin-sekolah'
 import { Route as GuruRingkasanRouteImport } from './routes/guru/ringkasan'
 import { Route as GuruObservasiMingguanRouteImport } from './routes/guru/observasi-mingguan'
 import { Route as GuruCatatObservasiRouteImport } from './routes/guru/catat-observasi'
@@ -30,6 +33,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminRouteRoute = SuperAdminRouteRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrtuRouteRoute = OrtuRouteRouteImport.update({
@@ -52,6 +60,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SuperAdminRouteRoute,
+} as any)
 const OrtuIndexRoute = OrtuIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -66,6 +79,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const SuperAdminAdminSekolahRoute = SuperAdminAdminSekolahRouteImport.update({
+  id: '/admin-sekolah',
+  path: '/admin-sekolah',
+  getParentRoute: () => SuperAdminRouteRoute,
 } as any)
 const GuruRingkasanRoute = GuruRingkasanRouteImport.update({
   id: '/ringkasan',
@@ -118,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/guru': typeof GuruRouteRouteWithChildren
   '/ortu': typeof OrtuRouteRouteWithChildren
+  '/super-admin': typeof SuperAdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/guru': typeof AdminGuruRoute
   '/admin/impor-data': typeof AdminImporDataRoute
@@ -127,9 +146,11 @@ export interface FileRoutesByFullPath {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
   '/ortu/': typeof OrtuIndexRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -143,9 +164,11 @@ export interface FileRoutesByTo {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin': typeof AdminIndexRoute
   '/guru': typeof GuruIndexRoute
   '/ortu': typeof OrtuIndexRoute
+  '/super-admin': typeof SuperAdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -154,6 +177,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/guru': typeof GuruRouteRouteWithChildren
   '/ortu': typeof OrtuRouteRouteWithChildren
+  '/super-admin': typeof SuperAdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/guru': typeof AdminGuruRoute
   '/admin/impor-data': typeof AdminImporDataRoute
@@ -163,9 +187,11 @@ export interface FileRoutesById {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
   '/ortu/': typeof OrtuIndexRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -175,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/guru'
     | '/ortu'
+    | '/super-admin'
     | '/login'
     | '/admin/guru'
     | '/admin/impor-data'
@@ -184,9 +211,11 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
     | '/ortu/'
+    | '/super-admin/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -200,9 +229,11 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/super-admin/admin-sekolah'
     | '/admin'
     | '/guru'
     | '/ortu'
+    | '/super-admin'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -210,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/guru'
     | '/ortu'
+    | '/super-admin'
     | '/login'
     | '/admin/guru'
     | '/admin/impor-data'
@@ -219,9 +251,11 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
     | '/ortu/'
+    | '/super-admin/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -230,6 +264,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   GuruRouteRoute: typeof GuruRouteRouteWithChildren
   OrtuRouteRoute: typeof OrtuRouteRouteWithChildren
+  SuperAdminRouteRoute: typeof SuperAdminRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -241,6 +276,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ortu': {
@@ -271,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/super-admin/': {
+      id: '/super-admin/'
+      path: '/'
+      fullPath: '/super-admin/'
+      preLoaderRoute: typeof SuperAdminIndexRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
+    }
     '/ortu/': {
       id: '/ortu/'
       path: '/'
@@ -291,6 +340,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/super-admin/admin-sekolah': {
+      id: '/super-admin/admin-sekolah'
+      path: '/admin-sekolah'
+      fullPath: '/super-admin/admin-sekolah'
+      preLoaderRoute: typeof SuperAdminAdminSekolahRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
     }
     '/guru/ringkasan': {
       id: '/guru/ringkasan'
@@ -410,11 +466,26 @@ const OrtuRouteRouteWithChildren = OrtuRouteRoute._addFileChildren(
   OrtuRouteRouteChildren,
 )
 
+interface SuperAdminRouteRouteChildren {
+  SuperAdminAdminSekolahRoute: typeof SuperAdminAdminSekolahRoute
+  SuperAdminIndexRoute: typeof SuperAdminIndexRoute
+}
+
+const SuperAdminRouteRouteChildren: SuperAdminRouteRouteChildren = {
+  SuperAdminAdminSekolahRoute: SuperAdminAdminSekolahRoute,
+  SuperAdminIndexRoute: SuperAdminIndexRoute,
+}
+
+const SuperAdminRouteRouteWithChildren = SuperAdminRouteRoute._addFileChildren(
+  SuperAdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   GuruRouteRoute: GuruRouteRouteWithChildren,
   OrtuRouteRoute: OrtuRouteRouteWithChildren,
+  SuperAdminRouteRoute: SuperAdminRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

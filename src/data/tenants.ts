@@ -5,6 +5,7 @@ export type Tenant = {
 }
 
 export const tenants: Array<Tenant> = [
+  { slug: 'platform', name: 'Habits+ Platform', region: 'Internal' },
   { slug: 'demo', name: 'SLB Demo Habits+', region: 'Kepri' },
   { slug: 'slb-batam-1', name: 'SLB Negeri Batam 1', region: 'Kota Batam' },
   { slug: 'slb-batam-2', name: 'SLB Negeri Batam 2', region: 'Kota Batam' },

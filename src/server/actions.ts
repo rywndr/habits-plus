@@ -7,6 +7,7 @@ import {
   dailyObservations,
   monthlySummaries,
   observationScores,
+  schools,
   students,
   users,
   weeklyNotes,
@@ -79,6 +80,33 @@ type BulkImportInput = {
 type DeleteInput = {
   tenant?: string
   id: string
+}
+
+type CreateSchoolInput = {
+  name: string
+  slug: string
+  region: string
+}
+
+type CreateSchoolAdminInput = {
+  schoolId: string
+  name: string
+  email: string
+  password: string
+}
+
+type UpdateSchoolInput = {
+  id: string
+  name: string
+  region: string
+}
+
+type UpdateSchoolAdminInput = {
+  id: string
+  schoolId: string
+  name: string
+  email: string
+  password?: string
 }
 
 type SaveDailyObservationsInput = {
@@ -190,6 +218,14 @@ function getRowValue(row: Record<string, string>, keys: Array<string>) {
   }
 
   return ''
+}
+
+function normalizeSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 async function upsertCredentialAccount(userId: string, password?: string) {
@@ -327,6 +363,178 @@ export const addUser = createServerFn({ method: 'POST' })
       if (data.role === 'ortu') {
         await assignParentStudent(tenant.id, user.id, data.studentId)
       }
+    }),
+  )
+
+export const createSchool = createServerFn({ method: 'POST' })
+  .inputValidator((data: CreateSchoolInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      assertText(data.name, 'Nama sekolah')
+      assertText(data.slug, 'Slug sekolah')
+      assertText(data.region, 'Wilayah')
+
+      const slug = normalizeSlug(data.slug)
+      if (!slug) throw new Error('Slug sekolah tidak valid.')
+      if (slug === 'platform') {
+        throw new Error('Slug platform tidak dapat digunakan untuk sekolah.')
+      }
+
+      await getDb()
+        .insert(schools)
+        .values({
+          name: data.name.trim(),
+          slug,
+          region: data.region.trim(),
+        })
+        .onConflictDoUpdate({
+          target: schools.slug,
+          set: {
+            name: data.name.trim(),
+            region: data.region.trim(),
+            updatedAt: new Date(),
+          },
+        })
+    }),
+  )
+
+export const createSchoolAdmin = createServerFn({ method: 'POST' })
+  .inputValidator((data: CreateSchoolAdminInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      assertText(data.schoolId, 'Sekolah')
+      assertText(data.name, 'Nama admin')
+      assertText(data.email, 'Email')
+      assertText(data.password, 'Kata sandi')
+
+      const school = await getDb().query.schools.findFirst({
+        where: eq(schools.id, data.schoolId),
+      })
+
+      if (!school || school.slug === 'platform') {
+        throw new Error('Sekolah tidak ditemukan.')
+      }
+
+      await upsertUserByEmail({
+        tenantId: school.id,
+        tenantSlug: school.slug,
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: 'admin',
+      })
+    }),
+  )
+
+export const updateSchool = createServerFn({ method: 'POST' })
+  .inputValidator((data: UpdateSchoolInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      assertText(data.id, 'Sekolah')
+      assertText(data.name, 'Nama sekolah')
+      assertText(data.region, 'Wilayah')
+
+      const school = await getDb().query.schools.findFirst({
+        where: eq(schools.id, data.id),
+      })
+
+      if (!school || school.slug === 'platform') {
+        throw new Error('Sekolah tidak ditemukan.')
+      }
+
+      await getDb()
+        .update(schools)
+        .set({
+          name: data.name.trim(),
+          region: data.region.trim(),
+          updatedAt: new Date(),
+        })
+        .where(eq(schools.id, data.id))
+    }),
+  )
+
+export const deleteSchool = createServerFn({ method: 'POST' })
+  .inputValidator((data: DeleteInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      const school = await getDb().query.schools.findFirst({
+        where: eq(schools.id, data.id),
+      })
+
+      if (!school || school.slug === 'platform') {
+        throw new Error('Sekolah tidak ditemukan.')
+      }
+
+      await getDb().delete(schools).where(eq(schools.id, data.id))
+    }),
+  )
+
+export const updateSchoolAdmin = createServerFn({ method: 'POST' })
+  .inputValidator((data: UpdateSchoolAdminInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      assertText(data.id, 'Admin')
+      assertText(data.schoolId, 'Sekolah')
+      assertText(data.name, 'Nama admin')
+      assertText(data.email, 'Email')
+
+      const school = await getDb().query.schools.findFirst({
+        where: eq(schools.id, data.schoolId),
+      })
+
+      if (!school || school.slug === 'platform') {
+        throw new Error('Sekolah tidak ditemukan.')
+      }
+
+      const existingAdmin = await getDb().query.users.findFirst({
+        where: and(eq(users.id, data.id), eq(users.role, 'admin')),
+      })
+
+      if (!existingAdmin) {
+        throw new Error('Admin sekolah tidak ditemukan.')
+      }
+
+      await getDb()
+        .update(users)
+        .set({
+          schoolId: school.id,
+          tenantSlug: school.slug,
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          role: 'admin',
+          updatedAt: new Date(),
+        })
+        .where(and(eq(users.id, data.id), eq(users.role, 'admin')))
+
+      await upsertCredentialAccount(data.id, data.password)
+    }),
+  )
+
+export const deleteSchoolAdmin = createServerFn({ method: 'POST' })
+  .inputValidator((data: DeleteInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      await getDb()
+        .delete(users)
+        .where(and(eq(users.id, data.id), eq(users.role, 'admin')))
     }),
   )
 

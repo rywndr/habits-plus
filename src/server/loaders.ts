@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { users } from '#/db/schema'
+import { schools, users } from '#/db/schema'
 import type { Role } from '#/db/schema'
 import {
   getAdminDashboard,
@@ -45,6 +45,23 @@ type ParentProgressInput = TenantInput & {
   parentId?: string
 }
 
+export type SuperAdminSchool = {
+  id: string
+  slug: string
+  name: string
+  region: string
+  adminCount: number
+  adminEmails: Array<string>
+}
+
+export type SuperAdminSchoolAdmin = {
+  id: string
+  schoolId: string
+  schoolName: string
+  name: string
+  email: string
+}
+
 export const loadCurrentUser = createServerFn({ method: 'GET' })
   .inputValidator((data: CurrentUserInput) => data)
   .handler(({ data }) =>
@@ -80,6 +97,75 @@ export const loadTenantUsers = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     withTenantCache(async () => getTenantUsers(await resolveTenant(data))),
   )
+
+export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
+  () =>
+    withTenantCache(async (): Promise<Array<SuperAdminSchool>> => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
+
+      const [schoolRows, userRows] = await Promise.all([
+        getDb().query.schools.findMany({
+          orderBy: [asc(schools.name)],
+        }),
+        getDb().query.users.findMany({
+          where: eq(users.role, 'admin'),
+        }),
+      ])
+
+      return schoolRows
+        .filter((school) => school.slug !== 'platform')
+        .map((school) => {
+          const admins = userRows.filter((user) => user.schoolId === school.id)
+
+          return {
+            id: school.id,
+            slug: school.slug,
+            name: school.name,
+            region: school.region,
+            adminCount: admins.length,
+            adminEmails: admins.map((admin) => admin.email),
+          }
+        })
+    }),
+)
+
+export const loadSuperAdminSchoolAdmins = createServerFn({
+  method: 'GET',
+}).handler(() =>
+  withTenantCache(async (): Promise<{
+    schools: Array<SuperAdminSchool>
+    admins: Array<SuperAdminSchoolAdmin>
+  }> => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    await getAuthenticatedUserByRole('super-admin')
+
+    const schoolRows = await loadSuperAdminSchools()
+    const adminRows = await getDb().query.users.findMany({
+      where: eq(users.role, 'admin'),
+      orderBy: [asc(users.name)],
+    })
+
+    return {
+      schools: schoolRows,
+      admins: adminRows
+        .map((admin) => {
+          const school = schoolRows.find((row) => row.id === admin.schoolId)
+
+          if (!school) return null
+
+          return {
+            id: admin.id,
+            schoolId: admin.schoolId,
+            schoolName: school.name,
+            name: admin.name,
+            email: admin.email,
+          }
+        })
+        .filter((admin): admin is SuperAdminSchoolAdmin => admin !== null),
+    }
+  }),
+)
 
 export const loadTenantClasses = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)

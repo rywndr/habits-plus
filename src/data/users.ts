@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'guru' | 'ortu'
+export type Role = 'super-admin' | 'admin' | 'guru' | 'ortu'
 
 export type User = {
   id: string
@@ -11,6 +11,13 @@ export type User = {
 }
 
 export const users: Array<User> = [
+  {
+    id: 'u-super-admin-1',
+    name: 'Super Admin',
+    email: 'superadmin@habitsplus.id',
+    role: 'super-admin',
+    tenantSlug: 'platform',
+  },
   {
     id: 'u-admin-1',
     name: 'Siti Aminah',
