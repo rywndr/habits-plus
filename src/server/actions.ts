@@ -22,6 +22,17 @@ type AddUserInput = {
   email: string
   password: string
   role: Role
+  classIds?: Array<string>
+}
+
+type UpdateUserInput = {
+  tenant?: string
+  id: string
+  name: string
+  email: string
+  password?: string
+  role?: Role
+  classIds?: Array<string>
 }
 
 type AddClassInput = {
@@ -80,6 +91,46 @@ async function assertTenantOwnedUser(tenantId: string, id: string) {
   if (!user) throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
 }
 
+async function assertTenantOwnedClasses(tenantId: string, ids: Array<string>) {
+  const uniqueIds = Array.from(new Set(ids))
+
+  if (!uniqueIds.length) return []
+
+  const rows = await getDb().query.classes.findMany({
+    where: and(eq(classes.schoolId, tenantId), inArray(classes.id, uniqueIds)),
+  })
+
+  if (rows.length !== uniqueIds.length) {
+    throw new Error('Sebagian kelas tidak ditemukan untuk sekolah ini.')
+  }
+
+  return uniqueIds
+}
+
+async function assignTeacherClasses(
+  tenantId: string,
+  teacherId: string,
+  classIds: Array<string>,
+) {
+  const ownedClassIds = await assertTenantOwnedClasses(tenantId, classIds)
+
+  await getDb()
+    .update(classes)
+    .set({ teacherId: null, updatedAt: new Date() })
+    .where(
+      and(eq(classes.schoolId, tenantId), eq(classes.teacherId, teacherId)),
+    )
+
+  if (ownedClassIds.length) {
+    await getDb()
+      .update(classes)
+      .set({ teacherId, updatedAt: new Date() })
+      .where(
+        and(eq(classes.schoolId, tenantId), inArray(classes.id, ownedClassIds)),
+      )
+  }
+}
+
 async function resolveTenant(input?: { tenant?: string }) {
   if (input?.tenant) return getTenantBySlug(input.tenant)
 
@@ -131,6 +182,53 @@ export const addUser = createServerFn({ method: 'POST' })
           userId: user.id,
           password: passwordHash,
         })
+
+      if (data.role === 'guru') {
+        await assignTeacherClasses(tenant.id, user.id, data.classIds ?? [])
+      }
+    }),
+  )
+
+export const updateUser = createServerFn({ method: 'POST' })
+  .inputValidator((data: UpdateUserInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.name, 'Nama')
+      assertText(data.email, 'Email')
+
+      const tenant = await resolveTenant(data)
+      const existingUser = await getDb().query.users.findFirst({
+        where: and(eq(users.schoolId, tenant.id), eq(users.id, data.id)),
+      })
+
+      if (!existingUser) {
+        throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
+      }
+
+      const role = data.role ?? existingUser.role
+
+      await getDb()
+        .update(users)
+        .set({
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          role,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
+
+      if (data.password?.trim()) {
+        const passwordHash = await hashPassword(data.password)
+
+        await getDb()
+          .update(accounts)
+          .set({ password: passwordHash, updatedAt: new Date() })
+          .where(eq(accounts.userId, data.id))
+      }
+
+      if (role === 'guru') {
+        await assignTeacherClasses(tenant.id, data.id, data.classIds ?? [])
+      }
     }),
   )
 
@@ -225,6 +323,18 @@ export const saveDailyObservations = createServerFn({ method: 'POST' })
       const tenant = await resolveTenant(data)
       const teacher = await getAuthenticatedUserByRole('guru')
       const observedAt = data.observedAt ?? todayIso()
+      const assignedClass = await getDb().query.classes.findFirst({
+        where: and(
+          eq(classes.schoolId, tenant.id),
+          eq(classes.id, data.classId),
+          eq(classes.teacherId, teacher.id),
+        ),
+      })
+
+      if (!assignedClass) {
+        throw new Error('Kelas tidak ditugaskan ke guru ini.')
+      }
+
       const studentIds = data.rows.map((row) => row.studentId)
       const classStudents = await getDb().query.students.findMany({
         where: and(
@@ -321,7 +431,11 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
           p3: data.p3.trim(),
         })
         .onConflictDoUpdate({
-          target: [weeklyNotes.schoolId, weeklyNotes.weekStart],
+          target: [
+            weeklyNotes.schoolId,
+            weeklyNotes.teacherId,
+            weeklyNotes.weekStart,
+          ],
           set: {
             teacherId: teacher.id,
             p1: data.p1.trim(),
@@ -338,10 +452,17 @@ export const deleteWeeklyNote = createServerFn({ method: 'POST' })
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+
       await getDb()
         .delete(weeklyNotes)
         .where(
-          and(eq(weeklyNotes.schoolId, tenant.id), eq(weeklyNotes.id, data.id)),
+          and(
+            eq(weeklyNotes.schoolId, tenant.id),
+            eq(weeklyNotes.id, data.id),
+            eq(weeklyNotes.teacherId, teacher.id),
+          ),
         )
     }),
   )
@@ -367,7 +488,11 @@ export const saveMonthlySummary = createServerFn({ method: 'POST' })
           text: data.text.trim(),
         })
         .onConflictDoUpdate({
-          target: [monthlySummaries.schoolId, monthlySummaries.monthStart],
+          target: [
+            monthlySummaries.schoolId,
+            monthlySummaries.teacherId,
+            monthlySummaries.monthStart,
+          ],
           set: {
             teacherId: teacher.id,
             text: data.text.trim(),

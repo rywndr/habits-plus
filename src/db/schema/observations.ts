@@ -78,8 +78,9 @@ export const weeklyNotes = pgTable(
       .notNull(),
   },
   (table) => ({
-    schoolWeekIdx: uniqueIndex('weekly_notes_school_week_idx').on(
+    teacherWeekIdx: uniqueIndex('weekly_notes_teacher_week_idx').on(
       table.schoolId,
+      table.teacherId,
       table.weekStart,
     ),
   }),
@@ -105,8 +106,9 @@ export const monthlySummaries = pgTable(
       .notNull(),
   },
   (table) => ({
-    schoolMonthIdx: uniqueIndex('monthly_summaries_school_month_idx').on(
+    teacherMonthIdx: uniqueIndex('monthly_summaries_teacher_month_idx').on(
       table.schoolId,
+      table.teacherId,
       table.monthStart,
     ),
   }),

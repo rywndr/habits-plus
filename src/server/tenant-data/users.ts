@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { students, users } from '#/db/schema'
+import { classes, students, users } from '#/db/schema'
 import type { AppUser, Tenant } from './types'
 
 export async function getTenantUsers(tenant: Tenant): Promise<Array<AppUser>> {
@@ -9,9 +9,16 @@ export async function getTenantUsers(tenant: Tenant): Promise<Array<AppUser>> {
     orderBy: [asc(users.name)],
   })
   const parentIds = rows.filter((u) => u.role === 'ortu').map((u) => u.id)
+  const teacherIds = rows.filter((u) => u.role === 'guru').map((u) => u.id)
   const linkedStudents = parentIds.length
     ? await getDb().query.students.findMany({
         where: inArray(students.parentId, parentIds),
+      })
+    : []
+  const linkedClasses = teacherIds.length
+    ? await getDb().query.classes.findMany({
+        where: inArray(classes.teacherId, teacherIds),
+        orderBy: [asc(classes.name)],
       })
     : []
 
@@ -22,5 +29,11 @@ export async function getTenantUsers(tenant: Tenant): Promise<Array<AppUser>> {
     role: user.role,
     tenantSlug: tenant.slug,
     studentId: linkedStudents.find((s) => s.parentId === user.id)?.id,
+    classIds: linkedClasses
+      .filter((klass) => klass.teacherId === user.id)
+      .map((klass) => klass.id),
+    classNames: linkedClasses
+      .filter((klass) => klass.teacherId === user.id)
+      .map((klass) => klass.name),
   }))
 }

@@ -1,4 +1,4 @@
-import { and, eq, gte, lt } from 'drizzle-orm'
+import { and, eq, gte, inArray, lt } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
   dailyObservations,
@@ -36,20 +36,30 @@ export async function getAdminDashboard(tenant: Tenant) {
   }
 }
 
-export async function getGuruDashboard(tenant: Tenant) {
+export async function getGuruDashboard(tenant: Tenant, teacherId: string) {
+  const tenantClasses = await getTenantClasses(tenant, teacherId)
+  const classIds = tenantClasses.map((klass) => klass.id)
   const [tenantStudents, observationRows] = await Promise.all([
-    getTenantStudents(tenant),
-    getDb()
-      .select({
-        indicator: observationScores.indicator,
-        frequency: observationScores.frequency,
-      })
-      .from(observationScores)
-      .innerJoin(
-        dailyObservations,
-        eq(observationScores.observationId, dailyObservations.id),
-      )
-      .where(eq(dailyObservations.schoolId, tenant.id)),
+    getTenantStudents(tenant, classIds),
+    classIds.length
+      ? getDb()
+          .select({
+            indicator: observationScores.indicator,
+            frequency: observationScores.frequency,
+          })
+          .from(observationScores)
+          .innerJoin(
+            dailyObservations,
+            eq(observationScores.observationId, dailyObservations.id),
+          )
+          .innerJoin(students, eq(dailyObservations.studentId, students.id))
+          .where(
+            and(
+              eq(dailyObservations.schoolId, tenant.id),
+              inArray(students.classId, classIds),
+            ),
+          )
+      : Promise.resolve([]),
   ])
 
   const distribution = tenantStudents.reduce(
@@ -94,34 +104,44 @@ export async function getGuruDashboard(tenant: Tenant) {
 export async function getMonthlySummary(
   tenant: Tenant,
   month: string,
+  teacherId?: string,
 ): Promise<MonthlySummary> {
   const start = monthStartIso(month)
   const end = nextMonthStartIso(month)
+  const teacherClasses = teacherId
+    ? await getTenantClasses(tenant, teacherId)
+    : undefined
+  const classIds = teacherClasses?.map((klass) => klass.id)
   const [manualSummary, observationRows] = await Promise.all([
     getDb().query.monthlySummaries.findFirst({
       where: and(
         eq(monthlySummaries.schoolId, tenant.id),
         eq(monthlySummaries.monthStart, start),
+        ...(teacherId ? [eq(monthlySummaries.teacherId, teacherId)] : []),
       ),
     }),
-    getDb()
-      .select({
-        indicator: observationScores.indicator,
-        frequency: observationScores.frequency,
-        observedAt: dailyObservations.observedAt,
-      })
-      .from(observationScores)
-      .innerJoin(
-        dailyObservations,
-        eq(observationScores.observationId, dailyObservations.id),
-      )
-      .where(
-        and(
-          eq(dailyObservations.schoolId, tenant.id),
-          gte(dailyObservations.observedAt, start),
-          lt(dailyObservations.observedAt, end),
-        ),
-      ),
+    classIds?.length === 0
+      ? Promise.resolve([])
+      : getDb()
+          .select({
+            indicator: observationScores.indicator,
+            frequency: observationScores.frequency,
+            observedAt: dailyObservations.observedAt,
+          })
+          .from(observationScores)
+          .innerJoin(
+            dailyObservations,
+            eq(observationScores.observationId, dailyObservations.id),
+          )
+          .innerJoin(students, eq(dailyObservations.studentId, students.id))
+          .where(
+            and(
+              eq(dailyObservations.schoolId, tenant.id),
+              gte(dailyObservations.observedAt, start),
+              lt(dailyObservations.observedAt, end),
+              ...(classIds ? [inArray(students.classId, classIds)] : []),
+            ),
+          ),
   ])
   const indicators = [
     'respons',
@@ -170,12 +190,16 @@ export async function getMonthlySummary(
       week: `Minggu ke-${index + 1}`,
       values: Object.fromEntries(
         indicators.map((indicator) => {
-          const indicatorRows = rows.filter((row) => row.indicator === indicator)
+          const indicatorRows = rows.filter(
+            (row) => row.indicator === indicator,
+          )
           const total = indicatorRows.reduce(
             (sum, row) => sum + frequencyScore[row.frequency],
             0,
           )
-          const average = indicatorRows.length ? total / indicatorRows.length : 0
+          const average = indicatorRows.length
+            ? total / indicatorRows.length
+            : 0
 
           return [indicator, Number(average.toFixed(2))]
         }),
@@ -193,8 +217,15 @@ export async function getMonthlySummary(
   }
 }
 
-export async function getLatestSummary(tenant: Tenant): Promise<MonthlySummary> {
-  return getMonthlySummary(tenant, new Date().toISOString().slice(0, 7))
+export async function getLatestSummary(
+  tenant: Tenant,
+  teacherId?: string,
+): Promise<MonthlySummary> {
+  return getMonthlySummary(
+    tenant,
+    new Date().toISOString().slice(0, 7),
+    teacherId,
+  )
 }
 
 export async function getParentProgress(tenant: Tenant, parentId: string) {

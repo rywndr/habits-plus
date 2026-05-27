@@ -17,6 +17,8 @@ export type AppUser = {
   role: Role
   tenantSlug: string
   studentId?: string
+  classIds?: Array<string>
+  classNames?: Array<string>
 }
 
 export type ClassRoom = {

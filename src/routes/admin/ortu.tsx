@@ -48,6 +48,7 @@ function columns(students: Array<Student>): Array<Column<AppUser>> {
       key: 'child',
       header: 'Anak',
       render: (r) => childNameOf(r.id, students),
+      sortValue: (r) => childNameOf(r.id, students),
     },
   ]
 }

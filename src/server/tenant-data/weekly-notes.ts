@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { weeklyNotes } from '#/db/schema'
 import { formatIndonesianDate } from '../date'
@@ -6,9 +6,15 @@ import type { Tenant, WeeklyNote } from './types'
 
 export async function getWeeklyNotes(
   tenant: Tenant,
+  teacherId?: string,
 ): Promise<Array<WeeklyNote>> {
   const rows = await getDb().query.weeklyNotes.findMany({
-    where: eq(weeklyNotes.schoolId, tenant.id),
+    where: teacherId
+      ? and(
+          eq(weeklyNotes.schoolId, tenant.id),
+          eq(weeklyNotes.teacherId, teacherId),
+        )
+      : eq(weeklyNotes.schoolId, tenant.id),
     orderBy: [desc(weeklyNotes.weekStart)],
   })
 

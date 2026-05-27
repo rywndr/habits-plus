@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pencil, Search, Trash2 } from 'lucide-react'
+import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import {
@@ -19,12 +20,20 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
+import type { SortDirection } from '#/hooks/use-sortable-data'
 
 export type Column<T> = {
   key: string
   header: string
   render: (row: T) => ReactNode
+  sortValue?: (row: T) => string | number | null | undefined
+  sortable?: boolean
   className?: string
+}
+
+type SortState = {
+  key: string
+  direction: SortDirection
 }
 
 type Props<T> = {
@@ -45,11 +54,59 @@ export function DataTable<T extends { id: string }>({
   onDelete,
 }: Props<T>) {
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
+  const [sort, setSort] = useState<SortState>()
   const filtered = filterKey
     ? rows.filter((r) =>
         String(r[filterKey]).toLowerCase().includes(q.toLowerCase()),
       )
     : rows
+  const sortedRows = sort
+    ? filtered
+        .map((row, index) => ({ row, index }))
+        .sort((left, right) => {
+          const column = columns.find((item) => item.key === sort.key)
+          const leftValue = column?.sortValue
+            ? column.sortValue(left.row)
+            : String(left.row[sort.key as keyof T] ?? '')
+          const rightValue = column?.sortValue
+            ? column.sortValue(right.row)
+            : String(right.row[sort.key as keyof T] ?? '')
+          const result =
+            typeof leftValue === 'number' && typeof rightValue === 'number'
+              ? leftValue - rightValue
+              : String(leftValue ?? '').localeCompare(
+                  String(rightValue ?? ''),
+                  'id',
+                  { numeric: true, sensitivity: 'base' },
+                )
+          const stableResult = result || left.index - right.index
+
+          return sort.direction === 'asc' ? stableResult : -stableResult
+        })
+        .map(({ row }) => row)
+    : filtered
+  const pageSize = 10
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize))
+  const visibleRows = sortedRows.slice((page - 1) * pageSize, page * pageSize)
+  const hasActions = Boolean(onEdit ?? onDelete)
+
+  function toggleSort(key: string) {
+    setSort((current) => ({
+      key,
+      direction:
+        current?.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }))
+    setPage(1)
+  }
+
+  useEffect(() => {
+    setPage(1)
+  }, [q, rows])
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages))
+  }, [totalPages])
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,7 +132,17 @@ export function DataTable<T extends { id: string }>({
                   key={c.key}
                   className={`text-brand-navy-foreground ${c.className ?? ''}`}
                 >
-                  {c.header}
+                  {c.sortable === false ? (
+                    c.header
+                  ) : (
+                    <SortableTableHeader
+                      label={c.header}
+                      direction={
+                        sort?.key === c.key ? sort.direction : undefined
+                      }
+                      onClick={() => toggleSort(c.key)}
+                    />
+                  )}
                 </TableHead>
               ))}
               {(onEdit ?? onDelete) ? (
@@ -89,14 +156,14 @@ export function DataTable<T extends { id: string }>({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 1}
+                  colSpan={columns.length + (hasActions ? 1 : 0)}
                   className="py-8 text-center text-muted-foreground"
                 >
                   Tidak ada data.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((row) => (
+              visibleRows.map((row) => (
                 <TableRow key={row.id}>
                   {columns.map((c) => (
                     <TableCell key={c.key} className={c.className}>
@@ -136,23 +203,46 @@ export function DataTable<T extends { id: string }>({
         </Table>
       </div>
 
-      <Pagination className="justify-end">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          {[1, 2, 3].map((n) => (
-            <PaginationItem key={n}>
-              <PaginationLink href="#" isActive={n === 1}>
-                {n}
-              </PaginationLink>
+      {totalPages > 1 ? (
+        <Pagination className="justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.max(1, current - 1))
+                }}
+              />
             </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (n) => (
+                <PaginationItem key={n}>
+                  <PaginationLink
+                    href="#"
+                    isActive={n === page}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      setPage(n)
+                    }}
+                  >
+                    {n}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setPage((current) => Math.min(totalPages, current + 1))
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      ) : null}
     </div>
   )
 }

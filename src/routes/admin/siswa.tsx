@@ -57,6 +57,7 @@ function columns(classes: Array<ClassRoom>): Array<Column<Student>> {
       key: 'class',
       header: 'Kelas',
       render: (r) => classNameOf(r.classId, classes),
+      sortValue: (r) => classNameOf(r.classId, classes),
     },
   ]
 }

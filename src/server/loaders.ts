@@ -102,7 +102,12 @@ export const loadAdminDashboard = createServerFn({ method: 'GET' })
 export const loadGuruDashboard = createServerFn({ method: 'GET' })
   .inputValidator((data: TenantInput) => data)
   .handler(({ data }) =>
-    withTenantCache(async () => getGuruDashboard(await resolveTenant(data))),
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+
+      return getGuruDashboard(await resolveTenant(data), teacher.id)
+    }),
   )
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
@@ -110,9 +115,12 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+
       return data.month
-        ? getMonthlySummary(tenant, data.month)
-        : getLatestSummary(tenant)
+        ? getMonthlySummary(tenant, data.month, teacher.id)
+        : getLatestSummary(tenant, teacher.id)
     }),
   )
 
@@ -137,7 +145,9 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .inputValidator((data: WeeklyNotesInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const notes = await getWeeklyNotes(await resolveTenant(data))
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const notes = await getWeeklyNotes(await resolveTenant(data), teacher.id)
       const selectedWeekStart = weekStartIso(
         data.weekStart ? new Date(data.weekStart) : new Date(),
       )
@@ -157,10 +167,13 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)
       const observedAt = data.observedAt || todayIso()
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const classes = await getTenantClasses(tenant, teacher.id)
+      const classIds = classes.map((item) => item.id)
 
-      const [classes, students, eagerObservation] = await Promise.all([
-        getTenantClasses(tenant),
-        getTenantStudents(tenant),
+      const [students, eagerObservation] = await Promise.all([
+        getTenantStudents(tenant, classIds),
         data.classId
           ? getDailyObservationDay(tenant, data.classId, observedAt)
           : Promise.resolve(null),

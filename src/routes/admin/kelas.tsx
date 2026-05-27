@@ -43,11 +43,13 @@ function columns(users: Array<AppUser>): Array<Column<ClassRoom>> {
       key: 'teacher',
       header: 'Guru',
       render: (r) => teacherNameOf(r.teacherId, users),
+      sortValue: (r) => teacherNameOf(r.teacherId, users),
     },
     {
       key: 'count',
       header: 'Jumlah Siswa',
       render: (r) => r.studentCount,
+      sortValue: (r) => r.studentCount,
       className: 'text-center',
     },
   ]
