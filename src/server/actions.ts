@@ -23,6 +23,7 @@ type AddUserInput = {
   password: string
   role: Role
   classIds?: Array<string>
+  studentId?: string
 }
 
 type UpdateUserInput = {
@@ -33,6 +34,7 @@ type UpdateUserInput = {
   password?: string
   role?: Role
   classIds?: Array<string>
+  studentId?: string
 }
 
 type AddClassInput = {
@@ -147,6 +149,32 @@ async function assignTeacherClasses(
   }
 }
 
+async function assignParentStudent(
+  tenantId: string,
+  parentId: string,
+  studentId?: string,
+) {
+  await getDb()
+    .update(students)
+    .set({ parentId: null, updatedAt: new Date() })
+    .where(
+      and(eq(students.schoolId, tenantId), eq(students.parentId, parentId)),
+    )
+
+  if (!studentId) return
+
+  const student = await getDb().query.students.findFirst({
+    where: and(eq(students.schoolId, tenantId), eq(students.id, studentId)),
+  })
+
+  if (!student) throw new Error('Siswa tidak ditemukan untuk sekolah ini.')
+
+  await getDb()
+    .update(students)
+    .set({ parentId, updatedAt: new Date() })
+    .where(and(eq(students.schoolId, tenantId), eq(students.id, studentId)))
+}
+
 async function resolveTenant(input?: { tenant?: string }) {
   if (input?.tenant) return getTenantBySlug(input.tenant)
 
@@ -202,6 +230,10 @@ export const addUser = createServerFn({ method: 'POST' })
       if (data.role === 'guru') {
         await assignTeacherClasses(tenant.id, user.id, data.classIds ?? [])
       }
+
+      if (data.role === 'ortu') {
+        await assignParentStudent(tenant.id, user.id, data.studentId)
+      }
     }),
   )
 
@@ -244,6 +276,10 @@ export const updateUser = createServerFn({ method: 'POST' })
 
       if (role === 'guru') {
         await assignTeacherClasses(tenant.id, data.id, data.classIds ?? [])
+      }
+
+      if (role === 'ortu') {
+        await assignParentStudent(tenant.id, data.id, data.studentId)
       }
     }),
   )
