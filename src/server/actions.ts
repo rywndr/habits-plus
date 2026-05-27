@@ -41,6 +41,13 @@ type AddClassInput = {
   teacherId?: string
 }
 
+type UpdateClassInput = {
+  tenant?: string
+  id: string
+  name: string
+  teacherId?: string
+}
+
 type AddStudentInput = {
   tenant?: string
   nisn: string
@@ -268,6 +275,30 @@ export const addClass = createServerFn({ method: 'POST' })
           name: data.name.trim(),
           teacherId: data.teacherId || null,
         })
+    }),
+  )
+
+export const updateClass = createServerFn({ method: 'POST' })
+  .inputValidator((data: UpdateClassInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      assertText(data.name, 'Nama kelas')
+      const tenant = await resolveTenant(data)
+      const klass = await getDb().query.classes.findFirst({
+        where: and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)),
+      })
+
+      if (!klass) throw new Error('Kelas tidak ditemukan untuk sekolah ini.')
+      if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
+
+      await getDb()
+        .update(classes)
+        .set({
+          name: data.name.trim(),
+          teacherId: data.teacherId || null,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)))
     }),
   )
 
