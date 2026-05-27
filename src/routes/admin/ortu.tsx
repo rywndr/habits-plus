@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
@@ -87,8 +87,22 @@ function KelolaOrtu() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [studentId, setStudentId] = useState('none')
+  const [classFilter, setClassFilter] = useState('all')
   const [editingParent, setEditingParent] = useState<AppUser | null>(null)
   const [deletingParent, setDeletingParent] = useState<AppUser | null>(null)
+  const filteredParents = useMemo(
+    () =>
+      classFilter === 'all'
+        ? parents
+        : parents.filter((parent) => {
+            const child = students.find(
+              (student) => student.parentId === parent.id,
+            )
+
+            return child?.classId === classFilter
+          }),
+    [classFilter, parents, students],
+  )
 
   async function handleAdd() {
     await addUser({
@@ -131,50 +145,57 @@ function KelolaOrtu() {
       <div className="flex flex-col gap-5">
         <PageHeader title="Kelola Orang Tua" />
         <DataTable
-          rows={parents}
+          rows={filteredParents}
           columns={columns(students)}
           filterKey="name"
           toolbar={
-            <AddEntityDialog title="Tambah Orang Tua">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="o-name">Nama</Label>
-                <Input
-                  id="o-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Nama lengkap"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="o-email">Email</Label>
-                <Input
-                  id="o-email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  placeholder="email@contoh.id"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="o-password">Kata Sandi Awal</Label>
-                <Input
-                  id="o-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  placeholder="Minimal 8 karakter"
-                />
-              </div>
-              <StudentSelect
-                students={students}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <ClassFilterSelect
                 classes={classes}
-                value={studentId}
-                onChange={setStudentId}
+                value={classFilter}
+                onChange={setClassFilter}
               />
-              <Button className="self-end" onClick={handleAdd}>
-                Simpan
-              </Button>
-            </AddEntityDialog>
+              <AddEntityDialog title="Tambah Orang Tua">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="o-name">Nama</Label>
+                  <Input
+                    id="o-name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Nama lengkap"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="o-email">Email</Label>
+                  <Input
+                    id="o-email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    placeholder="email@contoh.id"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="o-password">Kata Sandi Awal</Label>
+                  <Input
+                    id="o-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    type="password"
+                    placeholder="Minimal 8 karakter"
+                  />
+                </div>
+                <StudentSelect
+                  students={students}
+                  classes={classes}
+                  value={studentId}
+                  onChange={setStudentId}
+                />
+                <Button className="self-end" onClick={handleAdd}>
+                  Simpan
+                </Button>
+              </AddEntityDialog>
+            </div>
           }
           onEdit={setEditingParent}
           onDelete={setDeletingParent}
@@ -211,6 +232,39 @@ type StudentSelectProps = {
 
 function classNameOf(id: string, classes: Array<ClassRoom>) {
   return classes.find((klass) => klass.id === id)?.name ?? '-'
+}
+
+type ClassFilterSelectProps = {
+  classes: Array<ClassRoom>
+  value: string
+  onChange: (value: string) => void
+}
+
+function ClassFilterSelect({
+  classes,
+  value,
+  onChange,
+}: ClassFilterSelectProps) {
+  return (
+    <Select
+      value={value}
+      onValueChange={(nextValue) => onChange(nextValue || 'all')}
+    >
+      <SelectTrigger className="w-full bg-card sm:w-44">
+        <span className="min-w-0 flex-1 truncate text-left">
+          {value === 'all' ? 'Semua kelas' : classNameOf(value, classes)}
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">Semua kelas</SelectItem>
+        {classes.map((klass) => (
+          <SelectItem key={klass.id} value={klass.id}>
+            {klass.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
 }
 
 function StudentSelect({
@@ -318,7 +372,7 @@ function StudentSelect({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{student.name}</span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        {student.nisn} · {classNameOf(student.classId, classes)}
+                        {student.nisn} - {classNameOf(student.classId, classes)}
                       </span>
                     </span>
                   </button>
@@ -332,7 +386,7 @@ function StudentSelect({
         <div className="flex flex-wrap gap-2">
           <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
             <span className="truncate">
-              {selectedStudent.name} ·{' '}
+              {selectedStudent.name} -{' '}
               {classNameOf(selectedStudent.classId, classes)}
             </span>
             <button
