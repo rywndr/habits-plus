@@ -1,7 +1,7 @@
-import type { Frequency, Indicator, Role } from '#/db/schema'
+import type { Frequency, Gender, Indicator, Role } from '#/db/schema'
 import type { Trend } from '#/data'
 
-export type { Frequency, Indicator, Role }
+export type { Frequency, Gender, Indicator, Role }
 
 export type Tenant = {
   id: string
