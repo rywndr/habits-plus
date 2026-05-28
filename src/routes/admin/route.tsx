@@ -52,9 +52,9 @@ function AdminShell() {
       icon: UserCircle2,
     },
     {
-      to: '/admin/impor-data',
-      href: '/admin/impor-data',
-      label: 'impor data',
+      to: '/admin/data-massal',
+      href: '/admin/data-massal',
+      label: 'data massal',
       icon: FileSpreadsheet,
     },
   ]

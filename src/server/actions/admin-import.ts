@@ -19,6 +19,7 @@ export const bulkImportAdminRows = createServerFn({ method: 'POST' })
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)
+      const isUpdate = data.mode === 'update'
       let imported = 0
       const errors: Array<string> = []
 
@@ -38,7 +39,9 @@ export const bulkImportAdminRows = createServerFn({ method: 'POST' })
 
             assertText(name, `Baris ${rowNumber}: nama`)
             assertText(email, `Baris ${rowNumber}: email`)
-            assertText(password, `Baris ${rowNumber}: kata sandi`)
+            if (!isUpdate) {
+              assertText(password, `Baris ${rowNumber}: kata sandi`)
+            }
 
             const teacherId = await upsertUserByEmail({
               tenantId: tenant.id,
@@ -124,7 +127,9 @@ export const bulkImportAdminRows = createServerFn({ method: 'POST' })
 
             assertText(name, `Baris ${rowNumber}: nama`)
             assertText(email, `Baris ${rowNumber}: email`)
-            assertText(password, `Baris ${rowNumber}: kata sandi`)
+            if (!isUpdate) {
+              assertText(password, `Baris ${rowNumber}: kata sandi`)
+            }
 
             const parentId = await upsertUserByEmail({
               tenantId: tenant.id,

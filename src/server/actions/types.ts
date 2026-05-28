@@ -54,9 +54,12 @@ export type UpdateStudentInput = {
 
 export type BulkImportKind = 'teachers' | 'students' | 'parents'
 
+export type BulkImportMode = 'create' | 'update'
+
 export type BulkImportInput = {
   tenant?: string
   kind: BulkImportKind
+  mode?: BulkImportMode
   rows: Array<Record<string, string>>
 }
 
