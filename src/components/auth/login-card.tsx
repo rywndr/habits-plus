@@ -6,7 +6,7 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { BrandLogo } from '#/components/common/brand-logo'
-import { loginWithPassword } from '#/server/auth-context'
+import { authClient } from '#/lib/auth-client'
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Email tidak valid.'),
@@ -31,21 +31,24 @@ export function LoginCard() {
       setSubmitError(null)
       formApi.setErrorMap({})
 
-      let result: Awaited<ReturnType<typeof loginWithPassword>>
+      const result = await authClient.signIn.email({
+        email: value.email,
+        password: value.password,
+        rememberMe: false,
+      })
 
-      try {
-        result = await loginWithPassword({
-          data: {
-            email: value.email,
-            password: value.password,
-          },
-        })
-      } catch {
+      if (result.error || !result.data?.user) {
         setSubmitError('Email atau kata sandi tidak sesuai.')
         return
       }
 
-      window.location.assign(`/${result.role}`)
+      const role = (result.data.user as { role?: string }).role
+      if (!role) {
+        setSubmitError('Sesi berhasil dibuat, tetapi peran pengguna tidak ditemukan.')
+        return
+      }
+
+      window.location.assign(`/${role}`)
     },
   })
 
