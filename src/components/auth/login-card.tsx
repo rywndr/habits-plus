@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react'
 import { z } from 'zod'
@@ -15,7 +14,6 @@ const loginSchema = z.object({
 })
 
 export function LoginCard() {
-  const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const form = useForm({
@@ -33,18 +31,21 @@ export function LoginCard() {
       setSubmitError(null)
       formApi.setErrorMap({})
 
+      let result: Awaited<ReturnType<typeof loginWithPassword>>
+
       try {
-        const result = await loginWithPassword({
+        result = await loginWithPassword({
           data: {
             email: value.email,
             password: value.password,
           },
         })
-
-        await navigate({ to: `/${result.role}` })
       } catch {
         setSubmitError('Email atau kata sandi tidak sesuai.')
+        return
       }
+
+      window.location.assign(`/${result.role}`)
     },
   })
 
