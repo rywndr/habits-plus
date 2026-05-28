@@ -47,17 +47,14 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
   staticData: { title: 'Observasi Mingguan' },
 })
 
-const SAMPLE =
-  'Dalam 2 minggu terakhir, respons terhadap instruksi terlihat lebih konsisten.'
-
 function ObservasiMingguan() {
   const router = useRouter()
   const navigate = useNavigate()
   const weeklyNotes = Route.useLoaderData()
   const [classId, setClassId] = useState(weeklyNotes.classId)
-  const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
-  const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
-  const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+  const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? '')
+  const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? '')
+  const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? '')
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isOverwriteOpen, setIsOverwriteOpen] = useState(false)
@@ -66,9 +63,9 @@ function ObservasiMingguan() {
 
   useEffect(() => {
     setClassId(weeklyNotes.classId)
-    setP1(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
-    setP2(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
-    setP3(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
+    setP1(weeklyNotes.selectedNote?.p1 ?? '')
+    setP2(weeklyNotes.selectedNote?.p2 ?? '')
+    setP3(weeklyNotes.selectedNote?.p3 ?? '')
     setIsDataPending(false)
     setSaveStatus('idle')
   }, [
@@ -191,6 +188,7 @@ function ObservasiMingguan() {
               question="Pendekatan apa yang digunakan minggu ini?"
               code="P1"
               value={p1}
+              placeholder="Tulis pendekatan yang digunakan minggu ini."
               onChange={(value) => handleQuestionChange(setP1, value)}
             />
             <WeeklyQuestionInput
@@ -198,6 +196,7 @@ function ObservasiMingguan() {
               question="Apa yang terasa membantu?"
               code="P2"
               value={p2}
+              placeholder="Tulis hal yang terasa membantu minggu ini."
               onChange={(value) => handleQuestionChange(setP2, value)}
             />
             <WeeklyQuestionInput
@@ -205,6 +204,7 @@ function ObservasiMingguan() {
               question="Apa yang perlu disesuaikan?"
               code="P3"
               value={p3}
+              placeholder="Tulis hal yang perlu disesuaikan minggu depan."
               onChange={(value) => handleQuestionChange(setP3, value)}
             />
           </div>

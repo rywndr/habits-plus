@@ -6,6 +6,7 @@ type Props = {
   code: string
   value: string
   onChange: (v: string) => void
+  placeholder?: string
   disabled?: boolean
 }
 
@@ -15,6 +16,7 @@ export function WeeklyQuestionInput({
   code,
   value,
   onChange,
+  placeholder,
   disabled = false,
 }: Props) {
   return (
@@ -25,6 +27,7 @@ export function WeeklyQuestionInput({
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         rows={2}
         disabled={disabled}
         className="rounded-2xl bg-card"
