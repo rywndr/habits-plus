@@ -13,17 +13,16 @@ import * as schema from '#/db/schema'
 const SESSION_MAX_AGE = 60 * 60 * 8
 
 function getSecret() {
-  return (
-    process.env.BETTER_AUTH_SECRET ??
-    process.env.AUTH_SECRET ??
-    process.env.DATABASE_URL ??
-    'habits-plus-dev'
-  )
+  const secret = process.env.BETTER_AUTH_SECRET
+  if (!secret) {
+    throw new Error('BETTER_AUTH_SECRET environment variable is required')
+  }
+  return secret
 }
 
 export const auth = betterAuth({
   appName: 'Habits+',
-  baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
+  baseURL: process.env.BETTER_AUTH_URL,
   secret: getSecret(),
   database: drizzleAdapter(getDb(), {
     provider: 'pg',
@@ -78,27 +77,22 @@ export async function getSession() {
 
 export async function getAuthenticatedUserByRole(role: Role) {
   const session = await getSession()
-
   if (!session) {
     throw new Error(
       `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
     )
   }
-
   const user = await getDb().query.users.findFirst({
     where: and(eq(users.id, session.user.id), eq(users.role, role)),
   })
-
   if (!user) {
     throw new Error(
       `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
     )
   }
-
   const school = await getDb().query.schools.findFirst({
     where: eq(schools.id, user.schoolId),
   })
-
   return {
     id: user.id,
     name: user.name,
