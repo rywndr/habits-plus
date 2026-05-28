@@ -90,6 +90,10 @@ export const weeklyNotesRelations = relations(weeklyNotes, ({ one }) => ({
     fields: [weeklyNotes.teacherId],
     references: [users.id],
   }),
+  class: one(classes, {
+    fields: [weeklyNotes.classId],
+    references: [classes.id],
+  }),
 }))
 
 export const monthlySummariesRelations = relations(
@@ -102,6 +106,10 @@ export const monthlySummariesRelations = relations(
     teacher: one(users, {
       fields: [monthlySummaries.teacherId],
       references: [users.id],
+    }),
+    class: one(classes, {
+      fields: [monthlySummaries.classId],
+      references: [classes.id],
     }),
   }),
 )

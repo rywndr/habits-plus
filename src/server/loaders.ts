@@ -31,10 +31,12 @@ type ObservationPageInput = TenantInput & {
 
 type MonthlySummaryInput = TenantInput & {
   month?: string
+  classId?: string
 }
 
 type WeeklyNotesInput = TenantInput & {
   weekStart?: string
+  classId?: string
 }
 
 type CurrentUserInput = TenantInput & {
@@ -133,38 +135,40 @@ export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
 export const loadSuperAdminSchoolAdmins = createServerFn({
   method: 'GET',
 }).handler(() =>
-  withTenantCache(async (): Promise<{
-    schools: Array<SuperAdminSchool>
-    admins: Array<SuperAdminSchoolAdmin>
-  }> => {
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    await getAuthenticatedUserByRole('super-admin')
+  withTenantCache(
+    async (): Promise<{
+      schools: Array<SuperAdminSchool>
+      admins: Array<SuperAdminSchoolAdmin>
+    }> => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      await getAuthenticatedUserByRole('super-admin')
 
-    const schoolRows = await loadSuperAdminSchools()
-    const adminRows = await getDb().query.users.findMany({
-      where: eq(users.role, 'admin'),
-      orderBy: [asc(users.name)],
-    })
+      const schoolRows = await loadSuperAdminSchools()
+      const adminRows = await getDb().query.users.findMany({
+        where: eq(users.role, 'admin'),
+        orderBy: [asc(users.name)],
+      })
 
-    return {
-      schools: schoolRows,
-      admins: adminRows
-        .map((admin) => {
-          const school = schoolRows.find((row) => row.id === admin.schoolId)
+      return {
+        schools: schoolRows,
+        admins: adminRows
+          .map((admin) => {
+            const school = schoolRows.find((row) => row.id === admin.schoolId)
 
-          if (!school) return null
+            if (!school) return null
 
-          return {
-            id: admin.id,
-            schoolId: admin.schoolId,
-            schoolName: school.name,
-            name: admin.name,
-            email: admin.email,
-          }
-        })
-        .filter((admin): admin is SuperAdminSchoolAdmin => admin !== null),
-    }
-  }),
+            return {
+              id: admin.id,
+              schoolId: admin.schoolId,
+              schoolName: school.name,
+              name: admin.name,
+              email: admin.email,
+            }
+          })
+          .filter((admin): admin is SuperAdminSchoolAdmin => admin !== null),
+      }
+    },
+  ),
 )
 
 export const loadTenantClasses = createServerFn({ method: 'GET' })
@@ -203,10 +207,16 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
       const tenant = await resolveTenant(data)
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
+      const classId =
+        data.classId && data.classId !== 'all' ? data.classId : undefined
+      const [classes, summary] = await Promise.all([
+        getTenantClasses(tenant, teacher.id),
+        data.month
+          ? getMonthlySummary(tenant, data.month, teacher.id, classId)
+          : getLatestSummary(tenant, teacher.id, classId),
+      ])
 
-      return data.month
-        ? getMonthlySummary(tenant, data.month, teacher.id)
-        : getLatestSummary(tenant, teacher.id)
+      return { ...summary, classes, classId: classId ?? 'all' }
     }),
   )
 
@@ -232,17 +242,28 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const tenant = await resolveTenant(data)
       const teacher = await getAuthenticatedUserByRole('guru')
-      const notes = await getWeeklyNotes(await resolveTenant(data), teacher.id)
+      const classId =
+        data.classId && data.classId !== 'all' ? data.classId : undefined
+      const [classes, notes] = await Promise.all([
+        getTenantClasses(tenant, teacher.id),
+        getWeeklyNotes(tenant, teacher.id, classId),
+      ])
       const selectedWeekStart = weekStartIso(
         data.weekStart ? new Date(data.weekStart) : new Date(),
       )
 
       return {
         notes,
+        classes,
+        classId: classId ?? 'all',
         selectedWeekStart,
-        selectedNote:
-          notes.find((note) => note.date === selectedWeekStart) ?? null,
+        // Notes are per class, so the editor only targets a note when a
+        // specific class is selected ("Semua kelas" is a read-only overview).
+        selectedNote: classId
+          ? (notes.find((note) => note.date === selectedWeekStart) ?? null)
+          : null,
       }
     }),
   )

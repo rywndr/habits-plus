@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
 import { SaveButton } from '#/components/common/save-button'
@@ -15,6 +15,7 @@ import {
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
+import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
@@ -27,13 +28,19 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
   validateSearch: (search = {}) => ({
     weekStart:
       typeof search.weekStart === 'string' ? search.weekStart : undefined,
+    classId: typeof search.classId === 'string' ? search.classId : undefined,
   }),
   loaderDeps: ({ search }) => ({
     weekStart: search.weekStart,
+    classId: search.classId,
   }),
   loader: ({ context, deps }) =>
     loadWeeklyNotes({
-      data: { tenant: context.user.tenantSlug, weekStart: deps.weekStart },
+      data: {
+        tenant: context.user.tenantSlug,
+        weekStart: deps.weekStart,
+        classId: deps.classId,
+      },
     }),
   component: ObservasiMingguan,
   pendingComponent: WeeklyNotesSkeleton,
@@ -47,34 +54,39 @@ function ObservasiMingguan() {
   const router = useRouter()
   const navigate = useNavigate()
   const weeklyNotes = Route.useLoaderData()
+  const [classId, setClassId] = useState(weeklyNotes.classId)
   const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
   const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
   const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isOverwriteOpen, setIsOverwriteOpen] = useState(false)
-  const previousWeekStart = useRef(weeklyNotes.selectedWeekStart)
+
+  const isAllClasses = classId === ALL_CLASSES
 
   useEffect(() => {
-    const didWeekChange = previousWeekStart.current !== weeklyNotes.selectedWeekStart
-    previousWeekStart.current = weeklyNotes.selectedWeekStart
-
+    setClassId(weeklyNotes.classId)
     setP1(weeklyNotes.selectedNote?.p1 ?? SAMPLE)
     setP2(weeklyNotes.selectedNote?.p2 ?? SAMPLE)
     setP3(weeklyNotes.selectedNote?.p3 ?? SAMPLE)
     setIsDataPending(false)
-    if (didWeekChange) {
-      setSaveStatus('idle')
-    }
-  }, [weeklyNotes.selectedNote, weeklyNotes.selectedWeekStart])
+    setSaveStatus('idle')
+  }, [
+    weeklyNotes.selectedNote,
+    weeklyNotes.selectedWeekStart,
+    weeklyNotes.classId,
+  ])
 
-  async function handleWeekChange(weekStart: string) {
+  async function navigateTo(next: { weekStart: string; classId: string }) {
     setSaveStatus('idle')
     setIsDataPending(true)
     try {
       await navigate({
         to: '/guru/observasi-mingguan',
-        search: { weekStart },
+        search: {
+          weekStart: next.weekStart,
+          classId: next.classId === ALL_CLASSES ? undefined : next.classId,
+        },
       })
     } catch (error) {
       setIsDataPending(false)
@@ -82,7 +94,22 @@ function ObservasiMingguan() {
     }
   }
 
-  function handleQuestionChange(setter: (value: string) => void, value: string) {
+  async function handleWeekChange(weekStart: string) {
+    await navigateTo({ weekStart, classId })
+  }
+
+  async function handleClassChange(nextClassId: string) {
+    setClassId(nextClassId)
+    await navigateTo({
+      weekStart: weeklyNotes.selectedWeekStart,
+      classId: nextClassId,
+    })
+  }
+
+  function handleQuestionChange(
+    setter: (value: string) => void,
+    value: string,
+  ) {
     setter(value)
     setSaveStatus('idle')
   }
@@ -101,7 +128,7 @@ function ObservasiMingguan() {
     setSaveStatus('saving')
     try {
       await saveWeeklyNote({
-        data: { weekStart: weeklyNotes.selectedWeekStart, p1, p2, p3 },
+        data: { weekStart: weeklyNotes.selectedWeekStart, classId, p1, p2, p3 },
       })
       await router.invalidate()
       setSaveStatus('saved')
@@ -115,7 +142,9 @@ function ObservasiMingguan() {
     note: WeeklyNote,
     values: Pick<WeeklyNote, 'p1' | 'p2' | 'p3'>,
   ) {
-    await saveWeeklyNote({ data: { weekStart: note.date, ...values } })
+    await saveWeeklyNote({
+      data: { weekStart: note.date, classId: note.classId ?? '', ...values },
+    })
     await router.invalidate()
   }
 
@@ -129,15 +158,31 @@ function ObservasiMingguan() {
       <div className="flex flex-col gap-5">
         <PageHeader title="Observasi Mingguan" />
 
-        <div className="flex items-center gap-2">
-          <span className="font-heading font-semibold">Minggu:</span>
-          <WeekPicker
-            value={weeklyNotes.selectedWeekStart}
-            onChange={handleWeekChange}
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-semibold">Minggu:</span>
+            <WeekPicker
+              value={weeklyNotes.selectedWeekStart}
+              onChange={handleWeekChange}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-semibold">Kelas:</span>
+            <ClassSelect
+              classes={weeklyNotes.classes}
+              value={classId}
+              onChange={handleClassChange}
+              includeAll
+            />
+          </div>
         </div>
 
-        {isDataPending ? (
+        {isAllClasses ? (
+          <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">
+            Pilih satu kelas untuk menulis observasi mingguan. Tabel di bawah
+            menampilkan catatan dari semua kelas.
+          </p>
+        ) : isDataPending ? (
           <WeeklyQuestionSkeleton />
         ) : (
           <div className="flex flex-col gap-4">
@@ -171,9 +216,14 @@ function ObservasiMingguan() {
             size="lg"
             className="rounded-full px-6"
             onClick={handleSave}
-            disabled={isDataPending}
+            disabled={isDataPending || isAllClasses}
           />
-          <Button size="lg" variant="secondary" className="rounded-full px-6">
+          <Button
+            size="lg"
+            variant="secondary"
+            className="rounded-full px-6"
+            disabled={isAllClasses}
+          >
             Batal
           </Button>
         </div>
@@ -201,6 +251,7 @@ function ObservasiMingguan() {
         ) : (
           <WeeklyNotesTable
             weeklyNotes={weeklyNotes.notes}
+            showClassColumn={isAllClasses}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
           />
@@ -228,7 +279,10 @@ function WeeklyNotesTableSkeleton() {
     <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
       <div className="flex items-center gap-4 bg-brand-table-header px-4 py-3">
         {[...Array(6).keys()].map((i) => (
-          <Skeleton key={i} className="h-3 flex-1 bg-brand-navy-foreground/30" />
+          <Skeleton
+            key={i}
+            className="h-3 flex-1 bg-brand-navy-foreground/30"
+          />
         ))}
       </div>
       <div className="flex flex-col divide-y divide-border/40">

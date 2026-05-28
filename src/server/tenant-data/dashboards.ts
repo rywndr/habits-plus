@@ -105,21 +105,35 @@ export async function getMonthlySummary(
   tenant: Tenant,
   month: string,
   teacherId?: string,
+  classId?: string,
 ): Promise<MonthlySummary> {
   const start = monthStartIso(month)
   const end = nextMonthStartIso(month)
   const teacherClasses = teacherId
     ? await getTenantClasses(tenant, teacherId)
     : undefined
-  const classIds = teacherClasses?.map((klass) => klass.id)
+  const teacherClassIds = teacherClasses?.map((klass) => klass.id)
+  // When a specific class is selected, scope to it (only if owned by the
+  // teacher). Otherwise ("Semua kelas") aggregate across all teacher classes.
+  const classIds =
+    classId && teacherClassIds
+      ? teacherClassIds.includes(classId)
+        ? [classId]
+        : []
+      : teacherClassIds
+  // The manual summary text is per class, so it only exists when one is chosen.
+  const summaryPromise = classId
+    ? getDb().query.monthlySummaries.findFirst({
+        where: and(
+          eq(monthlySummaries.schoolId, tenant.id),
+          eq(monthlySummaries.monthStart, start),
+          eq(monthlySummaries.classId, classId),
+          ...(teacherId ? [eq(monthlySummaries.teacherId, teacherId)] : []),
+        ),
+      })
+    : Promise.resolve(undefined)
   const [manualSummary, observationRows] = await Promise.all([
-    getDb().query.monthlySummaries.findFirst({
-      where: and(
-        eq(monthlySummaries.schoolId, tenant.id),
-        eq(monthlySummaries.monthStart, start),
-        ...(teacherId ? [eq(monthlySummaries.teacherId, teacherId)] : []),
-      ),
-    }),
+    summaryPromise,
     classIds?.length === 0
       ? Promise.resolve([])
       : getDb()
@@ -182,7 +196,7 @@ export async function getMonthlySummary(
   )
   const weekBuckets = Array.from({ length: 4 }, (_, index) => {
     const rows = observationRows.filter((row) => {
-      const day = new Date(row.observedAt).getDate()
+      const day = Number(String(row.observedAt).slice(8, 10))
       return Math.min(3, Math.floor((day - 1) / 7)) === index
     })
 
@@ -220,11 +234,13 @@ export async function getMonthlySummary(
 export async function getLatestSummary(
   tenant: Tenant,
   teacherId?: string,
+  classId?: string,
 ): Promise<MonthlySummary> {
   return getMonthlySummary(
     tenant,
     new Date().toISOString().slice(0, 7),
     teacherId,
+    classId,
   )
 }
 

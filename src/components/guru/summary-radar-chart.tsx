@@ -70,7 +70,11 @@ export function SummaryRadarChart({ data }: Props) {
         aria-label="Radar ringkasan observasi bulanan"
       >
         <ResponsiveContainer width="100%" aspect={1}>
-          <RadarChart data={rows} outerRadius="75%">
+          <RadarChart
+            data={rows}
+            outerRadius="72%"
+            margin={{ top: 24, right: 72, bottom: 24, left: 72 }}
+          >
             <PolarGrid
               gridType="polygon"
               strokeDasharray="3 3"
@@ -81,7 +85,7 @@ export function SummaryRadarChart({ data }: Props) {
               tick={{ fontSize: 11, fill: 'currentColor' }}
             />
             <PolarRadiusAxis
-              angle={90}
+              angle={45}
               domain={[0, 2]}
               ticks={[0, 0.5, 1, 1.5, 2]}
               tickFormatter={(value) => value.toFixed(1)}

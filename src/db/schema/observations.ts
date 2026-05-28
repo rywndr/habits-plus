@@ -10,7 +10,7 @@ import {
 import { frequencyEnum, indicatorEnum } from './enums'
 import { schools } from './schools'
 import { users } from './auth'
-import { students } from './academics'
+import { classes, students } from './academics'
 
 export const dailyObservations = pgTable(
   'daily_observations',
@@ -66,6 +66,9 @@ export const weeklyNotes = pgTable(
     teacherId: uuid('teacher_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    classId: uuid('class_id').references(() => classes.id, {
+      onDelete: 'cascade',
+    }),
     weekStart: date('week_start').notNull(),
     p1: text('p1').notNull(),
     p2: text('p2').notNull(),
@@ -78,9 +81,10 @@ export const weeklyNotes = pgTable(
       .notNull(),
   },
   (table) => ({
-    teacherWeekIdx: uniqueIndex('weekly_notes_teacher_week_idx').on(
+    teacherClassWeekIdx: uniqueIndex('weekly_notes_teacher_class_week_idx').on(
       table.schoolId,
       table.teacherId,
+      table.classId,
       table.weekStart,
     ),
   }),
@@ -96,6 +100,9 @@ export const monthlySummaries = pgTable(
     teacherId: uuid('teacher_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    classId: uuid('class_id').references(() => classes.id, {
+      onDelete: 'cascade',
+    }),
     monthStart: date('month_start').notNull(),
     text: text('text').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -106,10 +113,8 @@ export const monthlySummaries = pgTable(
       .notNull(),
   },
   (table) => ({
-    teacherMonthIdx: uniqueIndex('monthly_summaries_teacher_month_idx').on(
-      table.schoolId,
-      table.teacherId,
-      table.monthStart,
-    ),
+    teacherClassMonthIdx: uniqueIndex(
+      'monthly_summaries_teacher_class_month_idx',
+    ).on(table.schoolId, table.teacherId, table.classId, table.monthStart),
   }),
 )

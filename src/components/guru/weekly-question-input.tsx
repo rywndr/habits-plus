@@ -6,6 +6,7 @@ type Props = {
   code: string
   value: string
   onChange: (v: string) => void
+  disabled?: boolean
 }
 
 export function WeeklyQuestionInput({
@@ -14,6 +15,7 @@ export function WeeklyQuestionInput({
   code,
   value,
   onChange,
+  disabled = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-2">
@@ -24,6 +26,7 @@ export function WeeklyQuestionInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={2}
+        disabled={disabled}
         className="rounded-2xl bg-card"
       />
     </div>

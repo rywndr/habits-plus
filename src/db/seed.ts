@@ -1,24 +1,26 @@
 import { drizzle } from 'drizzle-orm/neon-http'
 import { neon } from '@neondatabase/serverless'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import {
   accounts,
   classes,
   dailyObservations,
   observationScores,
   schools,
+  scoreFrequency,
   students,
   users,
   weeklyNotes,
 } from './schema'
 import {
   classes as mockClasses,
-  dailyObservations as mockObservations,
   students as mockStudents,
   tenants,
   users as mockUsers,
   weeklyNotes as mockWeeklyNotes,
 } from '#/data'
+import { hashPassword } from '#/server/password'
+import type { Indicator } from './schema'
 
 const databaseUrl = process.env.DATABASE_URL
 
@@ -27,8 +29,9 @@ if (!databaseUrl) {
 }
 
 const db = drizzle(neon(databaseUrl))
-const defaultPasswordHash =
-  'scrypt$habits-plus-demo$22282b6e7bca88a780f9c3b0cb8ec38b5ad77a338e3cca261594999de1fed2594f175d274f8cc4a7eef69b428ea49d386e536c4dcfeaa689efe12ff39194d6db'
+// All seeded accounts share one known password so the demo users can log in.
+const seedPassword = 'password'
+const passwordHash = await hashPassword(seedPassword)
 
 const schoolIds = new Map<string, string>()
 const userIds = new Map<string, string>()
@@ -85,11 +88,11 @@ for (const user of mockUsers) {
       accountId: created.id,
       providerId: 'credential',
       userId: created.id,
-      password: defaultPasswordHash,
+      password: passwordHash,
     })
     .onConflictDoUpdate({
       target: accounts.id,
-      set: { password: defaultPasswordHash, updatedAt: new Date() },
+      set: { password: passwordHash, updatedAt: new Date() },
     })
 }
 
@@ -147,58 +150,110 @@ const teacherId = userIds.get('u-guru-1')
 const demoSchoolId = schoolIds.get('demo')
 
 if (teacherId && demoSchoolId) {
-  for (const row of mockObservations) {
-    const studentId = studentIds.get(row.studentId)
-    if (!studentId) continue
+  // One observation date per week of the current month (mid-bucket days, so the
+  // day-of-month -> week mapping in getMonthlySummary is unambiguous).
+  const observationDates = [
+    '2026-05-04', // Minggu ke-1
+    '2026-05-11', // Minggu ke-2
+    '2026-05-18', // Minggu ke-3
+    '2026-05-25', // Minggu ke-4
+  ]
+  // Target weekly average score (0..2) per indicator, one per week above.
+  // Chosen to give four visually distinct radar polygons and varied trends.
+  const weeklyTargets: Record<Indicator, Array<number>> = {
+    respons: [0.6, 1.0, 1.4, 1.8], // steadily improving
+    interaksi: [1.7, 1.8, 1.6, 1.9], // consistently high
+    partisipasi: [1.0, 1.1, 1.3, 1.4], // gentle rise
+    regulasi: [1.2, 0.8, 1.0, 1.5], // dip, then recover
+  }
+  const indicators = Object.keys(weeklyTargets) as Array<Indicator>
+  const demoStudentIds = [...studentIds.values()]
 
-    const [observation] = await db
-      .insert(dailyObservations)
-      .values({
-        schoolId: demoSchoolId,
-        studentId,
-        teacherId,
-        observedAt: '2026-01-12',
-      })
-      .onConflictDoUpdate({
-        target: [dailyObservations.studentId, dailyObservations.observedAt],
-        set: { teacherId, updatedAt: new Date() },
-      })
-      .returning({ id: dailyObservations.id })
-
-    await db
-      .delete(observationScores)
-      .where(eq(observationScores.observationId, observation.id))
-
-    await db.insert(observationScores).values(
-      Object.entries(row.values).map(([indicator, frequency]) => ({
-        observationId: observation.id,
-        indicator: indicator as keyof typeof row.values,
-        frequency,
-      })),
+  // Distribute `n` integer scores (0|1|2) that average to `target`.
+  const scoresForAverage = (target: number, n: number): Array<number> => {
+    const total = Math.max(0, Math.min(2 * n, Math.round(target * n)))
+    const base = Math.floor(total / n)
+    const remainder = total - base * n
+    return Array.from({ length: n }, (_, i) =>
+      i < remainder ? base + 1 : base,
     )
   }
 
-  for (const note of mockWeeklyNotes) {
-    await db
-      .insert(weeklyNotes)
-      .values({
-        schoolId: demoSchoolId,
-        teacherId,
-        weekStart: note.date,
-        p1: note.p1,
-        p2: note.p2,
-        p3: note.p3,
-      })
-      .onConflictDoUpdate({
-        target: [weeklyNotes.schoolId, weeklyNotes.weekStart],
-        set: {
+  for (let week = 0; week < observationDates.length; week++) {
+    const observedAt = observationDates[week]
+    const scoresByIndicator = Object.fromEntries(
+      indicators.map((indicator) => [
+        indicator,
+        scoresForAverage(weeklyTargets[indicator][week], demoStudentIds.length),
+      ]),
+    ) as Record<Indicator, Array<number>>
+
+    for (let i = 0; i < demoStudentIds.length; i++) {
+      const studentId = demoStudentIds[i]
+
+      const [observation] = await db
+        .insert(dailyObservations)
+        .values({ schoolId: demoSchoolId, studentId, teacherId, observedAt })
+        .onConflictDoUpdate({
+          target: [dailyObservations.studentId, dailyObservations.observedAt],
+          set: { teacherId, updatedAt: new Date() },
+        })
+        .returning({ id: dailyObservations.id })
+
+      await db
+        .delete(observationScores)
+        .where(eq(observationScores.observationId, observation.id))
+
+      await db.insert(observationScores).values(
+        indicators.map((indicator) => ({
+          observationId: observation.id,
+          indicator,
+          frequency: scoreFrequency[scoresByIndicator[indicator][i]],
+        })),
+      )
+    }
+  }
+
+  // Weekly notes are per class; seed them against the class that has students.
+  const notesClassId = classIds.get('c-2')
+
+  // Drop any legacy class-less notes from earlier seeds so the per-class views
+  // don't show orphan rows.
+  await db
+    .delete(weeklyNotes)
+    .where(
+      and(eq(weeklyNotes.schoolId, demoSchoolId), isNull(weeklyNotes.classId)),
+    )
+
+  if (notesClassId) {
+    for (const note of mockWeeklyNotes) {
+      await db
+        .insert(weeklyNotes)
+        .values({
+          schoolId: demoSchoolId,
           teacherId,
+          classId: notesClassId,
+          weekStart: note.date,
           p1: note.p1,
           p2: note.p2,
           p3: note.p3,
-          updatedAt: new Date(),
-        },
-      })
+        })
+        .onConflictDoUpdate({
+          target: [
+            weeklyNotes.schoolId,
+            weeklyNotes.teacherId,
+            weeklyNotes.classId,
+            weeklyNotes.weekStart,
+          ],
+          set: {
+            teacherId,
+            p1: note.p1,
+            p2: note.p2,
+            p3: note.p3,
+            updatedAt: new Date(),
+          },
+        })
+    }
   }
 }
 

@@ -52,6 +52,8 @@ export type WeeklyNote = {
   id: string
   date: string
   dateLabel: string
+  classId: string | null
+  className: string | null
   p1: string
   p2: string
   p3: string

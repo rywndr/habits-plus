@@ -27,6 +27,7 @@ import {
 
 type Props = {
   weeklyNotes: Array<WeeklyNote>
+  showClassColumn?: boolean
   onDelete: (note: WeeklyNote) => Promise<void>
   onEdit: (
     note: WeeklyNote,
@@ -40,7 +41,12 @@ const dateSorters = {
     left.date.localeCompare(right.date),
 }
 
-export function WeeklyNotesTable({ weeklyNotes, onDelete, onEdit }: Props) {
+export function WeeklyNotesTable({
+  weeklyNotes,
+  showClassColumn = false,
+  onDelete,
+  onEdit,
+}: Props) {
   const [page, setPage] = useState(1)
   const [editingNote, setEditingNote] = useState<WeeklyNote | null>(null)
   const [deletingNote, setDeletingNote] = useState<WeeklyNote | null>(null)
@@ -65,6 +71,7 @@ export function WeeklyNotesTable({ weeklyNotes, onDelete, onEdit }: Props) {
           <colgroup>
             <col className="w-12" />
             <col className="w-32" />
+            {showClassColumn ? <col className="w-20" /> : null}
             <col />
             <col />
             <col />
@@ -85,6 +92,11 @@ export function WeeklyNotesTable({ weeklyNotes, onDelete, onEdit }: Props) {
                   }}
                 />
               </TableHead>
+              {showClassColumn ? (
+                <TableHead className="text-brand-navy-foreground">
+                  Kelas
+                </TableHead>
+              ) : null}
               <TableHead className="text-brand-navy-foreground">P1</TableHead>
               <TableHead className="text-brand-navy-foreground">P2</TableHead>
               <TableHead className="text-brand-navy-foreground">P3</TableHead>
@@ -102,6 +114,11 @@ export function WeeklyNotesTable({ weeklyNotes, onDelete, onEdit }: Props) {
                 <TableCell className="py-3 text-sm whitespace-nowrap">
                   {note.dateLabel}
                 </TableCell>
+                {showClassColumn ? (
+                  <TableCell className="py-3 text-sm whitespace-nowrap">
+                    {note.className ?? '-'}
+                  </TableCell>
+                ) : null}
                 <TableCell className="py-3 text-xs leading-snug text-muted-foreground sm:text-sm">
                   <p className="line-clamp-3 break-words">{note.p1}</p>
                 </TableCell>

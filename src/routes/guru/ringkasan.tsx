@@ -6,6 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
+import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
 import { SummaryRadarChart } from '#/components/guru/summary-radar-chart'
 import { ProgressStripCard } from '#/components/guru/progress-strip-card'
 import { SummaryPageSkeleton } from '#/components/skeletons/summary-page-skeleton'
@@ -18,13 +19,19 @@ import type { Indicator } from '#/server/tenant-data'
 export const Route = createFileRoute('/guru/ringkasan')({
   validateSearch: (search = {}) => ({
     month: typeof search.month === 'string' ? search.month : undefined,
+    classId: typeof search.classId === 'string' ? search.classId : undefined,
   }),
   loaderDeps: ({ search }) => ({
     month: search.month,
+    classId: search.classId,
   }),
   loader: ({ context, deps }) =>
     loadLatestSummary({
-      data: { tenant: context.user.tenantSlug, month: deps.month },
+      data: {
+        tenant: context.user.tenantSlug,
+        month: deps.month,
+        classId: deps.classId,
+      },
     }),
   component: LihatRingkasan,
   pendingComponent: SummaryPageSkeleton,
@@ -44,32 +51,51 @@ function LihatRingkasan() {
   const summary = Route.useLoaderData()
   const search = Route.useSearch()
   const [month, setMonth] = useState(search.month ?? summary.month)
+  const [classId, setClassId] = useState(summary.classId)
   const [text, setText] = useState(summary.text)
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
+  const isAllClasses = classId === ALL_CLASSES
+
   useEffect(() => {
     setMonth(search.month ?? summary.month)
+    setClassId(summary.classId)
     setText(summary.text)
     setIsDataPending(false)
     setSaveStatus('idle')
-  }, [search.month, summary.month, summary.text])
+  }, [search.month, summary.month, summary.text, summary.classId])
 
-  async function handleMonthChange(nextMonth: string) {
-    setMonth(nextMonth)
+  async function navigateTo(next: { month: string; classId: string }) {
     setIsDataPending(true)
     try {
-      await navigate({ to: '/guru/ringkasan', search: { month: nextMonth } })
+      await navigate({
+        to: '/guru/ringkasan',
+        search: {
+          month: next.month,
+          classId: next.classId === ALL_CLASSES ? undefined : next.classId,
+        },
+      })
     } catch (error) {
       setIsDataPending(false)
       throw error
     }
   }
 
+  async function handleMonthChange(nextMonth: string) {
+    setMonth(nextMonth)
+    await navigateTo({ month: nextMonth, classId })
+  }
+
+  async function handleClassChange(nextClassId: string) {
+    setClassId(nextClassId)
+    await navigateTo({ month, classId: nextClassId })
+  }
+
   async function handleSave() {
     setSaveStatus('saving')
     try {
-      await saveMonthlySummary({ data: { month, text } })
+      await saveMonthlySummary({ data: { month, classId, text } })
       await router.invalidate()
       setSaveStatus('saved')
     } catch (error) {
@@ -83,9 +109,20 @@ function LihatRingkasan() {
       <div className="flex flex-col gap-5">
         <PageHeader title="Lihat Ringkasan" />
 
-        <div className="flex items-center gap-2">
-          <span className="font-heading font-semibold">Bulan:</span>
-          <MonthPicker value={month} onChange={handleMonthChange} />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-semibold">Bulan:</span>
+            <MonthPicker value={month} onChange={handleMonthChange} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-semibold">Kelas:</span>
+            <ClassSelect
+              classes={summary.classes}
+              value={classId}
+              onChange={handleClassChange}
+              includeAll
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -95,13 +132,18 @@ function LihatRingkasan() {
               <Skeleton className="h-20 w-full rounded-2xl" />
             ) : (
               <Textarea
-                value={text}
+                value={isAllClasses ? '' : text}
                 onChange={(event) => {
                   setText(event.target.value)
                   setSaveStatus('idle')
                 }}
                 rows={2}
-                placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
+                disabled={isAllClasses}
+                placeholder={
+                  isAllClasses
+                    ? 'Pilih satu kelas untuk menulis ringkasan bulanan.'
+                    : 'Tulis ringkasan perkembangan siswa untuk bulan ini.'
+                }
                 className="rounded-2xl bg-card"
               />
             )}
@@ -111,7 +153,7 @@ function LihatRingkasan() {
               className="rounded-full px-6"
               wrapperClassName="sm:mt-1"
               onClick={handleSave}
-              disabled={isDataPending}
+              disabled={isDataPending || isAllClasses}
             />
           </div>
         </div>

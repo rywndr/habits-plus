@@ -122,6 +122,7 @@ type SaveDailyObservationsInput = {
 
 type SaveWeeklyNoteInput = {
   tenant?: string
+  classId: string
   weekStart?: string
   p1: string
   p2: string
@@ -130,6 +131,7 @@ type SaveWeeklyNoteInput = {
 
 type SaveMonthlySummaryInput = {
   tenant?: string
+  classId: string
   month: string
   text: string
 }
@@ -159,6 +161,24 @@ async function assertTenantOwnedClasses(tenantId: string, ids: Array<string>) {
   }
 
   return uniqueIds
+}
+
+async function assertTeacherOwnsClass(
+  tenantId: string,
+  teacherId: string,
+  classId: string,
+) {
+  assertText(classId, 'Kelas')
+
+  const klass = await getDb().query.classes.findFirst({
+    where: and(
+      eq(classes.schoolId, tenantId),
+      eq(classes.id, classId),
+      eq(classes.teacherId, teacherId),
+    ),
+  })
+
+  if (!klass) throw new Error('Kelas tidak ditugaskan ke guru ini.')
 }
 
 async function assignTeacherClasses(
@@ -976,6 +996,7 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
       const tenant = await resolveTenant(data)
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
+      await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
       const weekStart = data.weekStart ?? weekStartIso()
 
       await getDb()
@@ -983,6 +1004,7 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
         .values({
           schoolId: tenant.id,
           teacherId: teacher.id,
+          classId: data.classId,
           weekStart,
           p1: data.p1.trim(),
           p2: data.p2.trim(),
@@ -992,6 +1014,7 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
           target: [
             weeklyNotes.schoolId,
             weeklyNotes.teacherId,
+            weeklyNotes.classId,
             weeklyNotes.weekStart,
           ],
           set: {
@@ -1035,6 +1058,7 @@ export const saveMonthlySummary = createServerFn({ method: 'POST' })
       const tenant = await resolveTenant(data)
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
+      await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
       const monthStart = `${data.month.slice(0, 7)}-01`
 
       await getDb()
@@ -1042,6 +1066,7 @@ export const saveMonthlySummary = createServerFn({ method: 'POST' })
         .values({
           schoolId: tenant.id,
           teacherId: teacher.id,
+          classId: data.classId,
           monthStart,
           text: data.text.trim(),
         })
@@ -1049,6 +1074,7 @@ export const saveMonthlySummary = createServerFn({ method: 'POST' })
           target: [
             monthlySummaries.schoolId,
             monthlySummaries.teacherId,
+            monthlySummaries.classId,
             monthlySummaries.monthStart,
           ],
           set: {
