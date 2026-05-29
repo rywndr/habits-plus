@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { Download } from 'lucide-react'
+import { Button } from '#/components/ui/button'
 import { SaveButton } from '#/components/common/save-button'
 import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
-import { ClassSelect } from '#/components/guru/class-select'
+import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { ExportDialog } from '#/components/guru/export-dialog'
+import { downloadDailyObservationWorkbook } from '#/components/guru/export-workbooks'
 import { ObservationTable } from '#/components/guru/observation-table'
 import { ObservationPageSkeleton } from '#/components/skeletons/observation-page-skeleton'
 import { saveDailyObservations } from '#/server/actions'
-import { loadObservationPage } from '#/server/loaders'
+import {
+  loadDailyObservationExport,
+  loadObservationPage,
+} from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { Frequency, Indicator, Student } from '#/server/tenant-data'
@@ -60,6 +67,8 @@ function CatatObservasi() {
   const [note, setNote] = useState(data.note)
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     setClassId(data.classId)
@@ -122,6 +131,28 @@ function CatatObservasi() {
     setSaveStatus('idle')
   }
 
+  async function handleExport(options: {
+    startDate: string
+    endDate: string
+    classId: string
+  }) {
+    setIsExporting(true)
+    try {
+      const exportRows = await loadDailyObservationExport({
+        data: {
+          startDate: options.startDate,
+          endDate: options.endDate,
+          classId:
+            options.classId === ALL_CLASSES ? undefined : options.classId,
+        },
+      })
+      downloadDailyObservationWorkbook(exportRows, options)
+      setIsExportOpen(false)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
@@ -132,13 +163,24 @@ function CatatObservasi() {
             <span className="font-heading font-semibold">Tanggal :</span>
             <DatePicker value={observedAt} onChange={handleDateChange} />
           </div>
-          <div className="flex items-center gap-2 text-sm sm:text-base">
-            <span className="font-heading font-semibold">Pilih kelas</span>
-            <ClassSelect
-              classes={data.classes}
-              value={classId}
-              onChange={handleClassChange}
-            />
+          <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
+            <div className="flex items-center gap-2">
+              <span className="font-heading font-semibold">Kelas:</span>
+              <ClassSelect
+                classes={data.classes}
+                value={classId}
+                onChange={handleClassChange}
+              />
+            </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="rounded-full px-6"
+              onClick={() => setIsExportOpen(true)}
+            >
+              <Download />
+              Export
+            </Button>
           </div>
         </div>
 
@@ -183,6 +225,19 @@ function CatatObservasi() {
             onRowsChange={handleRowsChange}
           />
         )}
+
+        <ExportDialog
+          title="Export observasi harian"
+          description="Pilih kelas dan rentang tanggal yang ingin diunduh dalam format XLSX."
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          classes={data.classes}
+          initialClassId={classId || ALL_CLASSES}
+          initialStartDate={observedAt}
+          initialEndDate={observedAt}
+          isExporting={isExporting}
+          onExport={handleExport}
+        />
       </div>
     </ContentPanel>
   )

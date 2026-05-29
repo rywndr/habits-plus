@@ -1,7 +1,15 @@
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, between, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { schools, users } from '#/db/schema'
+import {
+  classes as classTable,
+  dailyObservations,
+  observationScores,
+  schools,
+  students as studentTable,
+  users,
+  weeklyNotes as weeklyNotesTable,
+} from '#/db/schema'
 import type { Role } from '#/db/schema'
 import {
   getAdminDashboard,
@@ -38,6 +46,12 @@ type WeeklyNotesInput = TenantInput & {
   classId?: string
 }
 
+type ExportRangeInput = TenantInput & {
+  startDate: string
+  endDate: string
+  classId?: string
+}
+
 type CurrentUserInput = TenantInput & {
   role: Role
 }
@@ -61,6 +75,29 @@ export type SuperAdminSchoolAdmin = {
   schoolName: string
   name: string
   email: string
+}
+
+export type DailyObservationExportRow = {
+  observedAt: string
+  classId: string
+  className: string
+  studentId: string
+  studentName: string
+  nisn: string
+  note: string
+  respons: string
+  interaksi: string
+  partisipasi: string
+  regulasi: string
+}
+
+export type WeeklyNoteExportRow = {
+  weekStart: string
+  classId: string | null
+  className: string | null
+  p1: string
+  p2: string
+  p3: string
 }
 
 export const loadCurrentUser = createServerFn({ method: 'GET' })
@@ -245,6 +282,129 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
           ? (notes.find((note) => note.date === selectedWeekStart) ?? null)
           : null,
       }
+    }),
+  )
+
+export const loadDailyObservationExport = createServerFn({ method: 'GET' })
+  .inputValidator((data: ExportRangeInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async (): Promise<Array<DailyObservationExportRow>> => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const teacherClasses = await getTenantClasses(tenant, teacher.id)
+      const allowedClassIds = teacherClasses.map((item) => item.id)
+      const classIds =
+        data.classId && data.classId !== 'all'
+          ? allowedClassIds.filter((id) => id === data.classId)
+          : allowedClassIds
+
+      if (!classIds.length) return []
+
+      const rows = await getDb()
+        .select({
+          observationId: dailyObservations.id,
+          observedAt: dailyObservations.observedAt,
+          note: dailyObservations.note,
+          classId: classTable.id,
+          className: classTable.name,
+          studentId: studentTable.id,
+          studentName: studentTable.name,
+          nisn: studentTable.nisn,
+          indicator: observationScores.indicator,
+          frequency: observationScores.frequency,
+        })
+        .from(dailyObservations)
+        .innerJoin(
+          studentTable,
+          eq(dailyObservations.studentId, studentTable.id),
+        )
+        .innerJoin(classTable, eq(studentTable.classId, classTable.id))
+        .leftJoin(
+          observationScores,
+          eq(observationScores.observationId, dailyObservations.id),
+        )
+        .where(
+          and(
+            eq(dailyObservations.schoolId, tenant.id),
+            inArray(classTable.id, classIds),
+            between(dailyObservations.observedAt, data.startDate, data.endDate),
+          ),
+        )
+        .orderBy(
+          asc(dailyObservations.observedAt),
+          asc(classTable.name),
+          asc(studentTable.name),
+        )
+
+      const grouped = new Map<string, DailyObservationExportRow>()
+
+      for (const row of rows) {
+        const existing =
+          grouped.get(row.observationId) ??
+          ({
+            observedAt: row.observedAt,
+            classId: row.classId,
+            className: row.className,
+            studentId: row.studentId,
+            studentName: row.studentName,
+            nisn: row.nisn,
+            note: row.note ?? '',
+            respons: '',
+            interaksi: '',
+            partisipasi: '',
+            regulasi: '',
+          } satisfies DailyObservationExportRow)
+
+        if (row.indicator) {
+          existing[row.indicator] = row.frequency ?? ''
+        }
+
+        grouped.set(row.observationId, existing)
+      }
+
+      return Array.from(grouped.values())
+    }),
+  )
+
+export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
+  .inputValidator((data: ExportRangeInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async (): Promise<Array<WeeklyNoteExportRow>> => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const teacherClasses = await getTenantClasses(tenant, teacher.id)
+      const allowedClassIds = teacherClasses.map((item) => item.id)
+      const classFilters =
+        data.classId && data.classId !== 'all'
+          ? allowedClassIds.filter((id) => id === data.classId)
+          : allowedClassIds
+
+      if (!classFilters.length) return []
+
+      const rows = await getDb()
+        .select({
+          weekStart: weeklyNotesTable.weekStart,
+          classId: weeklyNotesTable.classId,
+          className: classTable.name,
+          p1: weeklyNotesTable.p1,
+          p2: weeklyNotesTable.p2,
+          p3: weeklyNotesTable.p3,
+        })
+        .from(weeklyNotesTable)
+        .leftJoin(classTable, eq(weeklyNotesTable.classId, classTable.id))
+        .where(
+          and(
+            eq(weeklyNotesTable.schoolId, tenant.id),
+            eq(weeklyNotesTable.teacherId, teacher.id),
+            inArray(weeklyNotesTable.classId, classFilters),
+            between(weeklyNotesTable.weekStart, data.startDate, data.endDate),
+          ),
+        )
+        .orderBy(asc(weeklyNotesTable.weekStart), asc(classTable.name))
+
+      return rows
     }),
   )
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { SaveButton } from '#/components/common/save-button'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -16,11 +17,14 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { ExportDialog } from '#/components/guru/export-dialog'
+import { downloadWeeklyNotesWorkbook } from '#/components/guru/export-workbooks'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
 import { WeeklyNotesTable } from '#/components/guru/weekly-notes-table'
 import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleton'
 import { deleteWeeklyNote, saveWeeklyNote } from '#/server/actions'
-import { loadWeeklyNotes } from '#/server/loaders'
+import { loadWeeklyNotes, loadWeeklyNotesExport } from '#/server/loaders'
+import { weekEndIso } from '#/server/date'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { WeeklyNote } from '#/server/tenant-data'
 
@@ -57,6 +61,8 @@ function ObservasiMingguan() {
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isOverwriteOpen, setIsOverwriteOpen] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const isAllClasses = classId === ALL_CLASSES
 
@@ -149,6 +155,28 @@ function ObservasiMingguan() {
     await router.invalidate()
   }
 
+  async function handleExport(options: {
+    startDate: string
+    endDate: string
+    classId: string
+  }) {
+    setIsExporting(true)
+    try {
+      const exportRows = await loadWeeklyNotesExport({
+        data: {
+          startDate: options.startDate,
+          endDate: options.endDate,
+          classId:
+            options.classId === ALL_CLASSES ? undefined : options.classId,
+        },
+      })
+      downloadWeeklyNotesWorkbook(exportRows, options)
+      setIsExportOpen(false)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
@@ -162,14 +190,25 @@ function ObservasiMingguan() {
               onChange={handleWeekChange}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Kelas:</span>
-            <ClassSelect
-              classes={weeklyNotes.classes}
-              value={classId}
-              onChange={handleClassChange}
-              includeAll
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-heading font-semibold">Kelas:</span>
+              <ClassSelect
+                classes={weeklyNotes.classes}
+                value={classId}
+                onChange={handleClassChange}
+                includeAll
+              />
+            </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="rounded-full px-6"
+              onClick={() => setIsExportOpen(true)}
+            >
+              <Download />
+              Export
+            </Button>
           </div>
         </div>
 
@@ -255,6 +294,19 @@ function ObservasiMingguan() {
             onDelete={handleDeleteNote}
           />
         )}
+
+        <ExportDialog
+          title="Export observasi mingguan"
+          description="Pilih kelas dan rentang minggu yang ingin diunduh dalam format XLSX."
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          classes={weeklyNotes.classes}
+          initialClassId={classId}
+          initialStartDate={weeklyNotes.selectedWeekStart}
+          initialEndDate={weekEndIso(weeklyNotes.selectedWeekStart)}
+          isExporting={isExporting}
+          onExport={handleExport}
+        />
       </div>
     </ContentPanel>
   )
