@@ -5,13 +5,13 @@ import type { NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru')({
-  beforeLoad: () =>
-    loadCurrentUser({ data: { role: 'guru' } }).then((user) => ({ user })),
+  loader: () => loadCurrentUser({ data: { role: 'guru' } }),
+  staleTime: Infinity,
   component: GuruShell,
 })
 
 function GuruShell() {
-  const { user } = Route.useRouteContext()
+  const user = Route.useLoaderData()
 
   const items: Array<NavItem> = [
     {

@@ -12,13 +12,13 @@ import type { NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin')({
-  beforeLoad: () =>
-    loadCurrentUser({ data: { role: 'admin' } }).then((user) => ({ user })),
+  loader: () => loadCurrentUser({ data: { role: 'admin' } }),
+  staleTime: Infinity,
   component: AdminShell,
 })
 
 function AdminShell() {
-  const { user } = Route.useRouteContext()
+  const user = Route.useLoaderData()
 
   const items: Array<NavItem> = [
     {

@@ -17,7 +17,6 @@ import {
   getWeeklyNotes,
   withTenantCache,
 } from './tenant-data'
-import type { Tenant } from './tenant-data'
 import { todayIso, weekStartIso } from './date'
 
 type TenantInput = {
@@ -73,32 +72,13 @@ export const loadCurrentUser = createServerFn({ method: 'GET' })
     }),
   )
 
-async function resolveTenant(input?: TenantInput): Promise<Tenant> {
-  if (input?.tenant) return getTenantBySlug(input.tenant)
-
-  const { getSession } = await import('./auth.server')
-  const session = await getSession()
-
-  if (!session) {
-    throw new Error('Silakan masuk terlebih dahulu.')
-  }
-
-  const user = await getDb().query.users.findFirst({
-    where: eq(users.id, session.user.id),
-  })
-
-  if (!user) {
-    throw new Error('Silakan masuk terlebih dahulu.')
-  }
-
-  return getTenantBySlug(user.tenantSlug)
-}
-
-export const loadTenantUsers = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) =>
-    withTenantCache(async () => getTenantUsers(await resolveTenant(data))),
-  )
+export const loadTenantUsers = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const admin = await getAuthenticatedUserByRole('admin')
+    return getTenantUsers(await getTenantBySlug(admin.tenantSlug))
+  }),
+)
 
 export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
   () =>
@@ -171,42 +151,48 @@ export const loadSuperAdminSchoolAdmins = createServerFn({
   ),
 )
 
-export const loadTenantClasses = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) =>
-    withTenantCache(async () => getTenantClasses(await resolveTenant(data))),
-  )
+export const loadTenantClasses = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const admin = await getAuthenticatedUserByRole('admin')
+    return getTenantClasses(await getTenantBySlug(admin.tenantSlug))
+  }),
+)
 
-export const loadTenantStudents = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) =>
-    withTenantCache(async () => getTenantStudents(await resolveTenant(data))),
-  )
+export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const admin = await getAuthenticatedUserByRole('admin')
+    return getTenantStudents(await getTenantBySlug(admin.tenantSlug))
+  }),
+)
 
-export const loadAdminDashboard = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) =>
-    withTenantCache(async () => getAdminDashboard(await resolveTenant(data))),
-  )
+export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const admin = await getAuthenticatedUserByRole('admin')
+    return getAdminDashboard(await getTenantBySlug(admin.tenantSlug))
+  }),
+)
 
-export const loadGuruDashboard = createServerFn({ method: 'GET' })
-  .inputValidator((data: TenantInput) => data)
-  .handler(({ data }) =>
-    withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('./auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
-
-      return getGuruDashboard(await resolveTenant(data), teacher.id)
-    }),
-  )
+export const loadGuruDashboard = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const teacher = await getAuthenticatedUserByRole('guru')
+    return getGuruDashboard(
+      await getTenantBySlug(teacher.tenantSlug),
+      teacher.id,
+    )
+  }),
+)
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
   .inputValidator((data: MonthlySummaryInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = await getTenantBySlug(teacher.tenantSlug)
       const classId =
         data.classId && data.classId !== 'all' ? data.classId : undefined
       const [classes, summary] = await Promise.all([
@@ -224,16 +210,10 @@ export const loadParentProgress = createServerFn({ method: 'GET' })
   .inputValidator((data: ParentProgressInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
-      let parentId = data.parentId
-
-      if (!parentId) {
-        const { getAuthenticatedUserByRole } = await import('./auth.server')
-        const parent = await getAuthenticatedUserByRole('ortu')
-        parentId = parent.id
-      }
-
-      return getParentProgress(tenant, parentId)
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const parent = await getAuthenticatedUserByRole('ortu')
+      const tenant = await getTenantBySlug(parent.tenantSlug)
+      return getParentProgress(tenant, data.parentId ?? parent.id)
     }),
   )
 
@@ -242,8 +222,8 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
-      const tenant = await resolveTenant(data)
       const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = await getTenantBySlug(teacher.tenantSlug)
       const classId =
         data.classId && data.classId !== 'all' ? data.classId : undefined
       const [classes, notes] = await Promise.all([
@@ -272,10 +252,10 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
   .inputValidator((data: ObservationPageInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
-      const observedAt = data.observedAt || todayIso()
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const observedAt = data.observedAt || todayIso()
       const classes = await getTenantClasses(tenant, teacher.id)
       const classIds = classes.map((item) => item.id)
 

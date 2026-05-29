@@ -34,10 +34,9 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
     weekStart: search.weekStart,
     classId: search.classId,
   }),
-  loader: ({ context, deps }) =>
+  loader: ({ deps }) =>
     loadWeeklyNotes({
       data: {
-        tenant: context.user.tenantSlug,
         weekStart: deps.weekStart,
         classId: deps.classId,
       },

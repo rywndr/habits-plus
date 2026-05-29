@@ -25,10 +25,9 @@ export const Route = createFileRoute('/guru/ringkasan')({
     month: search.month,
     classId: search.classId,
   }),
-  loader: ({ context, deps }) =>
+  loader: ({ deps }) =>
     loadLatestSummary({
       data: {
-        tenant: context.user.tenantSlug,
         month: deps.month,
         classId: deps.classId,
       },

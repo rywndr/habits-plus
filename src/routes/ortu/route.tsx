@@ -5,13 +5,13 @@ import type { NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/ortu')({
-  beforeLoad: () =>
-    loadCurrentUser({ data: { role: 'ortu' } }).then((user) => ({ user })),
+  loader: () => loadCurrentUser({ data: { role: 'ortu' } }),
+  staleTime: Infinity,
   component: OrtuShell,
 })
 
 function OrtuShell() {
-  const { user } = Route.useRouteContext()
+  const user = Route.useLoaderData()
 
   const items: Array<NavItem> = [
     {

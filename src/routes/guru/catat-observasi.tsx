@@ -24,10 +24,9 @@ export const Route = createFileRoute('/guru/catat-observasi')({
     classId: search.classId,
     observedAt: search.observedAt,
   }),
-  loader: ({ context, deps }) =>
+  loader: ({ deps }) =>
     loadObservationPage({
       data: {
-        tenant: context.user.tenantSlug,
         classId: deps.classId,
         observedAt: deps.observedAt,
       },

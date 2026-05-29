@@ -13,8 +13,7 @@ import { AdminDashboardSkeleton } from '#/components/skeletons/admin-dashboard-s
 import { loadAdminDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/')({
-  loader: ({ context }) =>
-    loadAdminDashboard({ data: { tenant: context.user.tenantSlug } }),
+  loader: () => loadAdminDashboard(),
   component: BerandaAdmin,
   pendingComponent: AdminDashboardSkeleton,
   staticData: { title: 'Beranda Admin' },

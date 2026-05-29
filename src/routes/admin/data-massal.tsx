@@ -31,12 +31,11 @@ import {
 } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/data-massal')({
-  loader: async ({ context }) => {
-    const tenant = context.user.tenantSlug
+  loader: async () => {
     const [classes, users, students] = await Promise.all([
-      loadTenantClasses({ data: { tenant } }),
-      loadTenantUsers({ data: { tenant } }),
-      loadTenantStudents({ data: { tenant } }),
+      loadTenantClasses(),
+      loadTenantUsers(),
+      loadTenantStudents(),
     ])
     return { classes, users, students }
   },

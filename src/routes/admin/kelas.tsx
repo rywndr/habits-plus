@@ -29,11 +29,10 @@ import { loadTenantClasses, loadTenantUsers } from '#/server/loaders'
 import type { AppUser, ClassRoom } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/kelas')({
-  loader: async ({ context }) => {
-    const tenant = context.user.tenantSlug
+  loader: async () => {
     const [classes, users] = await Promise.all([
-      loadTenantClasses({ data: { tenant } }),
-      loadTenantUsers({ data: { tenant } }),
+      loadTenantClasses(),
+      loadTenantUsers(),
     ])
 
     return { classes, users }

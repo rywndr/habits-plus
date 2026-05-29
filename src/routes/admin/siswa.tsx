@@ -29,11 +29,10 @@ import { loadTenantClasses, loadTenantStudents } from '#/server/loaders'
 import type { ClassRoom, Gender, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/siswa')({
-  loader: async ({ context }) => {
-    const tenant = context.user.tenantSlug
+  loader: async () => {
     const [classes, students] = await Promise.all([
-      loadTenantClasses({ data: { tenant } }),
-      loadTenantStudents({ data: { tenant } }),
+      loadTenantClasses(),
+      loadTenantStudents(),
     ])
 
     return { classes, students }

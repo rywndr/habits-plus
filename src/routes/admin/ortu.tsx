@@ -39,12 +39,11 @@ import {
 import type { AppUser, ClassRoom, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/admin/ortu')({
-  loader: async ({ context }) => {
-    const tenant = context.user.tenantSlug
+  loader: async () => {
     const [users, students, classes] = await Promise.all([
-      loadTenantUsers({ data: { tenant } }),
-      loadTenantStudents({ data: { tenant } }),
-      loadTenantClasses({ data: { tenant } }),
+      loadTenantUsers(),
+      loadTenantStudents(),
+      loadTenantClasses(),
     ])
 
     return {

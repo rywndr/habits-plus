@@ -5,15 +5,13 @@ import type { NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/super-admin')({
-  beforeLoad: () =>
-    loadCurrentUser({ data: { role: 'super-admin' } }).then((user) => ({
-      user,
-    })),
+  loader: () => loadCurrentUser({ data: { role: 'super-admin' } }),
+  staleTime: Infinity,
   component: SuperAdminShell,
 })
 
 function SuperAdminShell() {
-  const { user } = Route.useRouteContext()
+  const user = Route.useLoaderData()
   const items: Array<NavItem> = [
     {
       to: '/super-admin',

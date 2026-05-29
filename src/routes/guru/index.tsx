@@ -17,8 +17,7 @@ import { GuruDashboardSkeleton } from '#/components/skeletons/guru-dashboard-ske
 import { loadGuruDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru/')({
-  loader: ({ context }) =>
-    loadGuruDashboard({ data: { tenant: context.user.tenantSlug } }),
+  loader: () => loadGuruDashboard(),
   component: BerandaGuru,
   pendingComponent: GuruDashboardSkeleton,
   staticData: { title: 'Beranda Guru' },
