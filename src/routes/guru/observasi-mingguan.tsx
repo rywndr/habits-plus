@@ -46,6 +46,7 @@ export const Route = createFileRoute('/guru/observasi-mingguan')({
       },
     }),
   component: ObservasiMingguan,
+  pendingMs: Infinity,
   pendingComponent: WeeklyNotesSkeleton,
   staticData: { title: 'Observasi Mingguan' },
 })

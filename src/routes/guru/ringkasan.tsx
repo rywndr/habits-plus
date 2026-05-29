@@ -33,6 +33,7 @@ export const Route = createFileRoute('/guru/ringkasan')({
       },
     }),
   component: LihatRingkasan,
+  pendingMs: Infinity,
   pendingComponent: SummaryPageSkeleton,
   staticData: { title: 'Lihat Ringkasan' },
 })

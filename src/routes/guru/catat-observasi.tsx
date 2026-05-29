@@ -39,6 +39,7 @@ export const Route = createFileRoute('/guru/catat-observasi')({
       },
     }),
   component: CatatObservasi,
+  pendingMs: Infinity,
   pendingComponent: ObservationPageSkeleton,
   staticData: { title: 'Catat Observasi' },
 })
