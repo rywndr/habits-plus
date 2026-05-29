@@ -256,14 +256,6 @@ function ObservasiMingguan() {
             onClick={handleSave}
             disabled={isDataPending || isAllClasses}
           />
-          <Button
-            size="lg"
-            variant="secondary"
-            className="rounded-full px-6"
-            disabled={isAllClasses}
-          >
-            Batal
-          </Button>
         </div>
 
         <Dialog open={isOverwriteOpen} onOpenChange={setIsOverwriteOpen}>
