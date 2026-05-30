@@ -54,16 +54,6 @@ function BerandaAdmin() {
             icon={UserCircle2}
           />
         </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/5">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Activity className="size-4 text-brand-orange" />
-            Aktivitas Terbaru
-          </div>
-          <div className="grid place-items-center rounded-lg border border-dashed border-border bg-brand-panel/50 py-12 text-xs text-muted-foreground">
-            [Placeholder — riwayat tambah/edit guru, siswa, observasi]
-          </div>
-        </div>
       </div>
     </ContentPanel>
   )

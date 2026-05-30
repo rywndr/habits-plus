@@ -36,11 +36,6 @@ export function GenderDistributionCard({ laki, perempuan, className }: Props) {
         <br />
         Berdasarkan Jenis Kelamin
       </span>
-
-      <div className="grid place-items-center rounded-lg border border-dashed border-border bg-brand-panel/50 py-6 text-xs text-muted-foreground">
-        [Chart placeholder]
-      </div>
-
       <div className="flex flex-col gap-3">
         <Bar label="Laki-laki" value={laki} color="bg-brand-navy" />
         <Bar label="Perempuan" value={perempuan} color="bg-brand-orange" />
