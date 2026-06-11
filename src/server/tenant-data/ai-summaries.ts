@@ -190,12 +190,33 @@ export async function getAiGenerationHistory(
   }))
 }
 
-export async function getLatestActiveAiSummary(studentId: string) {
-  return getDb().query.aiSummaries.findFirst({
+export type ParentAiSummary = {
+  id: string
+  weekStart: string
+  weekLabel: string
+  content: string
+}
+
+function weekRangeLabel(weekStart: string) {
+  const startLabel = formatIndonesianDate(weekStart).replace(/ \d{4}$/, '')
+  return `${startLabel} – ${formatIndonesianDate(addDaysIso(weekStart, 4))}`
+}
+
+export async function getActiveAiSummariesForStudent(
+  studentId: string,
+): Promise<Array<ParentAiSummary>> {
+  const rows = await getDb().query.aiSummaries.findMany({
     where: and(
       eq(aiSummaries.studentId, studentId),
       eq(aiSummaries.status, 'active'),
     ),
     orderBy: [desc(aiSummaries.weekStart)],
   })
+
+  return rows.map((row) => ({
+    id: row.id,
+    weekStart: row.weekStart,
+    weekLabel: weekRangeLabel(row.weekStart),
+    content: row.content,
+  }))
 }
