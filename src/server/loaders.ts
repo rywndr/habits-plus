@@ -99,6 +99,14 @@ export type WeeklyNoteExportRow = {
   p3: string
 }
 
+export const loadSessionRole = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<Role | null> => {
+    const { getSession } = await import('./auth.server')
+    const session = await getSession()
+    return (session?.user.role as Role | undefined) ?? null
+  },
+)
+
 export const loadCurrentUser = createServerFn({ method: 'GET' })
   .inputValidator((data: CurrentUserInput) => data)
   .handler(({ data }) =>
@@ -198,20 +206,22 @@ export const loadTenantClasses = createServerFn({ method: 'GET' }).handler(() =>
   }),
 )
 
-export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(() =>
-  withTenantCache(async () => {
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const admin = await getAuthenticatedUserByRole('admin')
-    return getTenantStudents(admin.tenant)
-  }),
+export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(
+  () =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const admin = await getAuthenticatedUserByRole('admin')
+      return getTenantStudents(admin.tenant)
+    }),
 )
 
-export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(() =>
-  withTenantCache(async () => {
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const admin = await getAuthenticatedUserByRole('admin')
-    return getAdminDashboard(admin.tenant)
-  }),
+export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(
+  () =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const admin = await getAuthenticatedUserByRole('admin')
+      return getAdminDashboard(admin.tenant)
+    }),
 )
 
 export const loadGuruDashboard = createServerFn({ method: 'GET' }).handler(() =>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
+import { useRouter } from '@tanstack/react-router'
 import { Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react'
 import { z } from 'zod'
 import { Button } from '#/components/ui/button'
@@ -14,6 +15,7 @@ const loginSchema = z.object({
 })
 
 export function LoginCard() {
+  const router = useRouter()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const form = useForm({
@@ -37,7 +39,7 @@ export function LoginCard() {
         rememberMe: false,
       })
 
-      if (result.error || !result.data?.user) {
+      if (result.error) {
         setSubmitError('Email atau kata sandi tidak sesuai.')
         return
       }
@@ -48,7 +50,10 @@ export function LoginCard() {
         return
       }
 
-      window.location.assign(`/${role}`)
+      // Drop any loader data cached for a previously signed-in user before
+      // navigating client-side (no full page reload).
+      await router.invalidate()
+      await router.navigate({ href: `/${role}` })
     },
   })
 

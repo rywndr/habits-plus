@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useRouter } from '@tanstack/react-router'
 import { SidebarInset, SidebarProvider } from '#/components/ui/sidebar'
 import { authClient } from '#/lib/auth-client'
 import { AppSidebar } from './app-sidebar'
@@ -23,11 +23,14 @@ export function AppShell({
   mobileTitle,
   children,
 }: Props) {
-  const navigate = useNavigate()
+  const router = useRouter()
 
   async function handleLogout() {
     await authClient.signOut()
-    await navigate({ to: '/login' })
+    await router.navigate({ to: '/login' })
+    // Drop the signed-out user's cached loader data so it can't be rendered
+    // again (e.g. via the back button) without re-authenticating.
+    await router.invalidate()
   }
 
   return (
