@@ -31,9 +31,14 @@ function LihatProgres() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="font-heading text-lg font-semibold">
-            Empat Kebiasaan yang Kami Amati
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-heading text-lg font-semibold">
+              Empat Kebiasaan yang Kami Amati
+            </h2>
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              {progress.indicatorsWeekLabel}
+            </span>
+          </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {progress.indicators.map((ind) => (
               <ProgressGraphicCard

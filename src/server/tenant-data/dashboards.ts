@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lt } from 'drizzle-orm'
+import { and, eq, gte, inArray, lt, lte } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
   dailyObservations,
@@ -15,9 +15,11 @@ import { getTenantStudents } from './students'
 import { getTenantUsers } from './users'
 import type { Frequency, Indicator, MonthlySummary, Tenant } from './types'
 import {
+  addDaysIso,
   formatIndonesianMonth,
   monthStartIso,
   nextMonthStartIso,
+  weekStartIso,
 } from '../date'
 
 export async function getAdminDashboard(tenant: Tenant) {
@@ -185,12 +187,6 @@ export async function getMonthlySummary(
   const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
     indicators.map((indicator) => {
       const frequency = averages[indicator] ?? 'tidak-terlihat'
-      const trendByFrequency: Record<Frequency, Trend> = {
-        'tidak-terlihat': 'tidak-terlihat',
-        'terlihat-sesekali': 'stabil',
-        sering: 'meningkat',
-      }
-
       return [indicator, trendByFrequency[frequency]]
     }),
   )
@@ -244,32 +240,92 @@ export async function getLatestSummary(
   )
 }
 
+const trendByFrequency: Record<Frequency, Trend> = {
+  'tidak-terlihat': 'tidak-terlihat',
+  'terlihat-sesekali': 'stabil',
+  sering: 'meningkat',
+}
+
+async function getStudentWeekTrends(
+  tenant: Tenant,
+  studentId: string,
+  weekStart: string,
+): Promise<Partial<Record<Indicator, Trend>>> {
+  const rows = await getDb()
+    .select({
+      indicator: observationScores.indicator,
+      frequency: observationScores.frequency,
+    })
+    .from(observationScores)
+    .innerJoin(
+      dailyObservations,
+      eq(observationScores.observationId, dailyObservations.id),
+    )
+    .where(
+      and(
+        eq(dailyObservations.schoolId, tenant.id),
+        eq(dailyObservations.studentId, studentId),
+        gte(dailyObservations.observedAt, weekStart),
+        lte(dailyObservations.observedAt, addDaysIso(weekStart, 6)),
+      ),
+    )
+
+  const averageByIndicator = rows.reduce(
+    (acc, row) => {
+      const summary = acc[row.indicator] ?? { total: 0, count: 0 }
+      summary.total += frequencyScore[row.frequency]
+      summary.count += 1
+      acc[row.indicator] = summary
+      return acc
+    },
+    {} as Partial<Record<Indicator, { total: number; count: number }>>,
+  )
+
+  return Object.fromEntries(
+    (['respons', 'interaksi', 'partisipasi', 'regulasi'] as const).map(
+      (indicator) => {
+        const summary = averageByIndicator[indicator]
+        const average = summary ? summary.total / summary.count : 0
+        const score = Math.max(0, Math.min(2, Math.round(average)))
+        return [indicator, trendByFrequency[scoreFrequency[score]]]
+      },
+    ),
+  )
+}
+
 export async function getParentProgress(tenant: Tenant, parentId: string) {
-  const [child, summary] = await Promise.all([
-    getDb().query.students.findFirst({
-      where: eq(students.parentId, parentId),
-    }),
-    getLatestSummary(tenant),
-  ])
+  const child = await getDb().query.students.findFirst({
+    where: eq(students.parentId, parentId),
+  })
   // Prefer the teacher-approved AI weekly summaries; fall back to the manual
   // monthly summary text when none has been accepted yet.
-  const { getActiveAiSummariesForStudent } = await import('./ai-summaries')
+  const { getActiveAiSummariesForStudent, weekRangeLabel } =
+    await import('./ai-summaries')
   const weeklySummaries = child
     ? await getActiveAiSummariesForStudent(child.id)
     : []
   const latest = weeklySummaries.at(0)
+  const featuredWeekStart = latest?.weekStart ?? weekStartIso(new Date())
+
+  const [trends, fallbackSummary] = await Promise.all([
+    child
+      ? getStudentWeekTrends(tenant, child.id, featuredWeekStart)
+      : Promise.resolve<Partial<Record<Indicator, Trend>>>({}),
+    latest ? Promise.resolve(null) : getLatestSummary(tenant),
+  ])
 
   return {
     childName: child?.name ?? 'Anak',
-    summaryText: latest?.content ?? summary.text,
+    summaryText: latest?.content ?? fallbackSummary?.text ?? '',
     latestWeekLabel: latest?.weekLabel ?? null,
+    indicatorsWeekLabel: weekRangeLabel(featuredWeekStart),
     history: weeklySummaries.slice(1),
     indicators: (
       ['respons', 'interaksi', 'partisipasi', 'regulasi'] as const
     ).map((indicator, index) => ({
       indicator,
       label: indicatorLabels[indicator],
-      trend: summary.trends[indicator] ?? 'tidak-terlihat',
+      trend: trends[indicator] ?? 'tidak-terlihat',
       graphic: `/graphics/graphic-${index + 1}.png`,
     })),
   }

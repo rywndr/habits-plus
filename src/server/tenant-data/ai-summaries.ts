@@ -197,7 +197,7 @@ export type ParentAiSummary = {
   content: string
 }
 
-function weekRangeLabel(weekStart: string) {
+export function weekRangeLabel(weekStart: string) {
   const startLabel = formatIndonesianDate(weekStart).replace(/ \d{4}$/, '')
   return `${startLabel} – ${formatIndonesianDate(addDaysIso(weekStart, 4))}`
 }
