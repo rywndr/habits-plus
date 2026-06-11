@@ -39,7 +39,7 @@ export const Route = createFileRoute('/guru/catat-observasi')({
       },
     }),
   component: CatatObservasi,
-  pendingMs: Infinity,
+  staleTime: 30_000,
   pendingComponent: ObservationPageSkeleton,
   staticData: { title: 'Catat Observasi' },
 })
@@ -85,11 +85,13 @@ function CatatObservasi() {
     setClassId(nextClassId)
     setRows(getEmptyRows(data.students, nextClassId))
     setNote('')
+    const search = { classId: nextClassId, observedAt }
     try {
-      await navigate({
-        to: '/guru/catat-observasi',
-        search: { classId: nextClassId, observedAt },
-      })
+      // Preload so the current view (with its inline skeletons) stays mounted
+      // while the data loads, instead of the route-level pendingComponent
+      // replacing the whole page.
+      await router.preloadRoute({ to: '/guru/catat-observasi', search })
+      await navigate({ to: '/guru/catat-observasi', search })
     } catch (error) {
       setIsDataPending(false)
       throw error
@@ -102,11 +104,10 @@ function CatatObservasi() {
     setObservedAt(nextObservedAt)
     setRows(getEmptyRows(data.students, classId))
     setNote('')
+    const search = { classId, observedAt: nextObservedAt }
     try {
-      await navigate({
-        to: '/guru/catat-observasi',
-        search: { classId, observedAt: nextObservedAt },
-      })
+      await router.preloadRoute({ to: '/guru/catat-observasi', search })
+      await navigate({ to: '/guru/catat-observasi', search })
     } catch (error) {
       setIsDataPending(false)
       throw error

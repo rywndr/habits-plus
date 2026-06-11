@@ -40,6 +40,7 @@ export const Route = createFileRoute('/admin/data-massal')({
     return { classes, users, students }
   },
   component: DataMassal,
+  staleTime: 30_000,
   staticData: { title: 'Data Massal' },
 })
 

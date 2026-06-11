@@ -38,6 +38,7 @@ export const Route = createFileRoute('/admin/kelas')({
     return { classes, users }
   },
   component: KelolaKelas,
+  staleTime: 30_000,
   pendingComponent: PendingKelasTable,
   staticData: { title: 'Kelola Kelas' },
 })

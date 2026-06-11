@@ -6,6 +6,7 @@ import { loadSuperAdminSchools } from '#/server/loaders'
 export const Route = createFileRoute('/super-admin/')({
   loader: () => loadSuperAdminSchools(),
   component: SuperAdminSchoolsRoute,
+  staleTime: 30_000,
   pendingComponent: PendingSchoolsTable,
   staticData: { title: 'Tambah Sekolah' },
 })

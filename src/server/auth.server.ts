@@ -82,23 +82,27 @@ export async function getAuthenticatedUserByRole(role: Role) {
       `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
     )
   }
-  const user = await getDb().query.users.findFirst({
-    where: and(eq(users.id, session.user.id), eq(users.role, role)),
-  })
-  if (!user) {
+  // Single round trip: the Neon HTTP driver issues one request per query, so
+  // fetching the user and school separately doubles the auth latency.
+  const rows = await getDb()
+    .select({ user: users, school: schools })
+    .from(users)
+    .innerJoin(schools, eq(schools.id, users.schoolId))
+    .where(and(eq(users.id, session.user.id), eq(users.role, role)))
+    .limit(1)
+  const row = rows.at(0)
+  if (!row) {
     throw new Error(
       `Silakan masuk sebagai ${roleLabels[role]} terlebih dahulu.`,
     )
   }
-  const school = await getDb().query.schools.findFirst({
-    where: eq(schools.id, user.schoolId),
-  })
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    tenantSlug: user.tenantSlug,
-    schoolName: school?.name ?? user.tenantSlug,
+    id: row.user.id,
+    name: row.user.name,
+    email: row.user.email,
+    role: row.user.role,
+    tenantSlug: row.user.tenantSlug,
+    schoolName: row.school.name,
+    tenant: row.school,
   }
 }

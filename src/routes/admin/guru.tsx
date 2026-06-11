@@ -41,6 +41,7 @@ export const Route = createFileRoute('/admin/guru')({
     }
   },
   component: KelolaGuru,
+  staleTime: 30_000,
   pendingComponent: PendingGuruTable,
   staticData: { title: 'Kelola Guru' },
 })

@@ -18,7 +18,6 @@ import {
   getLatestSummary,
   getMonthlySummary,
   getParentProgress,
-  getTenantBySlug,
   getTenantClasses,
   getTenantStudents,
   getTenantUsers,
@@ -113,9 +112,38 @@ export const loadTenantUsers = createServerFn({ method: 'GET' }).handler(() =>
   withTenantCache(async () => {
     const { getAuthenticatedUserByRole } = await import('./auth.server')
     const admin = await getAuthenticatedUserByRole('admin')
-    return getTenantUsers(await getTenantBySlug(admin.tenantSlug))
+    return getTenantUsers(admin.tenant)
   }),
 )
+
+async function fetchSuperAdminSchools() {
+  const [schoolRows, adminRows] = await Promise.all([
+    getDb().query.schools.findMany({
+      orderBy: [asc(schools.name)],
+    }),
+    getDb().query.users.findMany({
+      where: eq(users.role, 'admin'),
+      orderBy: [asc(users.name)],
+    }),
+  ])
+
+  const schoolList: Array<SuperAdminSchool> = schoolRows
+    .filter((school) => school.slug !== 'platform')
+    .map((school) => {
+      const admins = adminRows.filter((user) => user.schoolId === school.id)
+
+      return {
+        id: school.id,
+        slug: school.slug,
+        name: school.name,
+        region: school.region,
+        adminCount: admins.length,
+        adminEmails: admins.map((admin) => admin.email),
+      }
+    })
+
+  return { schools: schoolList, adminRows }
+}
 
 export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
   () =>
@@ -123,29 +151,7 @@ export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       await getAuthenticatedUserByRole('super-admin')
 
-      const [schoolRows, userRows] = await Promise.all([
-        getDb().query.schools.findMany({
-          orderBy: [asc(schools.name)],
-        }),
-        getDb().query.users.findMany({
-          where: eq(users.role, 'admin'),
-        }),
-      ])
-
-      return schoolRows
-        .filter((school) => school.slug !== 'platform')
-        .map((school) => {
-          const admins = userRows.filter((user) => user.schoolId === school.id)
-
-          return {
-            id: school.id,
-            slug: school.slug,
-            name: school.name,
-            region: school.region,
-            adminCount: admins.length,
-            adminEmails: admins.map((admin) => admin.email),
-          }
-        })
+      return (await fetchSuperAdminSchools()).schools
     }),
 )
 
@@ -160,17 +166,13 @@ export const loadSuperAdminSchoolAdmins = createServerFn({
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       await getAuthenticatedUserByRole('super-admin')
 
-      const schoolRows = await loadSuperAdminSchools()
-      const adminRows = await getDb().query.users.findMany({
-        where: eq(users.role, 'admin'),
-        orderBy: [asc(users.name)],
-      })
+      const { schools: schoolList, adminRows } = await fetchSuperAdminSchools()
 
       return {
-        schools: schoolRows,
+        schools: schoolList,
         admins: adminRows
           .map((admin) => {
-            const school = schoolRows.find((row) => row.id === admin.schoolId)
+            const school = schoolList.find((row) => row.id === admin.schoolId)
 
             if (!school) return null
 
@@ -192,7 +194,7 @@ export const loadTenantClasses = createServerFn({ method: 'GET' }).handler(() =>
   withTenantCache(async () => {
     const { getAuthenticatedUserByRole } = await import('./auth.server')
     const admin = await getAuthenticatedUserByRole('admin')
-    return getTenantClasses(await getTenantBySlug(admin.tenantSlug))
+    return getTenantClasses(admin.tenant)
   }),
 )
 
@@ -200,7 +202,7 @@ export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(() =
   withTenantCache(async () => {
     const { getAuthenticatedUserByRole } = await import('./auth.server')
     const admin = await getAuthenticatedUserByRole('admin')
-    return getTenantStudents(await getTenantBySlug(admin.tenantSlug))
+    return getTenantStudents(admin.tenant)
   }),
 )
 
@@ -208,7 +210,7 @@ export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(() =
   withTenantCache(async () => {
     const { getAuthenticatedUserByRole } = await import('./auth.server')
     const admin = await getAuthenticatedUserByRole('admin')
-    return getAdminDashboard(await getTenantBySlug(admin.tenantSlug))
+    return getAdminDashboard(admin.tenant)
   }),
 )
 
@@ -216,10 +218,7 @@ export const loadGuruDashboard = createServerFn({ method: 'GET' }).handler(() =>
   withTenantCache(async () => {
     const { getAuthenticatedUserByRole } = await import('./auth.server')
     const teacher = await getAuthenticatedUserByRole('guru')
-    return getGuruDashboard(
-      await getTenantBySlug(teacher.tenantSlug),
-      teacher.id,
-    )
+    return getGuruDashboard(teacher.tenant, teacher.id)
   }),
 )
 
@@ -229,7 +228,7 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
-      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const tenant = teacher.tenant
       const classId =
         data.classId && data.classId !== 'all' ? data.classId : undefined
       const [classes, summary] = await Promise.all([
@@ -249,7 +248,7 @@ export const loadParentProgress = createServerFn({ method: 'GET' })
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const parent = await getAuthenticatedUserByRole('ortu')
-      const tenant = await getTenantBySlug(parent.tenantSlug)
+      const tenant = parent.tenant
       return getParentProgress(tenant, data.parentId ?? parent.id)
     }),
   )
@@ -260,7 +259,7 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
-      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const tenant = teacher.tenant
       const classId =
         data.classId && data.classId !== 'all' ? data.classId : undefined
       const [classes, notes] = await Promise.all([
@@ -291,7 +290,7 @@ export const loadDailyObservationExport = createServerFn({ method: 'GET' })
     withTenantCache(async (): Promise<Array<DailyObservationExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
-      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const tenant = teacher.tenant
       const teacherClasses = await getTenantClasses(tenant, teacher.id)
       const allowedClassIds = teacherClasses.map((item) => item.id)
       const classIds =
@@ -373,7 +372,7 @@ export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
     withTenantCache(async (): Promise<Array<WeeklyNoteExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
-      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const tenant = teacher.tenant
       const teacherClasses = await getTenantClasses(tenant, teacher.id)
       const allowedClassIds = teacherClasses.map((item) => item.id)
       const classFilters =
@@ -414,7 +413,7 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
-      const tenant = await getTenantBySlug(teacher.tenantSlug)
+      const tenant = teacher.tenant
       const observedAt = data.observedAt || todayIso()
       const classes = await getTenantClasses(tenant, teacher.id)
       const classIds = classes.map((item) => item.id)

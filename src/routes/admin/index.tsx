@@ -15,6 +15,7 @@ import { loadAdminDashboard } from '#/server/loaders'
 export const Route = createFileRoute('/admin/')({
   loader: () => loadAdminDashboard(),
   component: BerandaAdmin,
+  staleTime: 30_000,
   pendingComponent: AdminDashboardSkeleton,
   staticData: { title: 'Beranda Admin' },
 })

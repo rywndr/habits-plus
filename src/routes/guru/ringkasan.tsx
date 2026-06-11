@@ -33,7 +33,7 @@ export const Route = createFileRoute('/guru/ringkasan')({
       },
     }),
   component: LihatRingkasan,
-  pendingMs: Infinity,
+  staleTime: 30_000,
   pendingComponent: SummaryPageSkeleton,
   staticData: { title: 'Lihat Ringkasan' },
 })
@@ -68,14 +68,16 @@ function LihatRingkasan() {
 
   async function navigateTo(next: { month: string; classId: string }) {
     setIsDataPending(true)
+    const nextSearch = {
+      month: next.month,
+      classId: next.classId === ALL_CLASSES ? undefined : next.classId,
+    }
     try {
-      await navigate({
-        to: '/guru/ringkasan',
-        search: {
-          month: next.month,
-          classId: next.classId === ALL_CLASSES ? undefined : next.classId,
-        },
-      })
+      // Preload so the current view (with its inline skeletons) stays mounted
+      // while the data loads, instead of the route-level pendingComponent
+      // replacing the whole page.
+      await router.preloadRoute({ to: '/guru/ringkasan', search: nextSearch })
+      await navigate({ to: '/guru/ringkasan', search: nextSearch })
     } catch (error) {
       setIsDataPending(false)
       throw error

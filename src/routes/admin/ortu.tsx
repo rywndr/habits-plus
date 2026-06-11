@@ -53,6 +53,7 @@ export const Route = createFileRoute('/admin/ortu')({
     }
   },
   component: KelolaOrtu,
+  staleTime: 30_000,
   pendingComponent: PendingOrtuTable,
   staticData: { title: 'Kelola Orang Tua' },
 })

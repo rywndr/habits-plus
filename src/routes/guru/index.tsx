@@ -19,6 +19,7 @@ import { loadGuruDashboard } from '#/server/loaders'
 export const Route = createFileRoute('/guru/')({
   loader: () => loadGuruDashboard(),
   component: BerandaGuru,
+  staleTime: 30_000,
   pendingComponent: GuruDashboardSkeleton,
   staticData: { title: 'Beranda Guru' },
 })

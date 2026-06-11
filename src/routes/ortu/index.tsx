@@ -9,6 +9,7 @@ import { loadParentProgress } from '#/server/loaders'
 export const Route = createFileRoute('/ortu/')({
   loader: () => loadParentProgress({ data: {} }),
   component: LihatProgres,
+  staleTime: 30_000,
   pendingComponent: ParentProgressSkeleton,
   staticData: { title: 'Lihat Progres' },
 })
