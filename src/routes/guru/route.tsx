@@ -1,5 +1,11 @@
 import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
-import { Home, ClipboardEdit, BarChart3, CalendarRange } from 'lucide-react'
+import {
+  Home,
+  ClipboardEdit,
+  BarChart3,
+  CalendarRange,
+  Sparkles,
+} from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
 import type { NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
@@ -37,6 +43,12 @@ function GuruShell() {
       href: '/guru/observasi-mingguan',
       label: 'observasi mingguan',
       icon: CalendarRange,
+    },
+    {
+      to: '/guru/ringkasan-ai',
+      href: '/guru/ringkasan-ai',
+      label: 'ringkasan AI',
+      icon: Sparkles,
     },
   ]
 

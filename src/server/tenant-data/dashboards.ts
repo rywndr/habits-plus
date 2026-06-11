@@ -251,10 +251,14 @@ export async function getParentProgress(tenant: Tenant, parentId: string) {
     }),
     getLatestSummary(tenant),
   ])
+  // Prefer the teacher-approved AI weekly summary; fall back to the manual
+  // monthly summary text when none has been accepted yet.
+  const { getLatestActiveAiSummary } = await import('./ai-summaries')
+  const aiSummary = child ? await getLatestActiveAiSummary(child.id) : null
 
   return {
     childName: child?.name ?? 'Anak',
-    summaryText: summary.text,
+    summaryText: aiSummary?.content ?? summary.text,
     indicators: (
       ['respons', 'interaksi', 'partisipasi', 'regulasi'] as const
     ).map((indicator, index) => ({

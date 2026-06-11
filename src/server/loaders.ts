@@ -12,7 +12,10 @@ import {
 } from '#/db/schema'
 import type { Role } from '#/db/schema'
 import {
+  getActiveAiSummaries,
   getAdminDashboard,
+  getAiGenerationHistory,
+  getClassWeekObservations,
   getDailyObservationDay,
   getGuruDashboard,
   getLatestSummary,
@@ -23,6 +26,11 @@ import {
   getTenantUsers,
   getWeeklyNotes,
   withTenantCache,
+} from './tenant-data'
+import type {
+  AiGenerationHistoryEntry,
+  AiSummaryListItem,
+  StudentWeekDayData,
 } from './tenant-data'
 import { todayIso, weekStartIso } from './date'
 
@@ -456,6 +464,69 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
         note: observationDay.note,
         observedAt,
         classId,
+      }
+    }),
+  )
+
+type AiSummaryPageInput = TenantInput & {
+  weekStart?: string
+  classId?: string
+}
+
+export const loadAiSummaryPage = createServerFn({ method: 'GET' })
+  .inputValidator((data: AiSummaryPageInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = teacher.tenant
+      const selectedWeekStart = weekStartIso(
+        data.weekStart ? new Date(data.weekStart) : new Date(),
+      )
+      const classes = await getTenantClasses(tenant, teacher.id)
+      const classId =
+        classes.find((item) => item.id === data.classId)?.id ||
+        classes[0]?.id ||
+        ''
+
+      if (!classId) {
+        const weekData: Record<string, Array<StudentWeekDayData>> = {}
+        const summaries: Array<AiSummaryListItem> = []
+        const history: Array<AiGenerationHistoryEntry> = []
+        return {
+          classes,
+          classId,
+          selectedWeekStart,
+          students: [],
+          weekData,
+          summaries,
+          history,
+        }
+      }
+
+      const [students, weekObservations, summaries, history] =
+        await Promise.all([
+          getTenantStudents(tenant, [classId]),
+          getClassWeekObservations(tenant, classId, selectedWeekStart),
+          getActiveAiSummaries(tenant, classId, selectedWeekStart),
+          getAiGenerationHistory(tenant),
+        ])
+      const activeIds = new Set(summaries.map((item) => item.studentId))
+
+      return {
+        classes,
+        classId,
+        selectedWeekStart,
+        students: students.map((student) => ({
+          id: student.id,
+          name: student.name,
+          gender: student.gender,
+          observedDays: weekObservations.get(student.id)?.length ?? 0,
+          hasActiveSummary: activeIds.has(student.id),
+        })),
+        weekData: Object.fromEntries(weekObservations),
+        summaries,
+        history,
       }
     }),
   )

@@ -20,6 +20,7 @@ import { Route as OrtuIndexRouteImport } from './routes/ortu/index'
 import { Route as GuruIndexRouteImport } from './routes/guru/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SuperAdminAdminSekolahRouteImport } from './routes/super-admin/admin-sekolah'
+import { Route as GuruRingkasanAiRouteImport } from './routes/guru/ringkasan-ai'
 import { Route as GuruRingkasanRouteImport } from './routes/guru/ringkasan'
 import { Route as GuruObservasiMingguanRouteImport } from './routes/guru/observasi-mingguan'
 import { Route as GuruCatatObservasiRouteImport } from './routes/guru/catat-observasi'
@@ -85,6 +86,11 @@ const SuperAdminAdminSekolahRoute = SuperAdminAdminSekolahRouteImport.update({
   path: '/admin-sekolah',
   getParentRoute: () => SuperAdminRouteRoute,
 } as any)
+const GuruRingkasanAiRoute = GuruRingkasanAiRouteImport.update({
+  id: '/ringkasan-ai',
+  path: '/ringkasan-ai',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
 const GuruRingkasanRoute = GuruRingkasanRouteImport.update({
   id: '/ringkasan',
   path: '/ringkasan',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin': typeof AdminIndexRoute
   '/guru': typeof GuruIndexRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/guru/catat-observasi': typeof GuruCatatObservasiRoute
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
+  '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/guru/ringkasan-ai'
     | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/guru/ringkasan-ai'
     | '/super-admin/admin-sekolah'
     | '/admin'
     | '/guru'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/guru/catat-observasi'
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
+    | '/guru/ringkasan-ai'
     | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminAdminSekolahRouteImport
       parentRoute: typeof SuperAdminRouteRoute
     }
+    '/guru/ringkasan-ai': {
+      id: '/guru/ringkasan-ai'
+      path: '/ringkasan-ai'
+      fullPath: '/guru/ringkasan-ai'
+      preLoaderRoute: typeof GuruRingkasanAiRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
     '/guru/ringkasan': {
       id: '/guru/ringkasan'
       path: '/ringkasan'
@@ -440,6 +459,7 @@ interface GuruRouteRouteChildren {
   GuruCatatObservasiRoute: typeof GuruCatatObservasiRoute
   GuruObservasiMingguanRoute: typeof GuruObservasiMingguanRoute
   GuruRingkasanRoute: typeof GuruRingkasanRoute
+  GuruRingkasanAiRoute: typeof GuruRingkasanAiRoute
   GuruIndexRoute: typeof GuruIndexRoute
 }
 
@@ -447,6 +467,7 @@ const GuruRouteRouteChildren: GuruRouteRouteChildren = {
   GuruCatatObservasiRoute: GuruCatatObservasiRoute,
   GuruObservasiMingguanRoute: GuruObservasiMingguanRoute,
   GuruRingkasanRoute: GuruRingkasanRoute,
+  GuruRingkasanAiRoute: GuruRingkasanAiRoute,
   GuruIndexRoute: GuruIndexRoute,
 }
 
@@ -492,12 +513,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
