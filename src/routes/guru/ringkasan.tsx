@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Textarea } from '#/components/ui/textarea'
 import { SaveButton } from '#/components/common/save-button'
@@ -66,17 +66,20 @@ function LihatRingkasan() {
     setSaveStatus('idle')
   }, [search.month, summary.month, summary.text, summary.classId])
 
+  const pendingNavToken = useRef(0)
+
   async function navigateTo(next: { month: string; classId: string }) {
     setIsDataPending(true)
+    const token = ++pendingNavToken.current
+    const startHref = router.state.location.href
     const nextSearch = {
       month: next.month,
       classId: next.classId === ALL_CLASSES ? undefined : next.classId,
     }
     try {
-      // Preload so the current view (with its inline skeletons) stays mounted
-      // while the data loads, instead of the route-level pendingComponent
-      // replacing the whole page.
       await router.preloadRoute({ to: '/guru/ringkasan', search: nextSearch })
+      if (token !== pendingNavToken.current) return
+      if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/ringkasan', search: nextSearch })
     } catch (error) {
       setIsDataPending(false)

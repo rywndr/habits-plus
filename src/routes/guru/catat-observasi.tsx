@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
@@ -79,23 +79,32 @@ function CatatObservasi() {
     setIsDataPending(false)
   }, [data.classId, data.note, data.observedAt, data.rows])
 
+  const pendingNavToken = useRef(0)
+
+  async function navigateToSearch(search: {
+    classId: string | undefined
+    observedAt: string | undefined
+  }) {
+    const token = ++pendingNavToken.current
+    const startHref = router.state.location.href
+    try {
+      await router.preloadRoute({ to: '/guru/catat-observasi', search })
+      if (token !== pendingNavToken.current) return
+      if (router.state.location.href !== startHref) return
+      await navigate({ to: '/guru/catat-observasi', search })
+    } catch (error) {
+      setIsDataPending(false)
+      throw error
+    }
+  }
+
   async function handleClassChange(nextClassId: string) {
     setSaveStatus('idle')
     setIsDataPending(true)
     setClassId(nextClassId)
     setRows(getEmptyRows(data.students, nextClassId))
     setNote('')
-    const search = { classId: nextClassId, observedAt }
-    try {
-      // Preload so the current view (with its inline skeletons) stays mounted
-      // while the data loads, instead of the route-level pendingComponent
-      // replacing the whole page.
-      await router.preloadRoute({ to: '/guru/catat-observasi', search })
-      await navigate({ to: '/guru/catat-observasi', search })
-    } catch (error) {
-      setIsDataPending(false)
-      throw error
-    }
+    await navigateToSearch({ classId: nextClassId, observedAt })
   }
 
   async function handleDateChange(nextObservedAt: string) {
@@ -104,14 +113,7 @@ function CatatObservasi() {
     setObservedAt(nextObservedAt)
     setRows(getEmptyRows(data.students, classId))
     setNote('')
-    const search = { classId, observedAt: nextObservedAt }
-    try {
-      await router.preloadRoute({ to: '/guru/catat-observasi', search })
-      await navigate({ to: '/guru/catat-observasi', search })
-    } catch (error) {
-      setIsDataPending(false)
-      throw error
-    }
+    await navigateToSearch({ classId, observedAt: nextObservedAt })
   }
 
   async function handleSave() {

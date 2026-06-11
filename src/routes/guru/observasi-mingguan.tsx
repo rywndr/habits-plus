@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
@@ -80,18 +80,21 @@ function ObservasiMingguan() {
     weeklyNotes.classId,
   ])
 
+  const pendingNavToken = useRef(0)
+
   async function navigateTo(next: { weekStart: string; classId: string }) {
     setSaveStatus('idle')
     setIsDataPending(true)
+    const token = ++pendingNavToken.current
+    const startHref = router.state.location.href
     const search = {
       weekStart: next.weekStart,
       classId: next.classId === ALL_CLASSES ? undefined : next.classId,
     }
     try {
-      // Preload so the current view (with its inline skeletons) stays mounted
-      // while the data loads, instead of the route-level pendingComponent
-      // replacing the whole page.
       await router.preloadRoute({ to: '/guru/observasi-mingguan', search })
+      if (token !== pendingNavToken.current) return
+      if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/observasi-mingguan', search })
     } catch (error) {
       setIsDataPending(false)
