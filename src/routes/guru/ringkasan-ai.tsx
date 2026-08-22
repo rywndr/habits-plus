@@ -366,6 +366,7 @@ function RingkasanAi() {
         ) : tab === 'tersimpan' ? (
           <AiSavedSummaries
             summaries={data.summaries}
+            weekData={data.weekData}
             onRevoke={handleRevoke}
             onDelete={handleDelete}
           />
