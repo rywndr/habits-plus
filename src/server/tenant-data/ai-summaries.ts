@@ -165,6 +165,7 @@ export async function getClassWeeklyNote(
 
 export async function getAiGenerationHistory(
   tenant: Tenant,
+  filters: { classId?: string; weekStart?: string } = {},
 ): Promise<Array<AiGenerationHistoryEntry>> {
   const rows = await getDb()
     .select({
@@ -180,7 +181,17 @@ export async function getAiGenerationHistory(
     })
     .from(aiGenerationLogs)
     .leftJoin(classes, eq(aiGenerationLogs.classId, classes.id))
-    .where(eq(aiGenerationLogs.schoolId, tenant.id))
+    .where(
+      and(
+        eq(aiGenerationLogs.schoolId, tenant.id),
+        filters.classId
+          ? eq(aiGenerationLogs.classId, filters.classId)
+          : undefined,
+        filters.weekStart
+          ? eq(aiGenerationLogs.weekStart, filters.weekStart)
+          : undefined,
+      ),
+    )
     .orderBy(desc(aiGenerationLogs.createdAt))
     .limit(200)
 

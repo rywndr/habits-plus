@@ -40,9 +40,7 @@ function StatCard({
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="truncate font-heading text-lg font-semibold">{value}</p>
-        {hint ? (
-          <p className="text-xs text-muted-foreground">{hint}</p>
-        ) : null}
+        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
       </div>
     </div>
   )
@@ -62,10 +60,7 @@ export function AiCostHistory({ history }: Props) {
   )
 
   const totalPages = Math.max(1, Math.ceil(history.length / PAGE_SIZE))
-  const visibleEntries = history.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
-  )
+  const visibleEntries = history.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages))

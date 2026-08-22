@@ -219,13 +219,34 @@ export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(
     }),
 )
 
-export const loadAiCostHistory = createServerFn({ method: 'GET' }).handler(() =>
-  withTenantCache(async () => {
-    const { getAuthenticatedUserByRole } = await import('./auth.server')
-    const admin = await getAuthenticatedUserByRole('admin')
-    return getAiGenerationHistory(admin.tenant)
-  }),
-)
+type AiCostHistoryInput = TenantInput & {
+  weekStart?: string
+  classId?: string
+}
+
+export const loadAiCostHistory = createServerFn({ method: 'GET' })
+  .inputValidator((data: AiCostHistoryInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const admin = await getAuthenticatedUserByRole('admin')
+      const selectedWeekStart = weekStartIso(
+        data.weekStart ? new Date(data.weekStart) : new Date(),
+      )
+      const classes = await getTenantClasses(admin.tenant)
+      const classId = classes.find((item) => item.id === data.classId)?.id ?? ''
+
+      return {
+        classes,
+        classId,
+        selectedWeekStart,
+        history: await getAiGenerationHistory(admin.tenant, {
+          classId: classId || undefined,
+          weekStart: selectedWeekStart,
+        }),
+      }
+    }),
+  )
 
 export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(
   () =>
