@@ -31,13 +31,6 @@ type SummaryIdInput = {
   id: string
 }
 
-export type GenerateBatchCost = {
-  promptTokens: number
-  cachedTokens: number
-  completionTokens: number
-  costUsd: number
-}
-
 export const generateAiSummaries = createServerFn({ method: 'POST' })
   .inputValidator((data: GenerateInput) => data)
   .handler(({ data }) =>
@@ -87,7 +80,7 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
       }
 
       if (!toGenerate.length) {
-        return { drafts: [], skipped, cost: null }
+        return { drafts: [], skipped }
       }
 
       const { drafts, usage } = await generateWeeklySummaries(toGenerate, {
@@ -111,8 +104,7 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
         costUsd: usage.costUsd,
       })
 
-      const cost: GenerateBatchCost = { ...usage }
-      return { drafts, skipped, cost }
+      return { drafts, skipped }
     }),
   )
 

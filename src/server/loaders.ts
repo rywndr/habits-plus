@@ -27,11 +27,7 @@ import {
   getWeeklyNotes,
   withTenantCache,
 } from './tenant-data'
-import type {
-  AiGenerationHistoryEntry,
-  AiSummaryListItem,
-  StudentWeekDayData,
-} from './tenant-data'
+import type { AiSummaryListItem, StudentWeekDayData } from './tenant-data'
 import { todayIso, weekStartIso } from './date'
 
 type TenantInput = {
@@ -221,6 +217,14 @@ export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(
       const admin = await getAuthenticatedUserByRole('admin')
       return getTenantStudents(admin.tenant)
     }),
+)
+
+export const loadAiCostHistory = createServerFn({ method: 'GET' }).handler(() =>
+  withTenantCache(async () => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    const admin = await getAuthenticatedUserByRole('admin')
+    return getAiGenerationHistory(admin.tenant)
+  }),
 )
 
 export const loadAdminDashboard = createServerFn({ method: 'GET' }).handler(
@@ -492,7 +496,6 @@ export const loadAiSummaryPage = createServerFn({ method: 'GET' })
       if (!classId) {
         const weekData: Record<string, Array<StudentWeekDayData>> = {}
         const summaries: Array<AiSummaryListItem> = []
-        const history: Array<AiGenerationHistoryEntry> = []
         return {
           classes,
           classId,
@@ -500,17 +503,14 @@ export const loadAiSummaryPage = createServerFn({ method: 'GET' })
           students: [],
           weekData,
           summaries,
-          history,
         }
       }
 
-      const [students, weekObservations, summaries, history] =
-        await Promise.all([
-          getTenantStudents(tenant, [classId]),
-          getClassWeekObservations(tenant, classId, selectedWeekStart),
-          getActiveAiSummaries(tenant, classId, selectedWeekStart),
-          getAiGenerationHistory(tenant),
-        ])
+      const [students, weekObservations, summaries] = await Promise.all([
+        getTenantStudents(tenant, [classId]),
+        getClassWeekObservations(tenant, classId, selectedWeekStart),
+        getActiveAiSummaries(tenant, classId, selectedWeekStart),
+      ])
       const activeIds = new Set(summaries.map((item) => item.studentId))
 
       return {
@@ -526,7 +526,6 @@ export const loadAiSummaryPage = createServerFn({ method: 'GET' })
         })),
         weekData: Object.fromEntries(weekObservations),
         summaries,
-        history,
       }
     }),
   )

@@ -10,12 +10,10 @@ import { ClassSelect } from '#/components/guru/class-select'
 import { AiStudentsTable } from '#/components/guru/ai-students-table'
 import { AiDraftReviewCard } from '#/components/guru/ai-draft-review-card'
 import { AiSavedSummaries } from '#/components/guru/ai-saved-summaries'
-import { AiCostHistory } from '#/components/guru/ai-cost-history'
 import {
   AiSummaryPageSkeleton,
   AiSummaryTableSkeleton,
 } from '#/components/skeletons/ai-summary-skeleton'
-import { formatUsd } from '#/lib/format'
 import { loadAiSummaryPage } from '#/server/loaders'
 import {
   acceptAiSummaries,
@@ -23,7 +21,6 @@ import {
   generateAiSummaries,
   revokeAiSummary,
 } from '#/server/actions'
-import type { GenerateBatchCost } from '#/server/actions'
 
 export const Route = createFileRoute('/guru/ringkasan-ai')({
   validateSearch: (search = {}) => ({
@@ -48,19 +45,7 @@ export const Route = createFileRoute('/guru/ringkasan-ai')({
   staticData: { title: 'Ringkasan AI' },
 })
 
-type Tab = 'generate' | 'tersimpan' | 'biaya'
-
-function addCost(
-  a: GenerateBatchCost,
-  b: GenerateBatchCost,
-): GenerateBatchCost {
-  return {
-    promptTokens: a.promptTokens + b.promptTokens,
-    cachedTokens: a.cachedTokens + b.cachedTokens,
-    completionTokens: a.completionTokens + b.completionTokens,
-    costUsd: a.costUsd + b.costUsd,
-  }
-}
+type Tab = 'generate' | 'tersimpan'
 
 function RingkasanAi() {
   const router = useRouter()
@@ -78,9 +63,6 @@ function RingkasanAi() {
   const [notices, setNotices] = useState<Record<string, string>>({})
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set())
   const [isAccepting, setIsAccepting] = useState(false)
-  const [sessionCost, setSessionCost] = useState<GenerateBatchCost | null>(
-    null,
-  )
 
   const drafts = draftsByContext[contextKey] ?? {}
   const draftIds = Object.keys(drafts)
@@ -170,10 +152,6 @@ function RingkasanAi() {
         }
         return next
       })
-      if (result.cost) {
-        const cost = result.cost
-        setSessionCost((prev) => (prev ? addCost(prev, cost) : cost))
-      }
       setSelected(new Set())
     } finally {
       setGeneratingIds(new Set())
@@ -266,11 +244,6 @@ function RingkasanAi() {
             active={tab === 'tersimpan'}
             onClick={() => setTab('tersimpan')}
           />
-          <TabButton
-            label="Riwayat Biaya"
-            active={tab === 'biaya'}
-            onClick={() => setTab('biaya')}
-          />
         </div>
 
         {isDataPending ? (
@@ -292,16 +265,6 @@ function RingkasanAi() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
                 {selected.size} siswa dipilih
-                {sessionCost ? (
-                  <>
-                    {' · '}Biaya sesi ini:{' '}
-                    <span className="font-semibold text-foreground">
-                      {formatUsd(sessionCost.costUsd)}
-                    </span>{' '}
-                    ({sessionCost.promptTokens + sessionCost.completionTokens}{' '}
-                    token)
-                  </>
-                ) : null}
               </p>
               <Button
                 size="lg"
@@ -363,15 +326,13 @@ function RingkasanAi() {
               </div>
             ) : null}
           </div>
-        ) : tab === 'tersimpan' ? (
+        ) : (
           <AiSavedSummaries
             summaries={data.summaries}
             weekData={data.weekData}
             onRevoke={handleRevoke}
             onDelete={handleDelete}
           />
-        ) : (
-          <AiCostHistory history={data.history} />
         )}
       </div>
     </ContentPanel>

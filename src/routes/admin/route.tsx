@@ -6,6 +6,7 @@ import {
   BookOpen,
   UserCircle2,
   FileSpreadsheet,
+  Coins,
 } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
 import type { NavItem } from '#/components/shell/sidebar-nav-item'
@@ -56,6 +57,12 @@ function AdminShell() {
       href: '/admin/data-massal',
       label: 'data massal',
       icon: FileSpreadsheet,
+    },
+    {
+      to: '/admin/biaya-ai',
+      href: '/admin/biaya-ai',
+      label: 'biaya ai',
+      icon: Coins,
     },
   ]
 

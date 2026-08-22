@@ -29,6 +29,7 @@ import { Route as AdminOrtuRouteImport } from './routes/admin/ortu'
 import { Route as AdminKelasRouteImport } from './routes/admin/kelas'
 import { Route as AdminGuruRouteImport } from './routes/admin/guru'
 import { Route as AdminDataMassalRouteImport } from './routes/admin/data-massal'
+import { Route as AdminBiayaAiRouteImport } from './routes/admin/biaya-ai'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const LoginRoute = LoginRouteImport.update({
@@ -131,6 +132,11 @@ const AdminDataMassalRoute = AdminDataMassalRouteImport.update({
   path: '/data-massal',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminBiayaAiRoute = AdminBiayaAiRouteImport.update({
+  id: '/biaya-ai',
+  path: '/biaya-ai',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/ortu': typeof OrtuRouteRouteWithChildren
   '/super-admin': typeof SuperAdminRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/biaya-ai': typeof AdminBiayaAiRoute
   '/admin/data-massal': typeof AdminDataMassalRoute
   '/admin/guru': typeof AdminGuruRoute
   '/admin/kelas': typeof AdminKelasRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/biaya-ai': typeof AdminBiayaAiRoute
   '/admin/data-massal': typeof AdminDataMassalRoute
   '/admin/guru': typeof AdminGuruRoute
   '/admin/kelas': typeof AdminKelasRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/ortu': typeof OrtuRouteRouteWithChildren
   '/super-admin': typeof SuperAdminRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/biaya-ai': typeof AdminBiayaAiRoute
   '/admin/data-massal': typeof AdminDataMassalRoute
   '/admin/guru': typeof AdminGuruRoute
   '/admin/kelas': typeof AdminKelasRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/ortu'
     | '/super-admin'
     | '/login'
+    | '/admin/biaya-ai'
     | '/admin/data-massal'
     | '/admin/guru'
     | '/admin/kelas'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/biaya-ai'
     | '/admin/data-massal'
     | '/admin/guru'
     | '/admin/kelas'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/ortu'
     | '/super-admin'
     | '/login'
+    | '/admin/biaya-ai'
     | '/admin/data-massal'
     | '/admin/guru'
     | '/admin/kelas'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDataMassalRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/biaya-ai': {
+      id: '/admin/biaya-ai'
+      path: '/biaya-ai'
+      fullPath: '/admin/biaya-ai'
+      preLoaderRoute: typeof AdminBiayaAiRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -434,6 +453,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteRouteChildren {
+  AdminBiayaAiRoute: typeof AdminBiayaAiRoute
   AdminDataMassalRoute: typeof AdminDataMassalRoute
   AdminGuruRoute: typeof AdminGuruRoute
   AdminKelasRoute: typeof AdminKelasRoute
@@ -443,6 +463,7 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminBiayaAiRoute: AdminBiayaAiRoute,
   AdminDataMassalRoute: AdminDataMassalRoute,
   AdminGuruRoute: AdminGuruRoute,
   AdminKelasRoute: AdminKelasRoute,
