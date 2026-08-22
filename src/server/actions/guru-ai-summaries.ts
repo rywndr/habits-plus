@@ -31,6 +31,8 @@ type SummaryIdInput = {
   id: string
 }
 
+const MANUAL_MODEL = 'manual'
+
 export const generateAiSummaries = createServerFn({ method: 'POST' })
   .inputValidator((data: GenerateInput) => data)
   .handler(({ data }) =>
@@ -148,6 +150,63 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
         )
 
       return { saved: toSave.map((item) => item.studentId) }
+    }),
+  )
+
+/** Teacher-written summaries reuse the same table so parents see one feed. */
+export const saveManualSummaries = createServerFn({ method: 'POST' })
+  .inputValidator((data: AcceptInput) => data)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('../auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const tenant = teacher.tenant
+      await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
+
+      const weekStart = weekStartIso(new Date(data.weekStart))
+      const classStudents = await getTenantStudents(tenant, [data.classId])
+      const classStudentIds = new Set(classStudents.map((item) => item.id))
+      const items = data.items.filter(
+        (item) => classStudentIds.has(item.studentId) && item.content.trim(),
+      )
+      if (!items.length) return { saved: [] as Array<string> }
+
+      const db = getDb()
+      for (const item of items) {
+        const content = item.content.trim()
+        const updated = await db
+          .update(aiSummaries)
+          .set({
+            content,
+            model: MANUAL_MODEL,
+            teacherId: teacher.id,
+            classId: data.classId,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(aiSummaries.schoolId, tenant.id),
+              eq(aiSummaries.studentId, item.studentId),
+              eq(aiSummaries.weekStart, weekStart),
+              eq(aiSummaries.status, 'active'),
+            ),
+          )
+          .returning({ id: aiSummaries.id })
+
+        if (!updated.length) {
+          await db.insert(aiSummaries).values({
+            schoolId: tenant.id,
+            studentId: item.studentId,
+            classId: data.classId,
+            teacherId: teacher.id,
+            weekStart,
+            content,
+            model: MANUAL_MODEL,
+          })
+        }
+      }
+
+      return { saved: items.map((item) => item.studentId) }
     }),
   )
 

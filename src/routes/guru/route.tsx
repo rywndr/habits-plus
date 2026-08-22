@@ -4,10 +4,11 @@ import {
   ClipboardEdit,
   BarChart3,
   CalendarRange,
+  PenLine,
   Sparkles,
 } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
-import type { NavItem } from '#/components/shell/sidebar-nav-item'
+import type { NavGroup, NavItem } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru')({
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/guru')({
 function GuruShell() {
   const user = Route.useLoaderData()
 
-  const items: Array<NavItem> = [
+  const items: Array<NavItem | NavGroup> = [
     {
       to: '/guru',
       href: '/guru',
@@ -45,10 +46,22 @@ function GuruShell() {
       icon: CalendarRange,
     },
     {
-      to: '/guru/ringkasan-ai',
-      href: '/guru/ringkasan-ai',
-      label: 'ringkasan AI',
+      label: 'ringkasan',
       icon: Sparkles,
+      items: [
+        {
+          to: '/guru/ringkasan-ai',
+          href: '/guru/ringkasan-ai',
+          label: 'ringkasan AI',
+          icon: Sparkles,
+        },
+        {
+          to: '/guru/ringkasan-manual',
+          href: '/guru/ringkasan-manual',
+          label: 'ringkasan manual',
+          icon: PenLine,
+        },
+      ],
     },
   ]
 

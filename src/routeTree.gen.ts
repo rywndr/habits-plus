@@ -9,47 +9,33 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as SuperAdminRouteRouteImport } from './routes/super-admin/route'
-import { Route as OrtuRouteRouteImport } from './routes/ortu/route'
-import { Route as GuruRouteRouteImport } from './routes/guru/route'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SuperAdminIndexRouteImport } from './routes/super-admin/index'
-import { Route as OrtuIndexRouteImport } from './routes/ortu/index'
-import { Route as GuruIndexRouteImport } from './routes/guru/index'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as GuruRouteRouteImport } from './routes/guru/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OrtuRouteRouteImport } from './routes/ortu/route'
+import { Route as SuperAdminRouteRouteImport } from './routes/super-admin/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as SuperAdminAdminSekolahRouteImport } from './routes/super-admin/admin-sekolah'
-import { Route as GuruRingkasanAiRouteImport } from './routes/guru/ringkasan-ai'
-import { Route as GuruRingkasanRouteImport } from './routes/guru/ringkasan'
-import { Route as GuruObservasiMingguanRouteImport } from './routes/guru/observasi-mingguan'
-import { Route as GuruCatatObservasiRouteImport } from './routes/guru/catat-observasi'
-import { Route as AdminSiswaRouteImport } from './routes/admin/siswa'
-import { Route as AdminOrtuRouteImport } from './routes/admin/ortu'
-import { Route as AdminKelasRouteImport } from './routes/admin/kelas'
-import { Route as AdminGuruRouteImport } from './routes/admin/guru'
-import { Route as AdminDataMassalRouteImport } from './routes/admin/data-massal'
 import { Route as AdminBiayaAiRouteImport } from './routes/admin/biaya-ai'
+import { Route as AdminDataMassalRouteImport } from './routes/admin/data-massal'
+import { Route as AdminGuruRouteImport } from './routes/admin/guru'
+import { Route as AdminKelasRouteImport } from './routes/admin/kelas'
+import { Route as AdminOrtuRouteImport } from './routes/admin/ortu'
+import { Route as AdminSiswaRouteImport } from './routes/admin/siswa'
+import { Route as GuruIndexRouteImport } from './routes/guru/index'
+import { Route as GuruCatatObservasiRouteImport } from './routes/guru/catat-observasi'
+import { Route as GuruObservasiMingguanRouteImport } from './routes/guru/observasi-mingguan'
+import { Route as GuruRingkasanRouteImport } from './routes/guru/ringkasan'
+import { Route as GuruRingkasanAiRouteImport } from './routes/guru/ringkasan-ai'
+import { Route as GuruRingkasanManualRouteImport } from './routes/guru/ringkasan-manual'
+import { Route as OrtuIndexRouteImport } from './routes/ortu/index'
+import { Route as SuperAdminIndexRouteImport } from './routes/super-admin/index'
+import { Route as SuperAdminAdminSekolahRouteImport } from './routes/super-admin/admin-sekolah'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuperAdminRouteRoute = SuperAdminRouteRouteImport.update({
-  id: '/super-admin',
-  path: '/super-admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrtuRouteRoute = OrtuRouteRouteImport.update({
-  id: '/ortu',
-  path: '/ortu',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GuruRouteRoute = GuruRouteRouteImport.update({
-  id: '/guru',
-  path: '/guru',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -57,74 +43,34 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const GuruRouteRoute = GuruRouteRouteImport.update({
+  id: '/guru',
+  path: '/guru',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SuperAdminRouteRoute,
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const OrtuIndexRoute = OrtuIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => OrtuRouteRoute,
+const OrtuRouteRoute = OrtuRouteRouteImport.update({
+  id: '/ortu',
+  path: '/ortu',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const GuruIndexRoute = GuruIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GuruRouteRoute,
+const SuperAdminRouteRoute = SuperAdminRouteRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const SuperAdminAdminSekolahRoute = SuperAdminAdminSekolahRouteImport.update({
-  id: '/admin-sekolah',
-  path: '/admin-sekolah',
-  getParentRoute: () => SuperAdminRouteRoute,
-} as any)
-const GuruRingkasanAiRoute = GuruRingkasanAiRouteImport.update({
-  id: '/ringkasan-ai',
-  path: '/ringkasan-ai',
-  getParentRoute: () => GuruRouteRoute,
-} as any)
-const GuruRingkasanRoute = GuruRingkasanRouteImport.update({
-  id: '/ringkasan',
-  path: '/ringkasan',
-  getParentRoute: () => GuruRouteRoute,
-} as any)
-const GuruObservasiMingguanRoute = GuruObservasiMingguanRouteImport.update({
-  id: '/observasi-mingguan',
-  path: '/observasi-mingguan',
-  getParentRoute: () => GuruRouteRoute,
-} as any)
-const GuruCatatObservasiRoute = GuruCatatObservasiRouteImport.update({
-  id: '/catat-observasi',
-  path: '/catat-observasi',
-  getParentRoute: () => GuruRouteRoute,
-} as any)
-const AdminSiswaRoute = AdminSiswaRouteImport.update({
-  id: '/siswa',
-  path: '/siswa',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrtuRoute = AdminOrtuRouteImport.update({
-  id: '/ortu',
-  path: '/ortu',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminKelasRoute = AdminKelasRouteImport.update({
-  id: '/kelas',
-  path: '/kelas',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminGuruRoute = AdminGuruRouteImport.update({
-  id: '/guru',
-  path: '/guru',
+const AdminBiayaAiRoute = AdminBiayaAiRouteImport.update({
+  id: '/biaya-ai',
+  path: '/biaya-ai',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminDataMassalRoute = AdminDataMassalRouteImport.update({
@@ -132,10 +78,70 @@ const AdminDataMassalRoute = AdminDataMassalRouteImport.update({
   path: '/data-massal',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminBiayaAiRoute = AdminBiayaAiRouteImport.update({
-  id: '/biaya-ai',
-  path: '/biaya-ai',
+const AdminGuruRoute = AdminGuruRouteImport.update({
+  id: '/guru',
+  path: '/guru',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminKelasRoute = AdminKelasRouteImport.update({
+  id: '/kelas',
+  path: '/kelas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrtuRoute = AdminOrtuRouteImport.update({
+  id: '/ortu',
+  path: '/ortu',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSiswaRoute = AdminSiswaRouteImport.update({
+  id: '/siswa',
+  path: '/siswa',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const GuruIndexRoute = GuruIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const GuruCatatObservasiRoute = GuruCatatObservasiRouteImport.update({
+  id: '/catat-observasi',
+  path: '/catat-observasi',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const GuruObservasiMingguanRoute = GuruObservasiMingguanRouteImport.update({
+  id: '/observasi-mingguan',
+  path: '/observasi-mingguan',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const GuruRingkasanRoute = GuruRingkasanRouteImport.update({
+  id: '/ringkasan',
+  path: '/ringkasan',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const GuruRingkasanAiRoute = GuruRingkasanAiRouteImport.update({
+  id: '/ringkasan-ai',
+  path: '/ringkasan-ai',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const GuruRingkasanManualRoute = GuruRingkasanManualRouteImport.update({
+  id: '/ringkasan-manual',
+  path: '/ringkasan-manual',
+  getParentRoute: () => GuruRouteRoute,
+} as any)
+const OrtuIndexRoute = OrtuIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrtuRouteRoute,
+} as any)
+const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SuperAdminRouteRoute,
+} as any)
+const SuperAdminAdminSekolahRoute = SuperAdminAdminSekolahRouteImport.update({
+  id: '/admin-sekolah',
+  path: '/admin-sekolah',
+  getParentRoute: () => SuperAdminRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
+  '/guru/ringkasan-manual': typeof GuruRingkasanManualRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
+  '/guru/ringkasan-manual': typeof GuruRingkasanManualRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin': typeof AdminIndexRoute
   '/guru': typeof GuruIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/guru/ringkasan-ai': typeof GuruRingkasanAiRoute
+  '/guru/ringkasan-manual': typeof GuruRingkasanManualRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/guru/ringkasan-ai'
+    | '/guru/ringkasan-manual'
     | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/guru/ringkasan-ai'
+    | '/guru/ringkasan-manual'
     | '/super-admin/admin-sekolah'
     | '/admin'
     | '/guru'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/guru/ringkasan-ai'
+    | '/guru/ringkasan-manual'
     | '/super-admin/admin-sekolah'
     | '/admin/'
     | '/guru/'
@@ -295,32 +307,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/super-admin': {
-      id: '/super-admin'
-      path: '/super-admin'
-      fullPath: '/super-admin'
-      preLoaderRoute: typeof SuperAdminRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ortu': {
-      id: '/ortu'
-      path: '/ortu'
-      fullPath: '/ortu'
-      preLoaderRoute: typeof OrtuRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guru': {
-      id: '/guru'
-      path: '/guru'
-      fullPath: '/guru'
-      preLoaderRoute: typeof GuruRouteRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -330,33 +321,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/guru': {
+      id: '/guru'
+      path: '/guru'
+      fullPath: '/guru'
+      preLoaderRoute: typeof GuruRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/super-admin/': {
-      id: '/super-admin/'
-      path: '/'
-      fullPath: '/super-admin/'
-      preLoaderRoute: typeof SuperAdminIndexRouteImport
-      parentRoute: typeof SuperAdminRouteRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/ortu/': {
-      id: '/ortu/'
-      path: '/'
-      fullPath: '/ortu/'
-      preLoaderRoute: typeof OrtuIndexRouteImport
-      parentRoute: typeof OrtuRouteRoute
+    '/ortu': {
+      id: '/ortu'
+      path: '/ortu'
+      fullPath: '/ortu'
+      preLoaderRoute: typeof OrtuRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/guru/': {
-      id: '/guru/'
-      path: '/'
-      fullPath: '/guru/'
-      preLoaderRoute: typeof GuruIndexRouteImport
-      parentRoute: typeof GuruRouteRoute
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -365,67 +356,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/super-admin/admin-sekolah': {
-      id: '/super-admin/admin-sekolah'
-      path: '/admin-sekolah'
-      fullPath: '/super-admin/admin-sekolah'
-      preLoaderRoute: typeof SuperAdminAdminSekolahRouteImport
-      parentRoute: typeof SuperAdminRouteRoute
-    }
-    '/guru/ringkasan-ai': {
-      id: '/guru/ringkasan-ai'
-      path: '/ringkasan-ai'
-      fullPath: '/guru/ringkasan-ai'
-      preLoaderRoute: typeof GuruRingkasanAiRouteImport
-      parentRoute: typeof GuruRouteRoute
-    }
-    '/guru/ringkasan': {
-      id: '/guru/ringkasan'
-      path: '/ringkasan'
-      fullPath: '/guru/ringkasan'
-      preLoaderRoute: typeof GuruRingkasanRouteImport
-      parentRoute: typeof GuruRouteRoute
-    }
-    '/guru/observasi-mingguan': {
-      id: '/guru/observasi-mingguan'
-      path: '/observasi-mingguan'
-      fullPath: '/guru/observasi-mingguan'
-      preLoaderRoute: typeof GuruObservasiMingguanRouteImport
-      parentRoute: typeof GuruRouteRoute
-    }
-    '/guru/catat-observasi': {
-      id: '/guru/catat-observasi'
-      path: '/catat-observasi'
-      fullPath: '/guru/catat-observasi'
-      preLoaderRoute: typeof GuruCatatObservasiRouteImport
-      parentRoute: typeof GuruRouteRoute
-    }
-    '/admin/siswa': {
-      id: '/admin/siswa'
-      path: '/siswa'
-      fullPath: '/admin/siswa'
-      preLoaderRoute: typeof AdminSiswaRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/ortu': {
-      id: '/admin/ortu'
-      path: '/ortu'
-      fullPath: '/admin/ortu'
-      preLoaderRoute: typeof AdminOrtuRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/kelas': {
-      id: '/admin/kelas'
-      path: '/kelas'
-      fullPath: '/admin/kelas'
-      preLoaderRoute: typeof AdminKelasRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/guru': {
-      id: '/admin/guru'
-      path: '/guru'
-      fullPath: '/admin/guru'
-      preLoaderRoute: typeof AdminGuruRouteImport
+    '/admin/biaya-ai': {
+      id: '/admin/biaya-ai'
+      path: '/biaya-ai'
+      fullPath: '/admin/biaya-ai'
+      preLoaderRoute: typeof AdminBiayaAiRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/data-massal': {
@@ -435,12 +370,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDataMassalRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/biaya-ai': {
-      id: '/admin/biaya-ai'
-      path: '/biaya-ai'
-      fullPath: '/admin/biaya-ai'
-      preLoaderRoute: typeof AdminBiayaAiRouteImport
+    '/admin/guru': {
+      id: '/admin/guru'
+      path: '/guru'
+      fullPath: '/admin/guru'
+      preLoaderRoute: typeof AdminGuruRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/kelas': {
+      id: '/admin/kelas'
+      path: '/kelas'
+      fullPath: '/admin/kelas'
+      preLoaderRoute: typeof AdminKelasRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/ortu': {
+      id: '/admin/ortu'
+      path: '/ortu'
+      fullPath: '/admin/ortu'
+      preLoaderRoute: typeof AdminOrtuRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/siswa': {
+      id: '/admin/siswa'
+      path: '/siswa'
+      fullPath: '/admin/siswa'
+      preLoaderRoute: typeof AdminSiswaRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/guru/': {
+      id: '/guru/'
+      path: '/'
+      fullPath: '/guru/'
+      preLoaderRoute: typeof GuruIndexRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/guru/catat-observasi': {
+      id: '/guru/catat-observasi'
+      path: '/catat-observasi'
+      fullPath: '/guru/catat-observasi'
+      preLoaderRoute: typeof GuruCatatObservasiRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/guru/observasi-mingguan': {
+      id: '/guru/observasi-mingguan'
+      path: '/observasi-mingguan'
+      fullPath: '/guru/observasi-mingguan'
+      preLoaderRoute: typeof GuruObservasiMingguanRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/guru/ringkasan': {
+      id: '/guru/ringkasan'
+      path: '/ringkasan'
+      fullPath: '/guru/ringkasan'
+      preLoaderRoute: typeof GuruRingkasanRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/guru/ringkasan-ai': {
+      id: '/guru/ringkasan-ai'
+      path: '/ringkasan-ai'
+      fullPath: '/guru/ringkasan-ai'
+      preLoaderRoute: typeof GuruRingkasanAiRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/guru/ringkasan-manual': {
+      id: '/guru/ringkasan-manual'
+      path: '/ringkasan-manual'
+      fullPath: '/guru/ringkasan-manual'
+      preLoaderRoute: typeof GuruRingkasanManualRouteImport
+      parentRoute: typeof GuruRouteRoute
+    }
+    '/ortu/': {
+      id: '/ortu/'
+      path: '/'
+      fullPath: '/ortu/'
+      preLoaderRoute: typeof OrtuIndexRouteImport
+      parentRoute: typeof OrtuRouteRoute
+    }
+    '/super-admin/': {
+      id: '/super-admin/'
+      path: '/'
+      fullPath: '/super-admin/'
+      preLoaderRoute: typeof SuperAdminIndexRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
+    }
+    '/super-admin/admin-sekolah': {
+      id: '/super-admin/admin-sekolah'
+      path: '/admin-sekolah'
+      fullPath: '/super-admin/admin-sekolah'
+      preLoaderRoute: typeof SuperAdminAdminSekolahRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -481,6 +500,7 @@ interface GuruRouteRouteChildren {
   GuruObservasiMingguanRoute: typeof GuruObservasiMingguanRoute
   GuruRingkasanRoute: typeof GuruRingkasanRoute
   GuruRingkasanAiRoute: typeof GuruRingkasanAiRoute
+  GuruRingkasanManualRoute: typeof GuruRingkasanManualRoute
   GuruIndexRoute: typeof GuruIndexRoute
 }
 
@@ -489,6 +509,7 @@ const GuruRouteRouteChildren: GuruRouteRouteChildren = {
   GuruObservasiMingguanRoute: GuruObservasiMingguanRoute,
   GuruRingkasanRoute: GuruRingkasanRoute,
   GuruRingkasanAiRoute: GuruRingkasanAiRoute,
+  GuruRingkasanManualRoute: GuruRingkasanManualRoute,
   GuruIndexRoute: GuruIndexRoute,
 }
 

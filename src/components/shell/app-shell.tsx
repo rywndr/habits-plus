@@ -4,13 +4,13 @@ import { SidebarInset, SidebarProvider } from '#/components/ui/sidebar'
 import { authClient } from '#/lib/auth-client'
 import { AppSidebar } from './app-sidebar'
 import { MobileHeader } from './mobile-header'
-import type { NavItem } from './sidebar-nav-item'
+import type { NavGroup, NavItem } from './sidebar-nav-item'
 
 type Props = {
   userName: string
   userEmail: string
   schoolName: string
-  navItems: Array<NavItem>
+  navItems: Array<NavItem | NavGroup>
   mobileTitle: string
   children: ReactNode
 }

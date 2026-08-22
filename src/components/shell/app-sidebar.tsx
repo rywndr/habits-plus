@@ -9,14 +9,14 @@ import {
 import { Button } from '#/components/ui/button'
 import { LogOut } from 'lucide-react'
 import { SidebarBrand } from './sidebar-brand'
-import { SidebarNavItem } from './sidebar-nav-item'
-import type { NavItem } from './sidebar-nav-item'
+import { SidebarNavGroup, SidebarNavItem, isNavGroup } from './sidebar-nav-item'
+import type { NavGroup, NavItem } from './sidebar-nav-item'
 
 type Props = {
   userName: string
   userEmail: string
   schoolName: string
-  items: Array<NavItem>
+  items: Array<NavItem | NavGroup>
   onLogout: () => void
 }
 
@@ -43,9 +43,13 @@ export function AppSidebar({
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-1">
-            {items.map((item) => (
-              <SidebarNavItem key={item.to} item={item} />
-            ))}
+            {items.map((item) =>
+              isNavGroup(item) ? (
+                <SidebarNavGroup key={item.label} group={item} />
+              ) : (
+                <SidebarNavItem key={item.to} item={item} />
+              ),
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
