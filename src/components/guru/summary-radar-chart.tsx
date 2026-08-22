@@ -65,14 +65,14 @@ export function SummaryRadarChart({ data }: Props) {
       </ul>
 
       <div
-        className="w-full max-w-md"
+        className="w-full max-w-xl"
         role="img"
         aria-label="Radar ringkasan observasi bulanan"
       >
         <ResponsiveContainer width="100%" aspect={1}>
           <RadarChart
             data={rows}
-            outerRadius="72%"
+            outerRadius="78%"
             margin={{ top: 24, right: 72, bottom: 24, left: 72 }}
           >
             <PolarGrid
