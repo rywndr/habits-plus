@@ -11,7 +11,7 @@ import type {
 } from './types'
 
 export const createSchoolAdmin = createServerFn({ method: 'POST' })
-  .inputValidator((data: CreateSchoolAdminInput) => data)
+  .validator((data: CreateSchoolAdminInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -42,7 +42,7 @@ export const createSchoolAdmin = createServerFn({ method: 'POST' })
   )
 
 export const updateSchoolAdmin = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateSchoolAdminInput) => data)
+  .validator((data: UpdateSchoolAdminInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -86,7 +86,7 @@ export const updateSchoolAdmin = createServerFn({ method: 'POST' })
   )
 
 export const deleteSchoolAdmin = createServerFn({ method: 'POST' })
-  .inputValidator((data: DeleteInput) => data)
+  .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')

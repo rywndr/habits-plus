@@ -7,7 +7,7 @@ import { assertText, normalizeSlug } from './shared'
 import type { CreateSchoolInput, DeleteInput, UpdateSchoolInput } from './types'
 
 export const createSchool = createServerFn({ method: 'POST' })
-  .inputValidator((data: CreateSchoolInput) => data)
+  .validator((data: CreateSchoolInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -42,7 +42,7 @@ export const createSchool = createServerFn({ method: 'POST' })
   )
 
 export const updateSchool = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateSchoolInput) => data)
+  .validator((data: UpdateSchoolInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -72,7 +72,7 @@ export const updateSchool = createServerFn({ method: 'POST' })
   )
 
 export const deleteSchool = createServerFn({ method: 'POST' })
-  .inputValidator((data: DeleteInput) => data)
+  .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')

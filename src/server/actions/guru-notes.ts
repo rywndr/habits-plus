@@ -12,7 +12,7 @@ import type {
 } from './types'
 
 export const saveWeeklyNote = createServerFn({ method: 'POST' })
-  .inputValidator((data: SaveWeeklyNoteInput) => data)
+  .validator((data: SaveWeeklyNoteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.p1, 'P1')
@@ -55,7 +55,7 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
   )
 
 export const deleteWeeklyNote = createServerFn({ method: 'POST' })
-  .inputValidator((data: DeleteInput) => data)
+  .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)
@@ -75,7 +75,7 @@ export const deleteWeeklyNote = createServerFn({ method: 'POST' })
   )
 
 export const saveMonthlySummary = createServerFn({ method: 'POST' })
-  .inputValidator((data: SaveMonthlySummaryInput) => data)
+  .validator((data: SaveMonthlySummaryInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.month, 'Bulan')

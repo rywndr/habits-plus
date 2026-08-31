@@ -34,7 +34,7 @@ type SummaryIdInput = {
 const MANUAL_MODEL = 'manual'
 
 export const generateAiSummaries = createServerFn({ method: 'POST' })
-  .inputValidator((data: GenerateInput) => data)
+  .validator((data: GenerateInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -111,7 +111,7 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
   )
 
 export const acceptAiSummaries = createServerFn({ method: 'POST' })
-  .inputValidator((data: AcceptInput) => data)
+  .validator((data: AcceptInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -155,7 +155,7 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
 
 /** Teacher-written summaries reuse the same table so parents see one feed. */
 export const saveManualSummaries = createServerFn({ method: 'POST' })
-  .inputValidator((data: AcceptInput) => data)
+  .validator((data: AcceptInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -211,7 +211,7 @@ export const saveManualSummaries = createServerFn({ method: 'POST' })
   )
 
 export const revokeAiSummary = createServerFn({ method: 'POST' })
-  .inputValidator((data: SummaryIdInput) => data)
+  .validator((data: SummaryIdInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')
@@ -230,7 +230,7 @@ export const revokeAiSummary = createServerFn({ method: 'POST' })
   )
 
 export const deleteAiSummary = createServerFn({ method: 'POST' })
-  .inputValidator((data: SummaryIdInput) => data)
+  .validator((data: SummaryIdInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')

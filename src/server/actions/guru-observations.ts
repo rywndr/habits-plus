@@ -14,7 +14,7 @@ import { resolveTenant } from './shared'
 import type { SaveDailyObservationsInput } from './types'
 
 export const saveDailyObservations = createServerFn({ method: 'POST' })
-  .inputValidator((data: SaveDailyObservationsInput) => data)
+  .validator((data: SaveDailyObservationsInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('../auth.server')

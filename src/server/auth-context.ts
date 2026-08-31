@@ -18,7 +18,7 @@ function logLoginFailure(reason: string, detail?: unknown) {
 }
 
 export const loginWithPassword = createServerFn({ method: 'POST' })
-  .inputValidator((data) => loginSchema.parse(data))
+  .validator((data) => loginSchema.parse(data))
   .handler(async ({ data }) => {
     const user = await getDb().query.users.findFirst({
       where: eq(users.email, data.email),

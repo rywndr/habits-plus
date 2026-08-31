@@ -11,7 +11,7 @@ import {
 import type { AddClassInput, DeleteInput, UpdateClassInput } from './types'
 
 export const addClass = createServerFn({ method: 'POST' })
-  .inputValidator((data: AddClassInput) => data)
+  .validator((data: AddClassInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama kelas')
@@ -30,7 +30,7 @@ export const addClass = createServerFn({ method: 'POST' })
   )
 
 export const updateClass = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateClassInput) => data)
+  .validator((data: UpdateClassInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama kelas')
@@ -54,7 +54,7 @@ export const updateClass = createServerFn({ method: 'POST' })
   )
 
 export const deleteClass = createServerFn({ method: 'POST' })
-  .inputValidator((data: DeleteInput) => data)
+  .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)

@@ -15,7 +15,7 @@ import {
 import type { BulkImportInput } from './types'
 
 export const bulkImportAdminRows = createServerFn({ method: 'POST' })
-  .inputValidator((data: BulkImportInput) => data)
+  .validator((data: BulkImportInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const tenant = await resolveTenant(data)

@@ -112,7 +112,7 @@ export const loadSessionRole = createServerFn({ method: 'GET' }).handler(
 )
 
 export const loadCurrentUser = createServerFn({ method: 'GET' })
-  .inputValidator((data: CurrentUserInput) => data)
+  .validator((data: CurrentUserInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -225,7 +225,7 @@ type AiCostHistoryInput = TenantInput & {
 }
 
 export const loadAiCostHistory = createServerFn({ method: 'GET' })
-  .inputValidator((data: AiCostHistoryInput) => data)
+  .validator((data: AiCostHistoryInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -266,7 +266,7 @@ export const loadGuruDashboard = createServerFn({ method: 'GET' }).handler(() =>
 )
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
-  .inputValidator((data: MonthlySummaryInput) => data)
+  .validator((data: MonthlySummaryInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -286,7 +286,7 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
   )
 
 export const loadParentProgress = createServerFn({ method: 'GET' })
-  .inputValidator((data: ParentProgressInput) => data)
+  .validator((data: ParentProgressInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -297,7 +297,7 @@ export const loadParentProgress = createServerFn({ method: 'GET' })
   )
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
-  .inputValidator((data: WeeklyNotesInput) => data)
+  .validator((data: WeeklyNotesInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -328,7 +328,7 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   )
 
 export const loadDailyObservationExport = createServerFn({ method: 'GET' })
-  .inputValidator((data: ExportRangeInput) => data)
+  .validator((data: ExportRangeInput) => data)
   .handler(({ data }) =>
     withTenantCache(async (): Promise<Array<DailyObservationExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -410,7 +410,7 @@ export const loadDailyObservationExport = createServerFn({ method: 'GET' })
   )
 
 export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
-  .inputValidator((data: ExportRangeInput) => data)
+  .validator((data: ExportRangeInput) => data)
   .handler(({ data }) =>
     withTenantCache(async (): Promise<Array<WeeklyNoteExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -451,7 +451,7 @@ export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
   )
 
 export const loadObservationPage = createServerFn({ method: 'GET' })
-  .inputValidator((data: ObservationPageInput) => data)
+  .validator((data: ObservationPageInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -499,7 +499,7 @@ type AiSummaryPageInput = TenantInput & {
 }
 
 export const loadAiSummaryPage = createServerFn({ method: 'GET' })
-  .inputValidator((data: AiSummaryPageInput) => data)
+  .validator((data: AiSummaryPageInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
