@@ -1,6 +1,12 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { accounts, classes, students, users } from '#/db/schema'
+import {
+  accounts,
+  classes,
+  CREDENTIAL_ISSUER,
+  students,
+  users,
+} from '#/db/schema'
 import type { Role } from '#/db/schema'
 import { hashPassword } from '../password'
 import { getTenantBySlug } from '../tenant-data'
@@ -130,6 +136,7 @@ export async function upsertCredentialAccount(
       id: `${userId}:credential`,
       accountId: userId,
       providerId: 'credential',
+      issuer: CREDENTIAL_ISSUER,
       userId,
       password: passwordHash,
     })

@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { accounts, users } from '#/db/schema'
+import { accounts, CREDENTIAL_ISSUER, users } from '#/db/schema'
 import { hashPassword } from '../password'
 import { withTenantCache } from '../tenant-data'
 import {
@@ -39,6 +39,7 @@ export const addUser = createServerFn({ method: 'POST' })
           id: `${user.id}:credential`,
           accountId: user.id,
           providerId: 'credential',
+          issuer: CREDENTIAL_ISSUER,
           userId: user.id,
           password: passwordHash,
         })

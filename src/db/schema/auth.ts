@@ -37,10 +37,17 @@ export const users = pgTable(
   }),
 )
 
+// Better Auth >= 1.7 requires an `issuer` on every account and resolves the
+// credential account by (providerId, issuer, accountId). Email/password is the
+// only provider here, so the local credential issuer doubles as the default and
+// backfills rows created before the column existed.
+export const CREDENTIAL_ISSUER = 'local:credential'
+
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
+  issuer: text('issuer').notNull().default(CREDENTIAL_ISSUER),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),

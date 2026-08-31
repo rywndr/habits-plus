@@ -4,6 +4,7 @@ import { and, eq, isNull } from 'drizzle-orm'
 import {
   accounts,
   classes,
+  CREDENTIAL_ISSUER,
   dailyObservations,
   observationScores,
   schools,
@@ -87,6 +88,7 @@ for (const user of mockUsers) {
       id: `${created.id}:credential`,
       accountId: created.id,
       providerId: 'credential',
+      issuer: CREDENTIAL_ISSUER,
       userId: created.id,
       password: passwordHash,
     })
