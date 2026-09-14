@@ -110,7 +110,7 @@ describe.each([
 const userInput = {
   name: 'Teacher',
   email: 'teacher@example.test',
-  password: 'secret',
+  password: 'secret123',
   role: 'guru',
 }
 describe('admin RPC input validation', () => {
@@ -121,32 +121,50 @@ describe('admin RPC input validation', () => {
         false,
       )
       expect(
-        updateUserSchema.safeParse({ ...userInput, id: 'user', role }).success,
+        updateUserSchema.safeParse({
+          ...userInput,
+          id: '11111111-1111-4111-8111-111111111111',
+          role,
+        }).success,
       ).toBe(false)
     },
   )
 
   it.each([
     { schema: addUserSchema, data: userInput },
-    { schema: updateUserSchema, data: { ...userInput, id: 'user' } },
+    {
+      schema: updateUserSchema,
+      data: { ...userInput, id: '11111111-1111-4111-8111-111111111111' },
+    },
     { schema: addClassSchema, data: { name: 'Class' } },
-    { schema: updateClassSchema, data: { id: 'class', name: 'Class' } },
+    {
+      schema: updateClassSchema,
+      data: { id: '11111111-1111-4111-8111-111111111111', name: 'Class' },
+    },
     {
       schema: addStudentSchema,
-      data: { nisn: '123', name: 'Student', classId: 'class', gender: 'L' },
+      data: {
+        nisn: '123',
+        name: 'Student',
+        classId: '11111111-1111-4111-8111-111111111111',
+        gender: 'L',
+      },
     },
     {
       schema: updateStudentSchema,
       data: {
-        id: 'student',
+        id: '11111111-1111-4111-8111-111111111111',
         nisn: '123',
         name: 'Student',
-        classId: 'class',
+        classId: '11111111-1111-4111-8111-111111111111',
         gender: 'L',
       },
     },
     { schema: bulkImportSchema, data: { kind: 'teachers', rows: [] } },
-    { schema: deleteSchema, data: { id: 'target' } },
+    {
+      schema: deleteSchema,
+      data: { id: '11111111-1111-4111-8111-111111111111' },
+    },
   ])(
     'accepts valid data and rejects a browser tenant override: $data',
     ({ schema, data }) => {

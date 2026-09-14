@@ -1,8 +1,13 @@
+import {
+  generateAiSummariesSchema,
+  acceptAiSummariesSchema,
+  deleteSchema,
+} from './schemas'
 import { createServerFn } from '@tanstack/react-start'
 import { requireTeacher } from '../authorization'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { aiGenerationLogs, aiSummaries } from '#/db/schema'
+import { aiGenerationLogs, aiSummaries, classes } from '#/db/schema'
 import { addDaysIso, weekStartIso } from '../date'
 import { DEEPSEEK_MODEL } from '../ai/deepseek'
 import { generateWeeklySummaries } from '../ai/weekly-summary'
@@ -17,25 +22,9 @@ import {
 import { assertTeacherOwnsClass } from './shared'
 import type { StudentWeekData } from '../ai/weekly-summary'
 
-type GenerateInput = {
-  weekStart: string
-  classId: string
-  studentIds: Array<string>
-}
-
-type AcceptInput = {
-  weekStart: string
-  classId: string
-  items: Array<{ studentId: string; content: string }>
-}
-
-type SummaryIdInput = {
-  id: string
-}
-
 export const generateAiSummaries = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: GenerateInput) => data)
+  .validator(generateAiSummariesSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -112,7 +101,7 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
 
 export const acceptAiSummaries = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: AcceptInput) => data)
+  .validator(acceptAiSummariesSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -164,7 +153,7 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
 /** Teacher-written summaries reuse the same table so parents see one feed. */
 export const saveManualSummaries = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: AcceptInput) => data)
+  .validator(acceptAiSummariesSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -220,7 +209,7 @@ export const saveManualSummaries = createServerFn({ method: 'POST' })
 
 export const revokeAiSummary = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: SummaryIdInput) => data)
+  .validator(deleteSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -232,6 +221,19 @@ export const revokeAiSummary = createServerFn({ method: 'POST' })
           and(
             eq(aiSummaries.id, data.id),
             eq(aiSummaries.schoolId, teacher.tenant.id),
+            eq(aiSummaries.teacherId, teacher.id),
+            inArray(
+              aiSummaries.classId,
+              getDb()
+                .select({ id: classes.id })
+                .from(classes)
+                .where(
+                  and(
+                    eq(classes.schoolId, teacher.tenant.id),
+                    eq(classes.teacherId, teacher.id),
+                  ),
+                ),
+            ),
           ),
         )
     }),
@@ -239,7 +241,7 @@ export const revokeAiSummary = createServerFn({ method: 'POST' })
 
 export const deleteAiSummary = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: SummaryIdInput) => data)
+  .validator(deleteSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -250,6 +252,19 @@ export const deleteAiSummary = createServerFn({ method: 'POST' })
           and(
             eq(aiSummaries.id, data.id),
             eq(aiSummaries.schoolId, teacher.tenant.id),
+            eq(aiSummaries.teacherId, teacher.id),
+            inArray(
+              aiSummaries.classId,
+              getDb()
+                .select({ id: classes.id })
+                .from(classes)
+                .where(
+                  and(
+                    eq(classes.schoolId, teacher.tenant.id),
+                    eq(classes.teacherId, teacher.id),
+                  ),
+                ),
+            ),
           ),
         )
     }),

@@ -1,3 +1,8 @@
+import {
+  deleteSchema,
+  saveWeeklyNoteSchema,
+  saveMonthlySummarySchema,
+} from './schemas'
 import { createServerFn } from '@tanstack/react-start'
 import { requireTeacher } from '../authorization'
 import { and, eq } from 'drizzle-orm'
@@ -6,15 +11,10 @@ import { monthlySummaries, weeklyNotes } from '#/db/schema'
 import { weekStartIso } from '../date'
 import { withTenantCache } from '../tenant-data'
 import { assertTeacherOwnsClass, assertText } from './shared'
-import type {
-  DeleteInput,
-  SaveMonthlySummaryInput,
-  SaveWeeklyNoteInput,
-} from './types'
 
 export const saveWeeklyNote = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: SaveWeeklyNoteInput) => data)
+  .validator(saveWeeklyNoteSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.p1, 'P1')
@@ -57,7 +57,7 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
 
 export const deleteWeeklyNote = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: DeleteInput) => data)
+  .validator(deleteSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
@@ -77,7 +77,7 @@ export const deleteWeeklyNote = createServerFn({ method: 'POST' })
 
 export const saveMonthlySummary = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: SaveMonthlySummaryInput) => data)
+  .validator(saveMonthlySummarySchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.month, 'Bulan')

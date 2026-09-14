@@ -1,7 +1,12 @@
-import type { Frequency, Indicator } from '#/db/schema'
-
 import type { z } from 'zod'
 import type {
+  createSchoolSchema,
+  updateSchoolSchema,
+  createSchoolAdminSchema,
+  updateSchoolAdminSchema,
+  saveDailyObservationsSchema,
+  saveWeeklyNoteSchema,
+  saveMonthlySummarySchema,
   addUserSchema,
   updateUserSchema,
   addClassSchema,
@@ -23,53 +28,12 @@ export type BulkImportKind = BulkImportInput['kind']
 export type BulkImportMode = NonNullable<BulkImportInput['mode']>
 export type DeleteInput = z.infer<typeof deleteSchema>
 
-export type CreateSchoolInput = {
-  name: string
-  slug: string
-  region: string
-}
-
-export type CreateSchoolAdminInput = {
-  schoolId: string
-  name: string
-  email: string
-  password: string
-}
-
-export type UpdateSchoolInput = {
-  id: string
-  name: string
-  region: string
-}
-
-export type UpdateSchoolAdminInput = {
-  id: string
-  schoolId: string
-  name: string
-  email: string
-  password?: string
-}
-
-export type SaveDailyObservationsInput = {
-  classId: string
-  observedAt?: string
-  note?: string
-  rows: Array<{
-    studentId: string
-    values: Record<Indicator, Frequency>
-  }>
-}
-
-export type SaveWeeklyNoteInput = {
-  classId: string
-  weekStart?: string
-  p1: string
-  p2: string
-  p3: string
-}
-
-export type SaveMonthlySummaryInput = {
-  classId: string
-  month: string
-  text: string
-}
+export type CreateSchoolInput = z.infer<typeof createSchoolSchema>
+export type UpdateSchoolInput = z.infer<typeof updateSchoolSchema>
+export type CreateSchoolAdminInput = z.infer<typeof createSchoolAdminSchema>
+export type UpdateSchoolAdminInput = z.infer<typeof updateSchoolAdminSchema>
+export type SaveDailyObservationsInput = z.infer<
+  typeof saveDailyObservationsSchema
+>
+export type SaveWeeklyNoteInput = z.infer<typeof saveWeeklyNoteSchema>
+export type SaveMonthlySummaryInput = z.infer<typeof saveMonthlySummarySchema>

@@ -12,7 +12,12 @@ import {
   getRowValue,
   upsertUserByEmail,
 } from './shared'
-import { bulkImportSchema } from './schemas'
+import {
+  bulkImportSchema,
+  emailSchema,
+  passwordSchema,
+  optionalPasswordSchema,
+} from './schemas'
 
 export const bulkImportAdminRows = createServerFn({ method: 'POST' })
   .middleware([requireAdmin])
@@ -39,7 +44,9 @@ export const bulkImportAdminRows = createServerFn({ method: 'POST' })
             ])
 
             assertText(name, `Baris ${rowNumber}: nama`)
-            assertText(email, `Baris ${rowNumber}: email`)
+            emailSchema.parse(email)
+            if (isUpdate) optionalPasswordSchema.parse(password)
+            else passwordSchema.parse(password)
             if (!isUpdate) {
               assertText(password, `Baris ${rowNumber}: kata sandi`)
             }
@@ -127,7 +134,9 @@ export const bulkImportAdminRows = createServerFn({ method: 'POST' })
             ])
 
             assertText(name, `Baris ${rowNumber}: nama`)
-            assertText(email, `Baris ${rowNumber}: email`)
+            emailSchema.parse(email)
+            if (isUpdate) optionalPasswordSchema.parse(password)
+            else passwordSchema.parse(password)
             if (!isUpdate) {
               assertText(password, `Baris ${rowNumber}: kata sandi`)
             }

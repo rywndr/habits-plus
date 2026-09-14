@@ -32,7 +32,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
-    minPasswordLength: 1,
+    minPasswordLength: 8,
     password: {
       hash: hashPassword,
       verify: ({ hash, password }) => verifyPassword(password, hash),

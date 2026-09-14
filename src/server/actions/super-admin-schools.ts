@@ -1,3 +1,4 @@
+import { createSchoolSchema, updateSchoolSchema, deleteSchema } from './schemas'
 import { createServerFn } from '@tanstack/react-start'
 import { requireSuperAdmin } from '../authorization'
 import { eq } from 'drizzle-orm'
@@ -5,11 +6,10 @@ import { getDb } from '#/db'
 import { schools } from '#/db/schema'
 import { withTenantCache } from '../tenant-data'
 import { assertText, normalizeSlug } from './shared'
-import type { CreateSchoolInput, DeleteInput, UpdateSchoolInput } from './types'
 
 export const createSchool = createServerFn({ method: 'POST' })
   .middleware([requireSuperAdmin])
-  .validator((data: CreateSchoolInput) => data)
+  .validator(createSchoolSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama sekolah')
@@ -42,7 +42,7 @@ export const createSchool = createServerFn({ method: 'POST' })
 
 export const updateSchool = createServerFn({ method: 'POST' })
   .middleware([requireSuperAdmin])
-  .validator((data: UpdateSchoolInput) => data)
+  .validator(updateSchoolSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       assertText(data.id, 'Sekolah')
@@ -70,7 +70,7 @@ export const updateSchool = createServerFn({ method: 'POST' })
 
 export const deleteSchool = createServerFn({ method: 'POST' })
   .middleware([requireSuperAdmin])
-  .validator((data: DeleteInput) => data)
+  .validator(deleteSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const school = await getDb().query.schools.findFirst({

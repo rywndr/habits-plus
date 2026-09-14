@@ -1,3 +1,4 @@
+import { saveDailyObservationsSchema } from './schemas'
 import { createServerFn } from '@tanstack/react-start'
 import { requireTeacher } from '../authorization'
 import { and, eq, inArray } from 'drizzle-orm'
@@ -11,11 +12,10 @@ import {
 import type { Frequency, Indicator } from '#/db/schema'
 import { todayIso } from '../date'
 import { withTenantCache } from '../tenant-data'
-import type { SaveDailyObservationsInput } from './types'
 
 export const saveDailyObservations = createServerFn({ method: 'POST' })
   .middleware([requireTeacher])
-  .validator((data: SaveDailyObservationsInput) => data)
+  .validator(saveDailyObservationsSchema)
   .handler(({ data, context }) =>
     withTenantCache(async () => {
       const teacher = context.teacher
