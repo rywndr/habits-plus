@@ -5,6 +5,7 @@ import { Textarea } from '#/components/ui/textarea'
 import { SaveButton } from '#/components/common/save-button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
+import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
@@ -113,23 +114,27 @@ function RingkasanBulanan() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Ringkasan Bulanan" />
+        <PageHeader
+          title="Ringkasan Bulanan"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Bulan:</span>
+        <HeaderFilters>
+          <HeaderFilter label="Bulan">
             <MonthPicker value={month} onChange={handleMonthChange} />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Kelas:</span>
+          </HeaderFilter>
+          <HeaderFilter
+            label="Kelas"
+            className="flex-1 lg:min-w-36 lg:flex-none"
+          >
             <ClassSelect
               classes={summary.classes}
               value={classId}
               onChange={handleClassChange}
               includeAll
             />
-          </div>
-        </div>
+          </HeaderFilter>
+        </HeaderFilters>
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">Ringkasan dalam bulan</span>

@@ -34,7 +34,10 @@ function DashboardGuru() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-6">
-        <PageHeader title="Dashboard Guru" />
+        <PageHeader
+          title="Dashboard Guru"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
         <div className="grid items-stretch gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="grid gap-4 sm:grid-cols-2">

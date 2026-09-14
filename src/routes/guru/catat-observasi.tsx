@@ -7,6 +7,7 @@ import { SaveButton } from '#/components/common/save-button'
 import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
+import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
 import { ExportDialog } from '#/components/guru/export-dialog'
@@ -161,33 +162,37 @@ function ObservasiHarian() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Observasi Harian" />
+        <PageHeader
+          title="Observasi Harian"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 text-sm sm:text-base">
-            <span className="font-heading font-semibold">Tanggal :</span>
+        <HeaderFilters>
+          <HeaderFilter label="Tanggal">
             <DatePicker value={observedAt} onChange={handleDateChange} />
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
-            <div className="flex items-center gap-2">
-              <span className="font-heading font-semibold">Kelas:</span>
+          </HeaderFilter>
+          <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
+            <HeaderFilter
+              label="Kelas"
+              className="flex-1 lg:min-w-36 lg:flex-none"
+            >
               <ClassSelect
                 classes={data.classes}
                 value={classId}
                 onChange={handleClassChange}
               />
-            </div>
+            </HeaderFilter>
             <Button
               variant="secondary"
               size="lg"
-              className="rounded-full px-6"
+              className="min-h-11 shrink-0 rounded-full px-5"
               onClick={() => setIsExportOpen(true)}
             >
               <Download />
               Export
             </Button>
           </div>
-        </div>
+        </HeaderFilters>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex-1">

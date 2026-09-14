@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import { ContentPanel } from '#/components/shell/content-panel'
+import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { DatePicker } from '#/components/guru/date-picker'
@@ -322,31 +323,37 @@ function LaporanOrangTua() {
     <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
-          <PageHeader title="Laporan Orang Tua" />
+          <PageHeader
+            title="Laporan Orang Tua"
+            className="text-2xl leading-tight sm:text-4xl"
+          />
           <p className="text-sm text-muted-foreground">
             Laporan mingguan per siswa. Buat dengan AI dari observasi harian,
             atau tulis sendiri.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-heading font-semibold">Minggu:</span>
+        <HeaderFilters>
+          <HeaderFilter label="Minggu">
             <WeekPicker
               value={data.selectedWeekStart}
               onChange={(weekStart) =>
                 void navigateTo({ weekStart, classId: data.classId })
               }
             />
+          </HeaderFilter>
+          <HeaderFilter label="Tanggal acuan">
             <DatePicker
               value={data.selectedWeekStart}
               onChange={(date) =>
                 void navigateTo({ weekStart: date, classId: data.classId })
               }
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Kelas:</span>
+          </HeaderFilter>
+          <HeaderFilter
+            label="Kelas"
+            className="flex-1 lg:min-w-36 lg:flex-none"
+          >
             <ClassSelect
               classes={data.classes}
               value={data.classId}
@@ -354,8 +361,8 @@ function LaporanOrangTua() {
                 void navigateTo({ weekStart: data.selectedWeekStart, classId })
               }
             />
-          </div>
-        </div>
+          </HeaderFilter>
+        </HeaderFilters>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">

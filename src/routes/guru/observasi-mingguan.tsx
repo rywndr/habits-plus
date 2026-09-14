@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { ContentPanel } from '#/components/shell/content-panel'
+import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
@@ -187,37 +188,41 @@ function ObservasiMingguan() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Observasi Mingguan" />
+        <PageHeader
+          title="Observasi Mingguan"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Minggu:</span>
+        <HeaderFilters>
+          <HeaderFilter label="Minggu">
             <WeekPicker
               value={weeklyNotes.selectedWeekStart}
               onChange={handleWeekChange}
             />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-heading font-semibold">Kelas:</span>
+          </HeaderFilter>
+          <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
+            <HeaderFilter
+              label="Kelas"
+              className="flex-1 lg:min-w-36 lg:flex-none"
+            >
               <ClassSelect
                 classes={weeklyNotes.classes}
                 value={classId}
                 onChange={handleClassChange}
                 includeAll
               />
-            </div>
+            </HeaderFilter>
             <Button
               variant="secondary"
               size="lg"
-              className="rounded-full px-6"
+              className="min-h-11 shrink-0 rounded-full px-5"
               onClick={() => setIsExportOpen(true)}
             >
               <Download />
               Export
             </Button>
           </div>
-        </div>
+        </HeaderFilters>
 
         {isAllClasses ? (
           <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">

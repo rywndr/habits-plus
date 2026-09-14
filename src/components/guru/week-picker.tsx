@@ -1,11 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '#/components/ui/button'
-import {
-  addDaysIso,
-  formatIndonesianDate,
-  weekEndIso,
-  weekStartIso,
-} from '#/server/date'
+import { addDaysIso, weekEndIso, weekStartIso } from '#/server/date'
 
 type Props = {
   value: string
@@ -15,30 +10,36 @@ type Props = {
 function weekLabel(value: string) {
   const start = weekStartIso(new Date(value))
   const end = weekEndIso(start)
-  return `Minggu ${formatIndonesianDate(start).replace(/ \d{4}$/, '')} - ${formatIndonesianDate(end)}`
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).formatRange(new Date(start), new Date(end))
 }
 
 export function WeekPicker({ value, onChange }: Props) {
   const weekStart = weekStartIso(new Date(value))
 
   return (
-    <div className="flex min-w-0 max-w-full items-center gap-1 rounded-full bg-card p-1 ring-1 ring-border sm:gap-2">
+    <div className="flex min-w-0 max-w-full items-center rounded-full bg-card ring-1 ring-border">
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
+        className="size-11 rounded-full"
         aria-label="Minggu sebelumnya"
         onClick={() => onChange(addDaysIso(weekStart, -7))}
       >
         <ChevronLeft />
       </Button>
-      <span className="min-w-0 px-1 text-center font-heading text-sm font-semibold sm:min-w-52 sm:px-2 sm:text-base">
+      <span className="min-w-0 flex-1 px-2 text-center font-heading text-sm leading-snug font-medium">
         {weekLabel(weekStart)}
       </span>
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
+        className="size-11 rounded-full"
         aria-label="Minggu berikutnya"
         onClick={() => onChange(addDaysIso(weekStart, 7))}
       >
