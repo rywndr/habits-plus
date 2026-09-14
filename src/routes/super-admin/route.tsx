@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
 import { Building2, ShieldPlus } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
-import type { NavItem } from '#/components/shell/sidebar-nav-item'
+import type { NavEntry } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/super-admin')({
@@ -12,17 +12,19 @@ export const Route = createFileRoute('/super-admin')({
 
 function SuperAdminShell() {
   const user = Route.useLoaderData()
-  const items: Array<NavItem> = [
+  const items: Array<NavEntry> = [
     {
+      kind: 'link',
       to: '/super-admin',
       href: '/super-admin',
-      label: 'tambah sekolah',
+      label: 'Tambah Sekolah',
       icon: Building2,
     },
     {
+      kind: 'link',
       to: '/super-admin/admin-sekolah',
       href: '/super-admin/admin-sekolah',
-      label: 'admin sekolah',
+      label: 'Admin Sekolah',
       icon: ShieldPlus,
     },
   ]

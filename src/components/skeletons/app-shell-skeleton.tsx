@@ -9,25 +9,31 @@ type Props = {
 export function AppShellSkeleton({ navItemsCount = 4 }: Props) {
   return (
     <div className="flex min-h-svh bg-brand-navy">
-      <aside className="hidden w-64 shrink-0 flex-col gap-3 p-3 md:flex">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <BrandLogo size={44} />
+      <aside className="hidden w-64 shrink-0 flex-col p-4 md:flex">
+        <div className="flex items-center gap-3">
+          <BrandLogo size={40} />
           <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className="h-3 w-24 bg-sidebar-foreground/25" />
+            <Skeleton className="h-3 w-20 bg-sidebar-foreground/25" />
             <Skeleton className="h-2 w-28 bg-sidebar-foreground/15" />
           </div>
         </div>
-        <Skeleton className="h-7 w-full rounded-lg bg-sidebar-foreground/15" />
-        <div className="flex flex-col gap-1.5 pt-2">
+        <div className="flex flex-col gap-1.5 pt-8">
           {Array.from({ length: navItemsCount }).map((_, i) => (
             <Skeleton
               key={i}
-              className="h-9 w-full rounded-md bg-sidebar-foreground/10"
+              className="h-12 w-full rounded-md bg-sidebar-foreground/10"
             />
           ))}
         </div>
-        <div className="mt-auto">
-          <Skeleton className="h-9 w-full rounded-md bg-sidebar-foreground/10" />
+        <div className="mt-auto flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="size-8 shrink-0 rounded-full bg-sidebar-foreground/20" />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Skeleton className="h-3 w-24 bg-sidebar-foreground/25" />
+              <Skeleton className="h-2 w-28 bg-sidebar-foreground/15" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-full rounded-lg bg-sidebar-foreground/10" />
         </div>
       </aside>
 

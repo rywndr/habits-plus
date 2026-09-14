@@ -32,10 +32,10 @@ export const Route = createFileRoute('/guru/ringkasan')({
         classId: deps.classId,
       },
     }),
-  component: LihatRingkasan,
+  component: RingkasanBulanan,
   staleTime: 30_000,
   pendingComponent: SummaryPageSkeleton,
-  staticData: { title: 'Lihat Ringkasan' },
+  staticData: { title: 'Ringkasan Bulanan' },
 })
 
 const ORDER: Array<Indicator> = [
@@ -45,7 +45,7 @@ const ORDER: Array<Indicator> = [
   'regulasi',
 ]
 
-function LihatRingkasan() {
+function RingkasanBulanan() {
   const router = useRouter()
   const navigate = useNavigate()
   const summary = Route.useLoaderData()
@@ -112,7 +112,7 @@ function LihatRingkasan() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Lihat Ringkasan" />
+        <PageHeader title="Ringkasan Bulanan" />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">

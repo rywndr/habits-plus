@@ -9,7 +9,7 @@ import {
   Coins,
 } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
-import type { NavItem } from '#/components/shell/sidebar-nav-item'
+import type { NavEntry } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin')({
@@ -21,47 +21,54 @@ export const Route = createFileRoute('/admin')({
 function AdminShell() {
   const user = Route.useLoaderData()
 
-  const items: Array<NavItem> = [
+  const items: Array<NavEntry> = [
     {
+      kind: 'link',
       to: '/admin',
       href: '/admin',
-      label: 'beranda',
+      label: 'Dashboard',
       icon: Home,
     },
     {
+      kind: 'link',
       to: '/admin/guru',
       href: '/admin/guru',
-      label: 'kelola guru',
+      label: 'Kelola Guru',
       icon: GraduationCap,
     },
     {
+      kind: 'link',
       to: '/admin/siswa',
       href: '/admin/siswa',
-      label: 'kelola siswa',
+      label: 'Kelola Siswa',
       icon: Users,
     },
     {
+      kind: 'link',
       to: '/admin/kelas',
       href: '/admin/kelas',
-      label: 'kelola kelas',
+      label: 'Kelola Kelas',
       icon: BookOpen,
     },
     {
+      kind: 'link',
       to: '/admin/ortu',
       href: '/admin/ortu',
-      label: 'kelola orang tua',
+      label: 'Kelola Orang Tua',
       icon: UserCircle2,
     },
     {
+      kind: 'link',
       to: '/admin/data-massal',
       href: '/admin/data-massal',
-      label: 'data massal',
+      label: 'Data Massal',
       icon: FileSpreadsheet,
     },
     {
+      kind: 'link',
       to: '/admin/biaya-ai',
       href: '/admin/biaya-ai',
-      label: 'biaya ai',
+      label: 'Biaya AI',
       icon: Coins,
     },
   ]

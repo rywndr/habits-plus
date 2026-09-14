@@ -38,10 +38,10 @@ export const Route = createFileRoute('/guru/catat-observasi')({
         observedAt: deps.observedAt,
       },
     }),
-  component: CatatObservasi,
+  component: ObservasiHarian,
   staleTime: 30_000,
   pendingComponent: ObservationPageSkeleton,
-  staticData: { title: 'Catat Observasi' },
+  staticData: { title: 'Observasi Harian' },
 })
 
 function getEmptyRows(students: Array<Student>, classId: string) {
@@ -58,7 +58,7 @@ function getEmptyRows(students: Array<Student>, classId: string) {
     }))
 }
 
-function CatatObservasi() {
+function ObservasiHarian() {
   const router = useRouter()
   const navigate = useNavigate()
   const data = Route.useLoaderData()
@@ -160,7 +160,7 @@ function CatatObservasi() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Catat Observasi" />
+        <PageHeader title="Observasi Harian" />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm sm:text-base">

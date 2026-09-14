@@ -4,11 +4,10 @@ import {
   ClipboardEdit,
   BarChart3,
   CalendarRange,
-  PenLine,
-  Sparkles,
+  Send,
 } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
-import type { NavGroup, NavItem } from '#/components/shell/sidebar-nav-item'
+import type { NavEntry } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru')({
@@ -20,48 +19,42 @@ export const Route = createFileRoute('/guru')({
 function GuruShell() {
   const user = Route.useLoaderData()
 
-  const items: Array<NavItem | NavGroup> = [
+  // Ordered by cadence: daily, weekly, then monthly.
+  const items: Array<NavEntry> = [
     {
+      kind: 'link',
       to: '/guru',
       href: '/guru',
-      label: 'beranda',
+      label: 'Dashboard',
       icon: Home,
     },
     {
+      kind: 'link',
       to: '/guru/catat-observasi',
       href: '/guru/catat-observasi',
-      label: 'catat observasi',
+      label: 'Observasi Harian',
       icon: ClipboardEdit,
     },
     {
-      to: '/guru/ringkasan',
-      href: '/guru/ringkasan',
-      label: 'lihat ringkasan',
-      icon: BarChart3,
-    },
-    {
+      kind: 'link',
       to: '/guru/observasi-mingguan',
       href: '/guru/observasi-mingguan',
-      label: 'observasi mingguan',
+      label: 'Observasi Mingguan',
       icon: CalendarRange,
     },
     {
-      label: 'ringkasan',
-      icon: Sparkles,
-      items: [
-        {
-          to: '/guru/ringkasan-ai',
-          href: '/guru/ringkasan-ai',
-          label: 'ringkasan AI',
-          icon: Sparkles,
-        },
-        {
-          to: '/guru/ringkasan-manual',
-          href: '/guru/ringkasan-manual',
-          label: 'ringkasan manual',
-          icon: PenLine,
-        },
-      ],
+      kind: 'link',
+      to: '/guru/laporan-orang-tua',
+      href: '/guru/laporan-orang-tua',
+      label: 'Laporan Orang Tua',
+      icon: Send,
+    },
+    {
+      kind: 'link',
+      to: '/guru/ringkasan',
+      href: '/guru/ringkasan',
+      label: 'Ringkasan Bulanan',
+      icon: BarChart3,
     },
   ]
 

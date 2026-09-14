@@ -8,23 +8,23 @@ export type KpiStat = {
   frequencyLabel: string
 }
 
-const indicatorOnBeranda: Record<Indicator, string> = {
+const dashboardIndicatorLabels: Record<Indicator, string> = {
   respons: 'Inisiasi Interaksi Sosial',
   interaksi: 'Respon Terhadap Interaksi',
   partisipasi: 'Partisipasi dalam Kelompok',
   regulasi: 'Regulasi Perilaku Sosial',
 }
 
-const beranda: Array<{ indicator: Indicator; frequency: Frequency }> = [
+const dashboardStats: Array<{ indicator: Indicator; frequency: Frequency }> = [
   { indicator: 'respons', frequency: 'tidak-terlihat' },
   { indicator: 'interaksi', frequency: 'terlihat-sesekali' },
   { indicator: 'partisipasi', frequency: 'sering' },
   { indicator: 'regulasi', frequency: 'tidak-terlihat' },
 ]
 
-export const kpiStats: Array<KpiStat> = beranda.map((b) => ({
+export const kpiStats: Array<KpiStat> = dashboardStats.map((b) => ({
   indicator: b.indicator,
-  label: indicatorOnBeranda[b.indicator],
+  label: dashboardIndicatorLabels[b.indicator],
   frequency: b.frequency,
   frequencyLabel: frequencyLabels[b.frequency],
 }))
@@ -43,10 +43,30 @@ export const parentIndicators: Array<{
   trend: 'meningkat' | 'stabil'
   graphic: string
 }> = [
-  { indicator: 'respons', label: 'Inisiasi Interaksi Sosial', trend: 'meningkat', graphic: '/graphics/graphic-1.png' },
-  { indicator: 'interaksi', label: 'Respon Terhadap Interaksi', trend: 'meningkat', graphic: '/graphics/graphic-2.png' },
-  { indicator: 'partisipasi', label: 'Partisipasi Kegiatan', trend: 'stabil', graphic: '/graphics/graphic-3.png' },
-  { indicator: 'regulasi', label: 'Regulasi Emosi', trend: 'meningkat', graphic: '/graphics/graphic-4.png' },
+  {
+    indicator: 'respons',
+    label: 'Inisiasi Interaksi Sosial',
+    trend: 'meningkat',
+    graphic: '/graphics/graphic-1.png',
+  },
+  {
+    indicator: 'interaksi',
+    label: 'Respon Terhadap Interaksi',
+    trend: 'meningkat',
+    graphic: '/graphics/graphic-2.png',
+  },
+  {
+    indicator: 'partisipasi',
+    label: 'Partisipasi Kegiatan',
+    trend: 'stabil',
+    graphic: '/graphics/graphic-3.png',
+  },
+  {
+    indicator: 'regulasi',
+    label: 'Regulasi Emosi',
+    trend: 'meningkat',
+    graphic: '/graphics/graphic-4.png',
+  },
 ]
 
 export { indicatorLabels }

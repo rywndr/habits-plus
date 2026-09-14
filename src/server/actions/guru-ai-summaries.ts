@@ -6,6 +6,7 @@ import { addDaysIso, weekStartIso } from '../date'
 import { DEEPSEEK_MODEL } from '../ai/deepseek'
 import { generateWeeklySummaries } from '../ai/weekly-summary'
 import {
+  MANUAL_MODEL,
   getActiveSummaryStudentIds,
   getClassWeekObservations,
   getClassWeeklyNote,
@@ -30,8 +31,6 @@ type AcceptInput = {
 type SummaryIdInput = {
   id: string
 }
-
-const MANUAL_MODEL = 'manual'
 
 export const generateAiSummaries = createServerFn({ method: 'POST' })
   .validator((data: GenerateInput) => data)
@@ -125,15 +124,23 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
       const items = data.items.filter(
         (item) => classStudentIds.has(item.studentId) && item.content.trim(),
       )
-      if (!items.length) return { saved: [] as Array<string> }
+      if (!items.length) return { saved: [] as Array<string>, skipped: [] }
 
       const activeIds = await getActiveSummaryStudentIds(
         tenant,
         weekStart,
         items.map((item) => item.studentId),
       )
+      // A report saved elsewhere since generation wins; the caller keeps the
+      // draft and shows the reason rather than discarding the teacher's work.
+      const skipped = items
+        .filter((item) => activeIds.has(item.studentId))
+        .map((item) => ({
+          studentId: item.studentId,
+          reason: 'Sudah ada laporan tersimpan untuk minggu ini.',
+        }))
       const toSave = items.filter((item) => !activeIds.has(item.studentId))
-      if (!toSave.length) return { saved: [] as Array<string> }
+      if (!toSave.length) return { saved: [] as Array<string>, skipped }
 
       await getDb()
         .insert(aiSummaries)
@@ -149,7 +156,7 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
           })),
         )
 
-      return { saved: toSave.map((item) => item.studentId) }
+      return { saved: toSave.map((item) => item.studentId), skipped }
     }),
   )
 

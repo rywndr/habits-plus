@@ -18,6 +18,19 @@ export type StudentWeekDayData = {
   note: string | null
 }
 
+/**
+ * Sentinel written to `ai_summaries.model` when a teacher types the report
+ * instead of generating it. Any other value is a real model id.
+ */
+export const MANUAL_MODEL = 'manual'
+
+/** Who wrote the text parents will read. */
+export type SummarySource = 'ai' | 'manual'
+
+function summarySource(model: string): SummarySource {
+  return model === MANUAL_MODEL ? 'manual' : 'ai'
+}
+
 export type AiSummaryListItem = {
   id: string
   studentId: string
@@ -25,6 +38,7 @@ export type AiSummaryListItem = {
   weekStart: string
   content: string
   createdLabel: string
+  source: SummarySource
 }
 
 export type AiGenerationHistoryEntry = {
@@ -102,6 +116,7 @@ export async function getActiveAiSummaries(
       studentName: students.name,
       weekStart: aiSummaries.weekStart,
       content: aiSummaries.content,
+      model: aiSummaries.model,
       createdAt: aiSummaries.createdAt,
     })
     .from(aiSummaries)
@@ -123,6 +138,7 @@ export async function getActiveAiSummaries(
     weekStart: row.weekStart,
     content: row.content,
     createdLabel: formatIndonesianDate(row.createdAt),
+    source: summarySource(row.model),
   }))
 }
 

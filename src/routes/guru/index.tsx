@@ -18,15 +18,15 @@ import { loadGuruDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/guru/')({
   loader: () => loadGuruDashboard(),
-  component: BerandaGuru,
+  component: DashboardGuru,
   staleTime: 30_000,
   pendingComponent: GuruDashboardSkeleton,
-  staticData: { title: 'Beranda Guru' },
+  staticData: { title: 'Dashboard Guru' },
 })
 
 const icons = [Users, MessageCircle, UsersRound, ShieldCheck]
 
-function BerandaGuru() {
+function DashboardGuru() {
   const dashboard = Route.useLoaderData()
   const navigate = useNavigate()
   const [isNavigating, setIsNavigating] = useState(false)
@@ -34,7 +34,7 @@ function BerandaGuru() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-6">
-        <PageHeader title="Beranda Guru" />
+        <PageHeader title="Dashboard Guru" />
 
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr] items-start">
           <div className="grid gap-4 sm:grid-cols-2">

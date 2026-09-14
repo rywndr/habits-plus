@@ -493,13 +493,13 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
     }),
   )
 
-type AiSummaryPageInput = TenantInput & {
+type ParentReportPageInput = TenantInput & {
   weekStart?: string
   classId?: string
 }
 
-export const loadAiSummaryPage = createServerFn({ method: 'GET' })
-  .validator((data: AiSummaryPageInput) => data)
+export const loadParentReportPage = createServerFn({ method: 'GET' })
+  .validator((data: ParentReportPageInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')

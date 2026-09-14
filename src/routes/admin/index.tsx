@@ -14,20 +14,20 @@ import { loadAdminDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/')({
   loader: () => loadAdminDashboard(),
-  component: BerandaAdmin,
+  component: DashboardAdmin,
   staleTime: 30_000,
   pendingComponent: AdminDashboardSkeleton,
-  staticData: { title: 'Beranda Admin' },
+  staticData: { title: 'Dashboard Admin' },
 })
 
-function BerandaAdmin() {
+function DashboardAdmin() {
   const dashboard = Route.useLoaderData()
 
   return (
     <ContentPanel>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          <PageHeader title="Beranda Admin" />
+          <PageHeader title="Dashboard Admin" />
           <p className="text-sm text-muted-foreground">
             {dashboard.tenant.name}
           </p>

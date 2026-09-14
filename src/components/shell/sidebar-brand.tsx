@@ -1,19 +1,25 @@
+import { School } from 'lucide-react'
 import { BrandLogo } from '#/components/common/brand-logo'
 
 type Props = {
-  name: string
-  email: string
+  schoolName: string
 }
 
-export function SidebarBrand({ name, email }: Props) {
+export function SidebarBrand({ schoolName }: Props) {
   return (
-    <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
-      <BrandLogo size={88} />
-      <div className="flex flex-col gap-0.5">
-        <span className="font-heading text-lg font-semibold text-sidebar-foreground">
-          {name}
+    <div className="flex items-center gap-3">
+      <BrandLogo size={40} />
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="font-heading text-base leading-none font-semibold text-sidebar-foreground">
+          Habits+
         </span>
-        <span className="text-xs text-sidebar-foreground/70">{email}</span>
+        <span
+          className="flex min-w-0 items-center gap-1.5 text-xs leading-none text-sidebar-foreground/70"
+          title={schoolName}
+        >
+          <School className="size-3 shrink-0" />
+          <span className="truncate">{schoolName}</span>
+        </span>
       </div>
     </div>
   )

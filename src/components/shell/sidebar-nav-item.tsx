@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { LinkProps } from '@tanstack/react-router'
@@ -13,6 +13,7 @@ import {
 import { cn } from '#/lib/utils'
 
 export type NavItem = Pick<LinkProps, 'to' | 'params'> & {
+  kind: 'link'
   label: string
   icon: LucideIcon
   /** resolved href used for active comparison (e.g. `/demo/guru`) */
@@ -21,14 +22,13 @@ export type NavItem = Pick<LinkProps, 'to' | 'params'> & {
 
 /** Non-navigating parent entry that expands into nested links. */
 export type NavGroup = {
+  kind: 'group'
   label: string
   icon: LucideIcon
   items: Array<NavItem>
 }
 
-export function isNavGroup(item: NavItem | NavGroup): item is NavGroup {
-  return 'items' in item
-}
+export type NavEntry = NavItem | NavGroup
 
 type Props = {
   item: NavItem
@@ -47,8 +47,8 @@ export function SidebarNavItem({ item }: Props) {
         tooltip={item.label}
         render={<Link to={item.to} params={item.params} />}
       >
-        <Icon />
-        <span className="text-base lowercase">{item.label}</span>
+        <Icon className={cn(isActive && 'text-sidebar-primary')} />
+        <span>{item.label}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
@@ -59,6 +59,7 @@ export function SidebarNavGroup({ group }: { group: NavGroup }) {
   const Icon = group.icon
   const hasActiveChild = group.items.some((item) => pathname === item.href)
   const [isOpen, setIsOpen] = useState(hasActiveChild)
+  const submenuId = useId()
 
   useEffect(() => {
     if (hasActiveChild) setIsOpen(true)
@@ -71,23 +72,28 @@ export function SidebarNavGroup({ group }: { group: NavGroup }) {
         size="lg"
         tooltip={group.label}
         aria-expanded={isOpen}
+        aria-controls={isOpen ? submenuId : undefined}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <Icon />
-        <span className="text-base lowercase">{group.label}</span>
+        <Icon className={cn(hasActiveChild && 'text-sidebar-primary')} />
+        <span>{group.label}</span>
         <ChevronDown
-          className={cn('ml-auto transition-transform', isOpen && 'rotate-180')}
+          className={cn(
+            'ml-auto text-sidebar-foreground/60 transition-transform',
+            isOpen && 'rotate-180',
+          )}
         />
       </SidebarMenuButton>
       {isOpen ? (
-        <SidebarMenuSub>
+        <SidebarMenuSub id={submenuId} className="mt-1 gap-1">
           {group.items.map((item) => (
             <SidebarMenuSubItem key={item.href}>
               <SidebarMenuSubButton
                 isActive={pathname === item.href}
+                className="h-9"
                 render={<Link to={item.to} params={item.params} />}
               >
-                <span className="lowercase">{item.label}</span>
+                <span>{item.label}</span>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           ))}
