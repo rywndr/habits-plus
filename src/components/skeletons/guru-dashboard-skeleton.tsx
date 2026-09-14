@@ -23,17 +23,14 @@ export function GuruDashboardSkeleton() {
             ))}
           </div>
 
-          <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/5">
+          <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/5 lg:justify-between lg:gap-2 lg:p-4">
             <Skeleton className="mx-auto h-3 w-40" />
-            <Skeleton className="h-24 w-full rounded-lg" />
-            <div className="flex flex-col gap-3">
+            <Skeleton className="mx-auto size-44 max-w-full rounded-full lg:size-36" />
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  <div className="flex items-baseline justify-between">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-3 w-10" />
-                  </div>
-                  <Skeleton className="h-2 w-full rounded-full" />
+                <div key={i} className="flex items-center gap-1.5">
+                  <Skeleton className="size-3 rounded-full" />
+                  <Skeleton className="h-3 w-20" />
                 </div>
               ))}
             </div>

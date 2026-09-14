@@ -36,7 +36,7 @@ function DashboardGuru() {
       <div className="flex flex-col gap-6">
         <PageHeader title="Dashboard Guru" />
 
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr] items-start">
+        <div className="grid items-stretch gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="grid gap-4 sm:grid-cols-2">
             {dashboard.kpiStats.map((kpi, idx) => (
               <KpiCard
