@@ -1,3 +1,4 @@
+import { affectsAdminData } from '#/lib/route-invalidation'
 import { useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -97,7 +98,7 @@ function DataMassal() {
         data: { kind: selectedKind, mode, rows },
       })
       setResult(next)
-      await router.invalidate()
+      await router.invalidate({ filter: affectsAdminData })
     } finally {
       setIsImporting(false)
     }

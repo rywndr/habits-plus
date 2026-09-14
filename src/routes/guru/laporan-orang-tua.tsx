@@ -1,3 +1,4 @@
+import { affectsReports } from '#/lib/route-invalidation'
 import { useMemo, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { LoaderCircle, Sparkles } from 'lucide-react'
@@ -255,7 +256,7 @@ function LaporanOrangTua() {
           },
         })
       }
-      await router.invalidate()
+      await router.invalidate({ filter: affectsReports })
       discardDrafts([studentId])
       clearEdit(studentId)
       setNotice(studentId, undefined)
@@ -275,7 +276,7 @@ function LaporanOrangTua() {
           items: [{ studentId, content: text }],
         },
       })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsReports })
       clearEdit(studentId)
       setNotice(studentId, undefined)
     } finally {
@@ -287,7 +288,7 @@ function LaporanOrangTua() {
     setSavingId(studentId)
     try {
       await revokeAiSummary({ data: { id } })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsReports })
       clearEdit(studentId)
     } finally {
       setSavingId(null)
@@ -298,7 +299,7 @@ function LaporanOrangTua() {
     setSavingId(studentId)
     try {
       await deleteAiSummary({ data: { id } })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsReports })
       clearEdit(studentId)
     } finally {
       setSavingId(null)

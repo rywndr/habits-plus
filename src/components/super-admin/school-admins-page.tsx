@@ -1,3 +1,4 @@
+import { affectsSuperAdminData } from '#/lib/route-invalidation'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -28,10 +29,7 @@ import {
   deleteSchoolAdmin,
   updateSchoolAdmin,
 } from '#/server/actions'
-import type {
-  SuperAdminSchool,
-  SuperAdminSchoolAdmin,
-} from '#/server/loaders'
+import type { SuperAdminSchool, SuperAdminSchoolAdmin } from '#/server/loaders'
 
 type Props = {
   schools: Array<SuperAdminSchool>
@@ -83,7 +81,8 @@ export function SchoolAdminsPage({ schools, admins }: Props) {
     setValues((current) => ({
       ...current,
       schoolId:
-        current.schoolId && schools.some((school) => school.id === current.schoolId)
+        current.schoolId &&
+        schools.some((school) => school.id === current.schoolId)
           ? current.schoolId
           : (schools[0]?.id ?? ''),
     }))
@@ -100,7 +99,7 @@ export function SchoolAdminsPage({ schools, admins }: Props) {
         password: '',
       }))
       setIsAddOpen(false)
-      await router.invalidate()
+      await router.invalidate({ filter: affectsSuperAdminData })
     } finally {
       setIsSaving(false)
     }
@@ -119,12 +118,12 @@ export function SchoolAdminsPage({ schools, admins }: Props) {
         password: nextValues.password || undefined,
       },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsSuperAdminData })
   }
 
   async function handleDelete(admin: SuperAdminSchoolAdmin) {
     await deleteSchoolAdmin({ data: { id: admin.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsSuperAdminData })
   }
 
   return (
@@ -262,11 +261,7 @@ type SchoolAdminFormProps = {
   onChange: (values: SchoolAdminFormValues) => void
 }
 
-function SchoolAdminForm({
-  schools,
-  values,
-  onChange,
-}: SchoolAdminFormProps) {
+function SchoolAdminForm({ schools, values, onChange }: SchoolAdminFormProps) {
   return (
     <>
       <SchoolSelect

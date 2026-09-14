@@ -1,3 +1,4 @@
+import { affectsAdminData } from '#/lib/route-invalidation'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -99,7 +100,7 @@ function KelolaSiswa() {
     await addStudent({ data: { nisn, name, classId, gender } })
     setNisn('')
     setName('')
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleEdit(student: Student, values: StudentFormValues) {
@@ -112,12 +113,12 @@ function KelolaSiswa() {
         gender: values.gender,
       },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleDelete(student: Student) {
     await deleteStudent({ data: { id: student.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   return (

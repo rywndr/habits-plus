@@ -1,3 +1,4 @@
+import { affectsSuperAdminData } from '#/lib/route-invalidation'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -74,7 +75,7 @@ export function SchoolsPage({ schools }: Props) {
       setName('')
       setRegion('')
       setIsAddOpen(false)
-      await router.invalidate()
+      await router.invalidate({ filter: affectsSuperAdminData })
     } finally {
       setIsSaving(false)
     }
@@ -87,12 +88,12 @@ export function SchoolsPage({ schools }: Props) {
     await updateSchool({
       data: { id: school.id, name: values.name, region: values.region },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsSuperAdminData })
   }
 
   async function handleDelete(school: SuperAdminSchool) {
     await deleteSchool({ data: { id: school.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsSuperAdminData })
   }
 
   return (
@@ -188,10 +189,7 @@ type SchoolEditDialogProps = {
   school: SuperAdminSchool | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (
-    school: SuperAdminSchool,
-    values: SchoolFormValues,
-  ) => Promise<void>
+  onSave: (school: SuperAdminSchool, values: SchoolFormValues) => Promise<void>
 }
 
 function SchoolEditDialog({

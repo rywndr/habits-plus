@@ -1,3 +1,4 @@
+import { affectsWeeklyNotes } from '#/lib/route-invalidation'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
@@ -138,7 +139,7 @@ function ObservasiMingguan() {
       await saveWeeklyNote({
         data: { weekStart: weeklyNotes.selectedWeekStart, classId, p1, p2, p3 },
       })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsWeeklyNotes })
       setSaveStatus('saved')
     } catch (error) {
       setSaveStatus('error')
@@ -153,12 +154,12 @@ function ObservasiMingguan() {
     await saveWeeklyNote({
       data: { weekStart: note.date, classId: note.classId ?? '', ...values },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsWeeklyNotes })
   }
 
   async function handleDeleteNote(note: WeeklyNote) {
     await deleteWeeklyNote({ data: { id: note.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsWeeklyNotes })
   }
 
   async function handleExport(options: {

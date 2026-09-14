@@ -1,3 +1,4 @@
+import { affectsMonthlySummary } from '#/lib/route-invalidation'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Textarea } from '#/components/ui/textarea'
@@ -101,7 +102,7 @@ function RingkasanBulanan() {
     setSaveStatus('saving')
     try {
       await saveMonthlySummary({ data: { month, classId, text } })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsMonthlySummary })
       setSaveStatus('saved')
     } catch (error) {
       setSaveStatus('error')

@@ -1,3 +1,4 @@
+import { affectsAdminData } from '#/lib/route-invalidation'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
@@ -118,7 +119,7 @@ function KelolaOrtu() {
     setEmail('')
     setPassword('')
     setStudentId('none')
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleEdit(parent: AppUser, values: ParentFormValues) {
@@ -132,12 +133,12 @@ function KelolaOrtu() {
         studentId: values.studentId === 'none' ? undefined : values.studentId,
       },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleDelete(parent: AppUser) {
     await deleteUser({ data: { id: parent.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   return (

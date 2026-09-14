@@ -1,3 +1,4 @@
+import { affectsAdminData } from '#/lib/route-invalidation'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { ContentPanel } from '#/components/shell/content-panel'
@@ -92,7 +93,7 @@ function KelolaKelas() {
     })
     setName('')
     setTeacherId('none')
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleEdit(klass: ClassRoom, values: ClassFormValues) {
@@ -103,12 +104,12 @@ function KelolaKelas() {
         teacherId: values.teacherId === 'none' ? undefined : values.teacherId,
       },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleDelete(klass: ClassRoom) {
     await deleteClass({ data: { id: klass.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   return (

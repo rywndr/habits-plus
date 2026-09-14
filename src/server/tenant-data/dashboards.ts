@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lt, lte } from 'drizzle-orm'
+import { and, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
   dailyObservations,
@@ -7,12 +7,13 @@ import {
   observationScores,
   scoreFrequency,
   students,
+  classes,
+  users,
 } from '#/db/schema'
 import type { Trend } from '#/data'
 import { frequencyLabels, indicatorLabels } from '#/lib/domain'
 import { getTenantClasses } from './classes'
 import { getTenantStudents } from './students'
-import { getTenantUsers } from './users'
 import type { Frequency, Indicator, MonthlySummary, Tenant } from './types'
 import {
   addDaysIso,
@@ -23,19 +24,28 @@ import {
 } from '../date'
 
 export async function getAdminDashboard(tenant: Tenant) {
-  const [tenantUsers, tenantClasses, tenantStudents] = await Promise.all([
-    getTenantUsers(tenant),
-    getTenantClasses(tenant),
-    getTenantStudents(tenant),
-  ])
+  const rows = await getDb()
+    .select({
+      teachersCount:
+        sql`count(*) filter (where ${users.role} = 'guru')`.mapWith(Number),
+      parentsCount: sql`count(*) filter (where ${users.role} = 'ortu')`.mapWith(
+        Number,
+      ),
+      classesCount:
+        sql`(select count(*) from ${classes} where ${classes.schoolId} = ${tenant.id})`.mapWith(
+          Number,
+        ),
+      studentsCount:
+        sql`(select count(*) from ${students} where ${students.schoolId} = ${tenant.id})`.mapWith(
+          Number,
+        ),
+    })
+    .from(users)
+    .where(eq(users.schoolId, tenant.id))
 
-  return {
-    tenant,
-    teachersCount: tenantUsers.filter((user) => user.role === 'guru').length,
-    parentsCount: tenantUsers.filter((user) => user.role === 'ortu').length,
-    classesCount: tenantClasses.length,
-    studentsCount: tenantStudents.length,
-  }
+  const counts = rows.at(0)
+  if (!counts) throw new Error('Dashboard counts were not returned.')
+  return { tenant, ...counts }
 }
 
 export async function getGuruDashboard(tenant: Tenant, teacherId: string) {

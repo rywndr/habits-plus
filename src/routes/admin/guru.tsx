@@ -1,3 +1,4 @@
+import { affectsAdminData } from '#/lib/route-invalidation'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
@@ -90,7 +91,7 @@ function KelolaGuru() {
     setEmail('')
     setPassword('')
     setClassIds([])
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleEdit(teacher: AppUser, values: TeacherFormValues) {
@@ -104,12 +105,12 @@ function KelolaGuru() {
         classIds: values.classIds,
       },
     })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   async function handleDelete(teacher: AppUser) {
     await deleteUser({ data: { id: teacher.id } })
-    await router.invalidate()
+    await router.invalidate({ filter: affectsAdminData })
   }
 
   return (

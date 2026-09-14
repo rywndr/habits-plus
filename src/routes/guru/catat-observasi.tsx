@@ -1,3 +1,4 @@
+import { affectsObservations } from '#/lib/route-invalidation'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
@@ -122,7 +123,7 @@ function ObservasiHarian() {
       await saveDailyObservations({
         data: { classId, observedAt, note, rows },
       })
-      await router.invalidate()
+      await router.invalidate({ filter: affectsObservations })
       setSaveStatus('saved')
     } catch (error) {
       setSaveStatus('error')
