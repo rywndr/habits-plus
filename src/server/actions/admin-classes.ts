@@ -1,21 +1,19 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireAdmin } from '../authorization'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { classes } from '#/db/schema'
 import { withTenantCache } from '../tenant-data'
-import {
-  assertTenantOwnedUser,
-  assertText,
-  resolveTenant,
-} from './shared'
-import type { AddClassInput, DeleteInput, UpdateClassInput } from './types'
+import { assertTenantOwnedUser, assertText } from './shared'
+import { addClassSchema, updateClassSchema, deleteSchema } from './schemas'
 
 export const addClass = createServerFn({ method: 'POST' })
-  .validator((data: AddClassInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(addClassSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama kelas')
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
 
       if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
 
@@ -30,11 +28,12 @@ export const addClass = createServerFn({ method: 'POST' })
   )
 
 export const updateClass = createServerFn({ method: 'POST' })
-  .validator((data: UpdateClassInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(updateClassSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama kelas')
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const klass = await getDb().query.classes.findFirst({
         where: and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)),
       })
@@ -54,10 +53,11 @@ export const updateClass = createServerFn({ method: 'POST' })
   )
 
 export const deleteClass = createServerFn({ method: 'POST' })
-  .validator((data: DeleteInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(deleteSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       await getDb()
         .delete(classes)
         .where(and(eq(classes.schoolId, tenant.id), eq(classes.id, data.id)))

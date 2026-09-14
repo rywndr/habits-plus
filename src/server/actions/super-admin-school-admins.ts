@@ -1,9 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireSuperAdmin } from '../authorization'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { schools, users } from '#/db/schema'
 import { withTenantCache } from '../tenant-data'
-import { assertText, upsertCredentialAccount, upsertUserByEmail } from './shared'
+import {
+  assertText,
+  upsertCredentialAccount,
+  upsertUserByEmail,
+} from './shared'
 import type {
   CreateSchoolAdminInput,
   DeleteInput,
@@ -11,12 +16,10 @@ import type {
 } from './types'
 
 export const createSchoolAdmin = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: CreateSchoolAdminInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       assertText(data.schoolId, 'Sekolah')
       assertText(data.name, 'Nama admin')
       assertText(data.email, 'Email')
@@ -42,12 +45,10 @@ export const createSchoolAdmin = createServerFn({ method: 'POST' })
   )
 
 export const updateSchoolAdmin = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: UpdateSchoolAdminInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       assertText(data.id, 'Admin')
       assertText(data.schoolId, 'Sekolah')
       assertText(data.name, 'Nama admin')
@@ -86,12 +87,10 @@ export const updateSchoolAdmin = createServerFn({ method: 'POST' })
   )
 
 export const deleteSchoolAdmin = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       await getDb()
         .delete(users)
         .where(and(eq(users.id, data.id), eq(users.role, 'admin')))

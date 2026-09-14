@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireTeacher } from '../authorization'
 import { and, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
@@ -10,16 +11,15 @@ import {
 import type { Frequency, Indicator } from '#/db/schema'
 import { todayIso } from '../date'
 import { withTenantCache } from '../tenant-data'
-import { resolveTenant } from './shared'
 import type { SaveDailyObservationsInput } from './types'
 
 export const saveDailyObservations = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: SaveDailyObservationsInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const tenant = await resolveTenant(data)
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
+      const tenant = teacher.tenant
       const observedAt = data.observedAt ?? todayIso()
       const assignedClass = await getDb().query.classes.findFirst({
         where: and(

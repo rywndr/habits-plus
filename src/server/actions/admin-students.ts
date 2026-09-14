@@ -1,23 +1,21 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireAdmin } from '../authorization'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { classes, students } from '#/db/schema'
 import { withTenantCache } from '../tenant-data'
-import {
-  assertTenantOwnedUser,
-  assertText,
-  resolveTenant,
-} from './shared'
-import type { AddStudentInput, DeleteInput, UpdateStudentInput } from './types'
+import { assertTenantOwnedUser, assertText } from './shared'
+import { addStudentSchema, updateStudentSchema, deleteSchema } from './schemas'
 
 export const addStudent = createServerFn({ method: 'POST' })
-  .validator((data: AddStudentInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(addStudentSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.nisn, 'NISN')
       assertText(data.name, 'Nama')
 
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const klass = await getDb().query.classes.findFirst({
         where: and(
           eq(classes.schoolId, tenant.id),
@@ -42,13 +40,14 @@ export const addStudent = createServerFn({ method: 'POST' })
   )
 
 export const updateStudent = createServerFn({ method: 'POST' })
-  .validator((data: UpdateStudentInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(updateStudentSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.nisn, 'NISN')
       assertText(data.name, 'Nama')
 
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const [student, klass] = await Promise.all([
         getDb().query.students.findFirst({
           where: and(
@@ -81,10 +80,11 @@ export const updateStudent = createServerFn({ method: 'POST' })
   )
 
 export const deleteStudent = createServerFn({ method: 'POST' })
-  .validator((data: DeleteInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(deleteSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       await getDb()
         .delete(students)
         .where(and(eq(students.schoolId, tenant.id), eq(students.id, data.id)))

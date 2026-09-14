@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireTeacher } from '../authorization'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { monthlySummaries, weeklyNotes } from '#/db/schema'
 import { weekStartIso } from '../date'
 import { withTenantCache } from '../tenant-data'
-import { assertTeacherOwnsClass, assertText, resolveTenant } from './shared'
+import { assertTeacherOwnsClass, assertText } from './shared'
 import type {
   DeleteInput,
   SaveMonthlySummaryInput,
@@ -12,16 +13,16 @@ import type {
 } from './types'
 
 export const saveWeeklyNote = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: SaveWeeklyNoteInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.p1, 'P1')
       assertText(data.p2, 'P2')
       assertText(data.p3, 'P3')
 
-      const tenant = await resolveTenant(data)
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
+      const tenant = teacher.tenant
       await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
       const weekStart = data.weekStart ?? weekStartIso()
 
@@ -55,12 +56,12 @@ export const saveWeeklyNote = createServerFn({ method: 'POST' })
   )
 
 export const deleteWeeklyNote = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: DeleteInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
+      const tenant = teacher.tenant
 
       await getDb()
         .delete(weeklyNotes)
@@ -75,15 +76,15 @@ export const deleteWeeklyNote = createServerFn({ method: 'POST' })
   )
 
 export const saveMonthlySummary = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: SaveMonthlySummaryInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.month, 'Bulan')
       assertText(data.text, 'Ringkasan')
 
-      const tenant = await resolveTenant(data)
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
+      const tenant = teacher.tenant
       await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
       const monthStart = `${data.month.slice(0, 7)}-01`
 

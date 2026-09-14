@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireTeacher } from '../authorization'
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { aiGenerationLogs, aiSummaries } from '#/db/schema'
@@ -33,11 +34,11 @@ type SummaryIdInput = {
 }
 
 export const generateAiSummaries = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: GenerateInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
       const tenant = teacher.tenant
       await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
 
@@ -110,11 +111,11 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
   )
 
 export const acceptAiSummaries = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: AcceptInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
       const tenant = teacher.tenant
       await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
 
@@ -162,11 +163,11 @@ export const acceptAiSummaries = createServerFn({ method: 'POST' })
 
 /** Teacher-written summaries reuse the same table so parents see one feed. */
 export const saveManualSummaries = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: AcceptInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
       const tenant = teacher.tenant
       await assertTeacherOwnsClass(tenant.id, teacher.id, data.classId)
 
@@ -218,11 +219,11 @@ export const saveManualSummaries = createServerFn({ method: 'POST' })
   )
 
 export const revokeAiSummary = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: SummaryIdInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
 
       await getDb()
         .update(aiSummaries)
@@ -237,11 +238,11 @@ export const revokeAiSummary = createServerFn({ method: 'POST' })
   )
 
 export const deleteAiSummary = createServerFn({ method: 'POST' })
+  .middleware([requireTeacher])
   .validator((data: SummaryIdInput) => data)
-  .handler(({ data }) =>
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      const teacher = await getAuthenticatedUserByRole('guru')
+      const teacher = context.teacher
 
       await getDb()
         .delete(aiSummaries)

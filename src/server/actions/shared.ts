@@ -9,7 +9,6 @@ import {
 } from '#/db/schema'
 import type { Role } from '#/db/schema'
 import { hashPassword } from '../password'
-import { getTenantBySlug } from '../tenant-data'
 
 export function assertText(value: string, label: string) {
   if (!value.trim()) throw new Error(`${label} wajib diisi.`)
@@ -69,7 +68,9 @@ export async function assignTeacherClasses(
   await getDb()
     .update(classes)
     .set({ teacherId: null, updatedAt: new Date() })
-    .where(and(eq(classes.schoolId, tenantId), eq(classes.teacherId, teacherId)))
+    .where(
+      and(eq(classes.schoolId, tenantId), eq(classes.teacherId, teacherId)),
+    )
 
   if (ownedClassIds.length) {
     await getDb()
@@ -89,7 +90,9 @@ export async function assignParentStudent(
   await getDb()
     .update(students)
     .set({ parentId: null, updatedAt: new Date() })
-    .where(and(eq(students.schoolId, tenantId), eq(students.parentId, parentId)))
+    .where(
+      and(eq(students.schoolId, tenantId), eq(students.parentId, parentId)),
+    )
 
   if (!studentId) return
 
@@ -154,7 +157,7 @@ export async function upsertUserByEmail(input: {
   password?: string
   role: Role
 }) {
-  const [user] = await getDb()
+  const result = await getDb()
     .insert(users)
     .values({
       schoolId: input.tenantId,
@@ -165,6 +168,7 @@ export async function upsertUserByEmail(input: {
     })
     .onConflictDoUpdate({
       target: [users.schoolId, users.email],
+      setWhere: eq(users.role, input.role),
       set: {
         name: input.name.trim(),
         role: input.role,
@@ -172,6 +176,10 @@ export async function upsertUserByEmail(input: {
       },
     })
     .returning({ id: users.id })
+
+  const user = result.at(0)
+  if (!user)
+    throw new Error('Email sudah digunakan oleh pengguna dengan peran berbeda.')
 
   await upsertCredentialAccount(user.id, input.password)
 
@@ -192,21 +200,4 @@ export async function findStudentByNisn(tenantId: string, nisn: string) {
   return getDb().query.students.findFirst({
     where: and(eq(students.schoolId, tenantId), eq(students.nisn, nisn.trim())),
   })
-}
-
-export async function resolveTenant(input?: { tenant?: string }) {
-  if (input?.tenant) return getTenantBySlug(input.tenant)
-
-  const { getSession } = await import('../auth.server')
-  const session = await getSession()
-
-  if (!session) throw new Error('Silakan masuk terlebih dahulu.')
-
-  const user = await getDb().query.users.findFirst({
-    where: eq(users.id, session.user.id),
-  })
-
-  if (!user) throw new Error('Silakan masuk terlebih dahulu.')
-
-  return getTenantBySlug(user.tenantSlug)
 }

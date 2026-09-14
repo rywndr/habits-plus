@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireSuperAdmin } from '../authorization'
 import { eq } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { schools } from '#/db/schema'
@@ -7,12 +8,10 @@ import { assertText, normalizeSlug } from './shared'
 import type { CreateSchoolInput, DeleteInput, UpdateSchoolInput } from './types'
 
 export const createSchool = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: CreateSchoolInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       assertText(data.name, 'Nama sekolah')
       assertText(data.slug, 'Slug sekolah')
       assertText(data.region, 'Wilayah')
@@ -42,12 +41,10 @@ export const createSchool = createServerFn({ method: 'POST' })
   )
 
 export const updateSchool = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: UpdateSchoolInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       assertText(data.id, 'Sekolah')
       assertText(data.name, 'Nama sekolah')
       assertText(data.region, 'Wilayah')
@@ -72,12 +69,10 @@ export const updateSchool = createServerFn({ method: 'POST' })
   )
 
 export const deleteSchool = createServerFn({ method: 'POST' })
+  .middleware([requireSuperAdmin])
   .validator((data: DeleteInput) => data)
   .handler(({ data }) =>
     withTenantCache(async () => {
-      const { getAuthenticatedUserByRole } = await import('../auth.server')
-      await getAuthenticatedUserByRole('super-admin')
-
       const school = await getDb().query.schools.findFirst({
         where: eq(schools.id, data.id),
       })

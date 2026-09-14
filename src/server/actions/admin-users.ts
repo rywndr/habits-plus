@@ -1,26 +1,23 @@
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq } from 'drizzle-orm'
+import { requireAdmin } from '../authorization'
+import { and, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { accounts, CREDENTIAL_ISSUER, users } from '#/db/schema'
 import { hashPassword } from '../password'
 import { withTenantCache } from '../tenant-data'
-import {
-  assertText,
-  assignParentStudent,
-  assignTeacherClasses,
-  resolveTenant,
-} from './shared'
-import type { AddUserInput, DeleteInput, UpdateUserInput } from './types'
+import { assertText, assignParentStudent, assignTeacherClasses } from './shared'
+import { addUserSchema, updateUserSchema, deleteSchema } from './schemas'
 
 export const addUser = createServerFn({ method: 'POST' })
-  .validator((data: AddUserInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(addUserSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama')
       assertText(data.email, 'Email')
       assertText(data.password, 'Kata sandi')
 
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const passwordHash = await hashPassword(data.password)
       const [user] = await getDb()
         .insert(users)
@@ -55,15 +52,20 @@ export const addUser = createServerFn({ method: 'POST' })
   )
 
 export const updateUser = createServerFn({ method: 'POST' })
-  .validator((data: UpdateUserInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(updateUserSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
       assertText(data.name, 'Nama')
       assertText(data.email, 'Email')
 
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const existingUser = await getDb().query.users.findFirst({
-        where: and(eq(users.schoolId, tenant.id), eq(users.id, data.id)),
+        where: and(
+          eq(users.schoolId, tenant.id),
+          eq(users.id, data.id),
+          inArray(users.role, ['guru', 'ortu']),
+        ),
       })
 
       if (!existingUser) {
@@ -72,7 +74,7 @@ export const updateUser = createServerFn({ method: 'POST' })
 
       const role = data.role ?? existingUser.role
 
-      await getDb()
+      const updatedUsers = await getDb()
         .update(users)
         .set({
           name: data.name.trim(),
@@ -80,7 +82,17 @@ export const updateUser = createServerFn({ method: 'POST' })
           role,
           updatedAt: new Date(),
         })
-        .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
+        .where(
+          and(
+            eq(users.schoolId, tenant.id),
+            eq(users.id, data.id),
+            inArray(users.role, ['guru', 'ortu']),
+          ),
+        )
+        .returning({ id: users.id })
+
+      if (!updatedUsers.at(0))
+        throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
 
       if (data.password?.trim()) {
         const passwordHash = await hashPassword(data.password)
@@ -102,12 +114,19 @@ export const updateUser = createServerFn({ method: 'POST' })
   )
 
 export const deleteUser = createServerFn({ method: 'POST' })
-  .validator((data: DeleteInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(deleteSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       await getDb()
         .delete(users)
-        .where(and(eq(users.schoolId, tenant.id), eq(users.id, data.id)))
+        .where(
+          and(
+            eq(users.schoolId, tenant.id),
+            eq(users.id, data.id),
+            inArray(users.role, ['guru', 'ortu']),
+          ),
+        )
     }),
   )

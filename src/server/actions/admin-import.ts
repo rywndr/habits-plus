@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { requireAdmin } from '../authorization'
 import { getDb } from '#/db'
 import { students } from '#/db/schema'
 import { withTenantCache } from '../tenant-data'
@@ -9,16 +10,16 @@ import {
   findClassByName,
   findStudentByNisn,
   getRowValue,
-  resolveTenant,
   upsertUserByEmail,
 } from './shared'
-import type { BulkImportInput } from './types'
+import { bulkImportSchema } from './schemas'
 
 export const bulkImportAdminRows = createServerFn({ method: 'POST' })
-  .validator((data: BulkImportInput) => data)
-  .handler(({ data }) =>
+  .middleware([requireAdmin])
+  .validator(bulkImportSchema)
+  .handler(({ data, context }) =>
     withTenantCache(async () => {
-      const tenant = await resolveTenant(data)
+      const tenant = context.admin.tenant
       const isUpdate = data.mode === 'update'
       let imported = 0
       const errors: Array<string> = []
