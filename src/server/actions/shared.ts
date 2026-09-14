@@ -14,11 +14,22 @@ export function assertText(value: string, label: string) {
   if (!value.trim()) throw new Error(`${label} wajib diisi.`)
 }
 
-export async function assertTenantOwnedUser(tenantId: string, id: string) {
+export async function assertTenantOwnedUser(
+  tenantId: string,
+  id: string,
+  role: 'guru' | 'ortu',
+) {
   const user = await getDb().query.users.findFirst({
-    where: and(eq(users.schoolId, tenantId), eq(users.id, id)),
+    where: and(
+      eq(users.schoolId, tenantId),
+      eq(users.id, id),
+      eq(users.role, role),
+    ),
   })
-  if (!user) throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
+  if (!user)
+    throw new Error(
+      'Pengguna dengan peran yang sesuai tidak ditemukan untuk sekolah ini.',
+    )
 }
 
 export async function assertTenantOwnedClasses(

@@ -30,34 +30,15 @@ import {
 import type { AiSummaryListItem, StudentWeekDayData } from './tenant-data'
 import { todayIso, weekStartIso } from './date'
 
-type TenantInput = {
-  tenant?: string
-}
-
-type ObservationPageInput = TenantInput & {
-  classId?: string
-  observedAt?: string
-}
-
-type MonthlySummaryInput = TenantInput & {
-  month?: string
-  classId?: string
-}
-
-type WeeklyNotesInput = TenantInput & {
-  weekStart?: string
-  classId?: string
-}
-
-type ExportRangeInput = TenantInput & {
-  startDate: string
-  endDate: string
-  classId?: string
-}
-
-type CurrentUserInput = TenantInput & {
-  role: Role
-}
+import {
+  currentUserSchema,
+  aiCostHistorySchema,
+  monthlySummarySchema,
+  weeklyNotesSchema,
+  exportRangeSchema,
+  observationPageSchema,
+  parentReportPageSchema,
+} from './loader-schemas'
 
 export type SuperAdminSchool = {
   id: string
@@ -108,7 +89,7 @@ export const loadSessionRole = createServerFn({ method: 'GET' }).handler(
 )
 
 export const loadCurrentUser = createServerFn({ method: 'GET' })
-  .validator((data: CurrentUserInput) => data)
+  .validator(currentUserSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -215,13 +196,8 @@ export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(
     }),
 )
 
-type AiCostHistoryInput = TenantInput & {
-  weekStart?: string
-  classId?: string
-}
-
 export const loadAiCostHistory = createServerFn({ method: 'GET' })
-  .validator((data: AiCostHistoryInput) => data)
+  .validator(aiCostHistorySchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -262,7 +238,7 @@ export const loadGuruDashboard = createServerFn({ method: 'GET' }).handler(() =>
 )
 
 export const loadLatestSummary = createServerFn({ method: 'GET' })
-  .validator((data: MonthlySummaryInput) => data)
+  .validator(monthlySummarySchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -291,7 +267,7 @@ export const loadParentProgress = createServerFn({ method: 'GET' }).handler(
 )
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
-  .validator((data: WeeklyNotesInput) => data)
+  .validator(weeklyNotesSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -322,7 +298,7 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   )
 
 export const loadDailyObservationExport = createServerFn({ method: 'GET' })
-  .validator((data: ExportRangeInput) => data)
+  .validator(exportRangeSchema)
   .handler(({ data }) =>
     withTenantCache(async (): Promise<Array<DailyObservationExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -404,7 +380,7 @@ export const loadDailyObservationExport = createServerFn({ method: 'GET' })
   )
 
 export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
-  .validator((data: ExportRangeInput) => data)
+  .validator(exportRangeSchema)
   .handler(({ data }) =>
     withTenantCache(async (): Promise<Array<WeeklyNoteExportRow>> => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -445,7 +421,7 @@ export const loadWeeklyNotesExport = createServerFn({ method: 'GET' })
   )
 
 export const loadObservationPage = createServerFn({ method: 'GET' })
-  .validator((data: ObservationPageInput) => data)
+  .validator(observationPageSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
@@ -487,13 +463,8 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
     }),
   )
 
-type ParentReportPageInput = TenantInput & {
-  weekStart?: string
-  classId?: string
-}
-
 export const loadParentReportPage = createServerFn({ method: 'GET' })
-  .validator((data: ParentReportPageInput) => data)
+  .validator(parentReportPageSchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')

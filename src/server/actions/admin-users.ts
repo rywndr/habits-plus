@@ -2,7 +2,13 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireAdmin } from '../authorization'
 import { and, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
-import { accounts, CREDENTIAL_ISSUER, users } from '#/db/schema'
+import {
+  accounts,
+  classes,
+  students,
+  CREDENTIAL_ISSUER,
+  users,
+} from '#/db/schema'
 import { hashPassword } from '../password'
 import { withTenantCache } from '../tenant-data'
 import { assertText, assignParentStudent, assignTeacherClasses } from './shared'
@@ -93,6 +99,31 @@ export const updateUser = createServerFn({ method: 'POST' })
 
       if (!updatedUsers.at(0))
         throw new Error('Data pengguna tidak ditemukan untuk sekolah ini.')
+
+      if (role !== existingUser.role) {
+        if (existingUser.role === 'guru') {
+          await getDb()
+            .update(classes)
+            .set({ teacherId: null, updatedAt: new Date() })
+            .where(
+              and(
+                eq(classes.schoolId, tenant.id),
+                eq(classes.teacherId, data.id),
+              ),
+            )
+        }
+        if (existingUser.role === 'ortu') {
+          await getDb()
+            .update(students)
+            .set({ parentId: null, updatedAt: new Date() })
+            .where(
+              and(
+                eq(students.schoolId, tenant.id),
+                eq(students.parentId, data.id),
+              ),
+            )
+        }
+      }
 
       if (data.password?.trim()) {
         const passwordHash = await hashPassword(data.password)

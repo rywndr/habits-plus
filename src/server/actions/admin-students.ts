@@ -24,7 +24,8 @@ export const addStudent = createServerFn({ method: 'POST' })
       })
 
       if (!klass) throw new Error('Kelas tidak ditemukan untuk sekolah ini.')
-      if (data.parentId) await assertTenantOwnedUser(tenant.id, data.parentId)
+      if (data.parentId)
+        await assertTenantOwnedUser(tenant.id, data.parentId, 'ortu')
 
       await getDb()
         .insert(students)

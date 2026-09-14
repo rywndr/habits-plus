@@ -15,7 +15,8 @@ export const addClass = createServerFn({ method: 'POST' })
       assertText(data.name, 'Nama kelas')
       const tenant = context.admin.tenant
 
-      if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
+      if (data.teacherId)
+        await assertTenantOwnedUser(tenant.id, data.teacherId, 'guru')
 
       await getDb()
         .insert(classes)
@@ -39,7 +40,8 @@ export const updateClass = createServerFn({ method: 'POST' })
       })
 
       if (!klass) throw new Error('Kelas tidak ditemukan untuk sekolah ini.')
-      if (data.teacherId) await assertTenantOwnedUser(tenant.id, data.teacherId)
+      if (data.teacherId)
+        await assertTenantOwnedUser(tenant.id, data.teacherId, 'guru')
 
       await getDb()
         .update(classes)
