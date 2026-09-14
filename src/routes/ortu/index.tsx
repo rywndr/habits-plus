@@ -7,7 +7,7 @@ import { ParentProgressSkeleton } from '#/components/skeletons/parent-progress-s
 import { loadParentProgress } from '#/server/loaders'
 
 export const Route = createFileRoute('/ortu/')({
-  loader: () => loadParentProgress({ data: {} }),
+  loader: () => loadParentProgress(),
   component: LihatProgres,
   staleTime: 30_000,
   pendingComponent: ParentProgressSkeleton,

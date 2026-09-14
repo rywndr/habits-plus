@@ -230,10 +230,12 @@ export function weekRangeLabel(weekStart: string) {
 }
 
 export async function getActiveAiSummariesForStudent(
+  tenant: Tenant,
   studentId: string,
 ): Promise<Array<ParentAiSummary>> {
   const rows = await getDb().query.aiSummaries.findMany({
     where: and(
+      eq(aiSummaries.schoolId, tenant.id),
       eq(aiSummaries.studentId, studentId),
       eq(aiSummaries.status, 'active'),
     ),

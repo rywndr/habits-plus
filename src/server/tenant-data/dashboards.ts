@@ -295,28 +295,27 @@ async function getStudentWeekTrends(
 
 export async function getParentProgress(tenant: Tenant, parentId: string) {
   const child = await getDb().query.students.findFirst({
-    where: eq(students.parentId, parentId),
+    where: and(
+      eq(students.schoolId, tenant.id),
+      eq(students.parentId, parentId),
+    ),
   })
-  // Prefer the teacher-approved AI weekly summaries; fall back to the manual
-  // monthly summary text when none has been accepted yet.
+  // Parents only see approved reports for their child, never school-wide summaries.
   const { getActiveAiSummariesForStudent, weekRangeLabel } =
     await import('./ai-summaries')
   const weeklySummaries = child
-    ? await getActiveAiSummariesForStudent(child.id)
+    ? await getActiveAiSummariesForStudent(tenant, child.id)
     : []
   const latest = weeklySummaries.at(0)
   const featuredWeekStart = latest?.weekStart ?? weekStartIso(new Date())
 
-  const [trends, fallbackSummary] = await Promise.all([
-    child
-      ? getStudentWeekTrends(tenant, child.id, featuredWeekStart)
-      : Promise.resolve<Partial<Record<Indicator, Trend>>>({}),
-    latest ? Promise.resolve(null) : getLatestSummary(tenant),
-  ])
+  const trends = child
+    ? await getStudentWeekTrends(tenant, child.id, featuredWeekStart)
+    : {}
 
   return {
     childName: child?.name ?? 'Anak',
-    summaryText: latest?.content ?? fallbackSummary?.text ?? '',
+    summaryText: latest?.content ?? '',
     latestWeekLabel: latest?.weekLabel ?? null,
     indicatorsWeekLabel: weekRangeLabel(featuredWeekStart),
     history: weeklySummaries.slice(1),

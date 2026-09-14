@@ -59,10 +59,6 @@ type CurrentUserInput = TenantInput & {
   role: Role
 }
 
-type ParentProgressInput = TenantInput & {
-  parentId?: string
-}
-
 export type SuperAdminSchool = {
   id: string
   slug: string
@@ -285,16 +281,14 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
     }),
   )
 
-export const loadParentProgress = createServerFn({ method: 'GET' })
-  .validator((data: ParentProgressInput) => data)
-  .handler(({ data }) =>
+export const loadParentProgress = createServerFn({ method: 'GET' }).handler(
+  () =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const parent = await getAuthenticatedUserByRole('ortu')
-      const tenant = parent.tenant
-      return getParentProgress(tenant, data.parentId ?? parent.id)
+      return getParentProgress(parent.tenant, parent.id)
     }),
-  )
+)
 
 export const loadWeeklyNotes = createServerFn({ method: 'GET' })
   .validator((data: WeeklyNotesInput) => data)
