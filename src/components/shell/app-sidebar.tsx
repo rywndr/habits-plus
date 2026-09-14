@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -7,6 +8,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarSeparator,
+  useSidebar,
 } from '#/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '#/components/ui/avatar'
 import {
@@ -44,6 +46,17 @@ export function AppSidebar({
   isLoggingOut,
   logoutError,
 }: Props) {
+  const { setOpen, setOpenMobile } = useSidebar()
+
+  function handleNavigationClick(event: MouseEvent<HTMLDivElement>) {
+    if (!(event.target instanceof Element) || !event.target.closest('a[href]')) {
+      return
+    }
+
+    setOpen(false)
+    setOpenMobile(false)
+  }
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -53,7 +66,7 @@ export function AppSidebar({
         <SidebarBrand schoolName={schoolName} />
       </SidebarHeader>
       <SidebarSeparator className="mx-4" />
-      <SidebarContent>
+      <SidebarContent onClick={handleNavigationClick}>
         <SidebarGroup className="px-3 py-4">
           <SidebarGroupLabel className="px-2 tracking-wide text-sidebar-foreground/50 uppercase">
             Menu
