@@ -115,7 +115,9 @@ function LaporanOrangTua() {
     }
   })
 
-  const generatable = rows.filter((row) => isGeneratable(row.student, row.state))
+  const generatable = rows.filter((row) =>
+    isGeneratable(row.student, row.state),
+  )
   const allGeneratableSelected =
     generatable.length > 0 &&
     generatable.every((row) => selected.has(row.student.id))
@@ -240,7 +242,8 @@ function LaporanOrangTua() {
             items,
           },
         })
-        for (const skip of result.skipped) setNotice(skip.studentId, skip.reason)
+        for (const skip of result.skipped)
+          setNotice(skip.studentId, skip.reason)
         // Only drop drafts the server actually stored.
         if (!result.saved.includes(studentId)) return
       } else {
@@ -315,7 +318,7 @@ function LaporanOrangTua() {
   )
 
   return (
-    <ContentPanel>
+    <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <PageHeader title="Laporan Orang Tua" />
@@ -360,7 +363,7 @@ function LaporanOrangTua() {
           </p>
           <Button
             size="lg"
-            className="gap-2 rounded-full px-6"
+            className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
             disabled={!selected.size || isGenerating}
             aria-busy={isGenerating}
             onClick={() => void runGeneration([...selected])}
@@ -377,32 +380,34 @@ function LaporanOrangTua() {
         {isDataPending ? (
           <ParentReportTableSkeleton />
         ) : rows.length ? (
-          <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header">
-                  <TableHead className="w-12 text-center">
-                    <input
-                      type="checkbox"
-                      aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
-                      className="size-4 accent-brand-orange"
-                      checked={allGeneratableSelected}
-                      onChange={toggleSelectAll}
-                      disabled={!generatable.length}
-                    />
+          <div className="min-w-0 rounded-xl bg-card ring-1 ring-foreground/5">
+            <Table className="max-sm:block">
+              <TableHeader className="max-sm:block">
+                <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
+                  <TableHead className="w-16 text-center sm:w-12">
+                    <label className="flex min-h-11 items-center justify-center">
+                      <input
+                        type="checkbox"
+                        aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
+                        className="size-5 accent-brand-orange sm:size-4"
+                        checked={allGeneratableSelected}
+                        onChange={toggleSelectAll}
+                        disabled={!generatable.length}
+                      />
+                    </label>
                   </TableHead>
                   <TableHead className="text-brand-navy-foreground">
                     Nama
                   </TableHead>
-                  <TableHead className="w-36 text-center text-brand-navy-foreground">
+                  <TableHead className="hidden w-36 text-center text-brand-navy-foreground sm:table-cell">
                     Hari terobservasi
                   </TableHead>
-                  <TableHead className="w-48 text-center text-brand-navy-foreground">
+                  <TableHead className="hidden w-48 text-center text-brand-navy-foreground sm:table-cell">
                     Status
                   </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="max-sm:block">
                 {rows.map(({ student, state, text }) => (
                   <ParentReportRow
                     key={student.id}

@@ -22,7 +22,7 @@ export function WeekPicker({ value, onChange }: Props) {
   const weekStart = weekStartIso(new Date(value))
 
   return (
-    <div className="flex items-center gap-2 rounded-full bg-card p-1 ring-1 ring-border">
+    <div className="flex min-w-0 max-w-full items-center gap-1 rounded-full bg-card p-1 ring-1 ring-border sm:gap-2">
       <Button
         type="button"
         variant="ghost"
@@ -32,7 +32,7 @@ export function WeekPicker({ value, onChange }: Props) {
       >
         <ChevronLeft />
       </Button>
-      <span className="min-w-52 px-2 text-center font-heading text-sm font-semibold sm:text-base">
+      <span className="min-w-0 px-1 text-center font-heading text-sm font-semibold sm:min-w-52 sm:px-2 sm:text-base">
         {weekLabel(weekStart)}
       </span>
       <Button

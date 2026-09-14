@@ -15,7 +15,10 @@ import { Textarea } from '#/components/ui/textarea'
 import { TableCell, TableRow } from '#/components/ui/table'
 import { cn } from '#/lib/utils'
 import { WeekObservationStrip } from './week-observation-strip'
-import type { AiSummaryListItem, StudentWeekDayData } from '#/server/tenant-data'
+import type {
+  AiSummaryListItem,
+  StudentWeekDayData,
+} from '#/server/tenant-data'
 
 /** Columns in the report table, so the detail row can span all of them. */
 export const REPORT_COLUMN_COUNT = 4
@@ -73,7 +76,9 @@ function RowStatus({
     case 'saved':
       return (
         <Badge>
-          {state.summary.source === 'manual' ? 'Tersimpan · Manual' : 'Tersimpan · AI'}
+          {state.summary.source === 'manual'
+            ? 'Tersimpan · Manual'
+            : 'Tersimpan · AI'}
         </Badge>
       )
     case 'draft':
@@ -133,24 +138,31 @@ export function ParentReportRow({
 
   return (
     <Fragment>
-      <TableRow className={cn(isExpanded && 'bg-muted/30')}>
+      <TableRow
+        className={cn(
+          'max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center',
+          isExpanded && 'bg-muted/30',
+        )}
+      >
         <TableCell className="text-center">
-          <input
-            type="checkbox"
-            aria-label={`Pilih ${student.name}`}
-            className="size-4 accent-brand-orange"
-            checked={isSelected}
-            onChange={actions.onToggleSelect}
-            disabled={!selectable}
-          />
+          <label className="flex min-h-11 items-center justify-center">
+            <input
+              type="checkbox"
+              aria-label={`Pilih ${student.name}`}
+              className="size-5 accent-brand-orange sm:size-4"
+              checked={isSelected}
+              onChange={actions.onToggleSelect}
+              disabled={!selectable}
+            />
+          </label>
         </TableCell>
-        <TableCell>
+        <TableCell className="whitespace-normal">
           <button
             type="button"
             aria-expanded={isExpanded}
             aria-controls={isExpanded ? detailId : undefined}
             onClick={actions.onToggleExpand}
-            className="flex w-full items-center gap-2 text-left font-medium hover:text-brand-navy"
+            className="flex min-h-11 w-full items-center gap-2 rounded-md text-left font-medium hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-ring"
           >
             <ChevronDown
               aria-hidden
@@ -159,21 +171,35 @@ export function ParentReportRow({
                 isExpanded && 'rotate-180',
               )}
             />
-            <span className="truncate">{student.name}</span>
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              {student.name}
+            </span>
           </button>
+          <div className="flex flex-wrap items-center gap-2 pb-2 pl-6 sm:hidden">
+            <span className="text-xs text-muted-foreground">
+              {student.observedDays} hari terobservasi
+            </span>
+            <RowStatus state={state} observedDays={student.observedDays} />
+          </div>
         </TableCell>
-        <TableCell className="text-center whitespace-nowrap">
+        <TableCell className="hidden text-center whitespace-nowrap sm:table-cell">
           {student.observedDays} hari
         </TableCell>
-        <TableCell className="text-center">
+        <TableCell className="hidden text-center sm:table-cell">
           <RowStatus state={state} observedDays={student.observedDays} />
         </TableCell>
       </TableRow>
 
       {isExpanded ? (
-        <TableRow className="bg-muted/30 hover:bg-muted/30">
-          <TableCell colSpan={REPORT_COLUMN_COUNT} className="p-4">
-            <div id={detailId} className="flex flex-col gap-3">
+        <TableRow className="bg-muted/30 hover:bg-muted/30 max-sm:block">
+          <TableCell
+            colSpan={REPORT_COLUMN_COUNT}
+            className="p-3 whitespace-normal max-sm:block sm:p-4"
+          >
+            <div
+              id={detailId}
+              className="flex min-w-0 flex-col gap-3 [overflow-wrap:anywhere]"
+            >
               <WeekObservationStrip days={days} />
 
               {notice ? (
@@ -189,7 +215,7 @@ export function ParentReportRow({
                 disabled={busy}
                 aria-label={`Laporan untuk ${student.name}`}
                 placeholder={`Tulis laporan minggu ini untuk ${student.name}, atau buat dengan AI.`}
-                className="rounded-2xl bg-card"
+                className="rounded-2xl bg-card text-base sm:text-sm"
               />
 
               <RowActions
@@ -230,7 +256,7 @@ function RowActions({
 
     case 'saved':
       return (
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-col gap-2 max-sm:[&>button]:min-h-11 sm:flex-row sm:flex-wrap sm:justify-end">
           <Button
             variant="ghost"
             className="gap-1 text-destructive"
@@ -262,7 +288,7 @@ function RowActions({
 
     case 'draft':
       return (
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-col gap-2 max-sm:[&>button]:min-h-11 sm:flex-row sm:flex-wrap sm:justify-end">
           <Button
             variant="ghost"
             className="gap-1 text-destructive"
@@ -294,7 +320,7 @@ function RowActions({
 
     case 'empty':
       return (
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-col gap-2 max-sm:[&>button]:min-h-11 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <Button
             variant="secondary"
             className="gap-1 rounded-full"

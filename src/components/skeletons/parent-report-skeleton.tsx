@@ -8,15 +8,21 @@ export function ParentReportTableSkeleton() {
         {[...Array(4).keys()].map((i) => (
           <Skeleton
             key={i}
-            className="h-3 flex-1 bg-brand-navy-foreground/30"
+            className="h-3 flex-1 bg-brand-navy-foreground/30 max-sm:[&:nth-child(n+3)]:hidden"
           />
         ))}
       </div>
       <div className="flex flex-col divide-y divide-border/40">
         {[...Array(8).keys()].map((rowIndex) => (
-          <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
+          <div
+            key={rowIndex}
+            className="flex items-center gap-4 px-4 py-6 sm:py-4"
+          >
             {[...Array(4).keys()].map((cellIndex) => (
-              <Skeleton key={cellIndex} className="h-3 flex-1" />
+              <Skeleton
+                key={cellIndex}
+                className="h-3 flex-1 max-sm:[&:nth-child(n+3)]:hidden"
+              />
             ))}
           </div>
         ))}
@@ -27,17 +33,17 @@ export function ParentReportTableSkeleton() {
 
 export function ParentReportPageSkeleton() {
   return (
-    <ContentPanel>
+    <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <Skeleton className="h-8 w-72" />
-          <Skeleton className="h-4 w-96" />
+          <Skeleton className="h-8 w-72 max-w-full" />
+          <Skeleton className="h-4 w-96 max-w-full" />
         </div>
-        <div className="flex justify-between">
-          <Skeleton className="h-10 w-80 rounded-full" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+          <Skeleton className="h-10 w-80 max-w-full rounded-full" />
           <Skeleton className="h-10 w-36 rounded-full" />
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-4 w-56" />
           <Skeleton className="h-10 w-48 rounded-full" />
         </div>
