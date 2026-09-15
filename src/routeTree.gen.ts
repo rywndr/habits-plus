@@ -30,7 +30,19 @@ import { Route as GuruRingkasanRouteImport } from './routes/guru/ringkasan'
 import { Route as OrtuIndexRouteImport } from './routes/ortu/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin/index'
 import { Route as SuperAdminAdminSekolahRouteImport } from './routes/super-admin/admin-sekolah'
+import { Route as SuperAdminNewRouteImport } from './routes/super-admin/new'
+import { Route as AdminGuruNewRouteImport } from './routes/admin/guru_.new'
+import { Route as AdminKelasNewRouteImport } from './routes/admin/kelas_.new'
+import { Route as AdminOrtuNewRouteImport } from './routes/admin/ortu_.new'
+import { Route as AdminSiswaNewRouteImport } from './routes/admin/siswa_.new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as SuperAdminSchoolIdEditRouteImport } from './routes/super-admin/$schoolId.edit'
+import { Route as SuperAdminAdminSekolahNewRouteImport } from './routes/super-admin/admin-sekolah_.new'
+import { Route as AdminGuruTeacherIdEditRouteImport } from './routes/admin/guru_.$teacherId.edit'
+import { Route as AdminKelasClassIdEditRouteImport } from './routes/admin/kelas_.$classId.edit'
+import { Route as AdminOrtuParentIdEditRouteImport } from './routes/admin/ortu_.$parentId.edit'
+import { Route as AdminSiswaStudentIdEditRouteImport } from './routes/admin/siswa_.$studentId.edit'
+import { Route as SuperAdminAdminSekolahAdminIdEditRouteImport } from './routes/super-admin/admin-sekolah_.$adminId.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -137,11 +149,73 @@ const SuperAdminAdminSekolahRoute = SuperAdminAdminSekolahRouteImport.update({
   path: '/admin-sekolah',
   getParentRoute: () => SuperAdminRouteRoute,
 } as any)
+const SuperAdminNewRoute = SuperAdminNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => SuperAdminRouteRoute,
+} as any)
+const AdminGuruNewRoute = AdminGuruNewRouteImport.update({
+  id: '/guru_/new',
+  path: '/guru/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminKelasNewRoute = AdminKelasNewRouteImport.update({
+  id: '/kelas_/new',
+  path: '/kelas/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrtuNewRoute = AdminOrtuNewRouteImport.update({
+  id: '/ortu_/new',
+  path: '/ortu/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSiswaNewRoute = AdminSiswaNewRouteImport.update({
+  id: '/siswa_/new',
+  path: '/siswa/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperAdminSchoolIdEditRoute = SuperAdminSchoolIdEditRouteImport.update({
+  id: '/$schoolId/edit',
+  path: '/$schoolId/edit',
+  getParentRoute: () => SuperAdminRouteRoute,
+} as any)
+const SuperAdminAdminSekolahNewRoute =
+  SuperAdminAdminSekolahNewRouteImport.update({
+    id: '/admin-sekolah_/new',
+    path: '/admin-sekolah/new',
+    getParentRoute: () => SuperAdminRouteRoute,
+  } as any)
+const AdminGuruTeacherIdEditRoute = AdminGuruTeacherIdEditRouteImport.update({
+  id: '/guru_/$teacherId/edit',
+  path: '/guru/$teacherId/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminKelasClassIdEditRoute = AdminKelasClassIdEditRouteImport.update({
+  id: '/kelas_/$classId/edit',
+  path: '/kelas/$classId/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrtuParentIdEditRoute = AdminOrtuParentIdEditRouteImport.update({
+  id: '/ortu_/$parentId/edit',
+  path: '/ortu/$parentId/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSiswaStudentIdEditRoute = AdminSiswaStudentIdEditRouteImport.update({
+  id: '/siswa_/$studentId/edit',
+  path: '/siswa/$studentId/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const SuperAdminAdminSekolahAdminIdEditRoute =
+  SuperAdminAdminSekolahAdminIdEditRouteImport.update({
+    id: '/admin-sekolah_/$adminId/edit',
+    path: '/admin-sekolah/$adminId/edit',
+    getParentRoute: () => SuperAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,11 +235,23 @@ export interface FileRoutesByFullPath {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
+  '/super-admin/new': typeof SuperAdminNewRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
   '/ortu/': typeof OrtuIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/admin/guru/new': typeof AdminGuruNewRoute
+  '/admin/kelas/new': typeof AdminKelasNewRoute
+  '/admin/ortu/new': typeof AdminOrtuNewRoute
+  '/admin/siswa/new': typeof AdminSiswaNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/super-admin/$schoolId/edit': typeof SuperAdminSchoolIdEditRoute
+  '/super-admin/admin-sekolah/new': typeof SuperAdminAdminSekolahNewRoute
+  '/admin/guru/$teacherId/edit': typeof AdminGuruTeacherIdEditRoute
+  '/admin/kelas/$classId/edit': typeof AdminKelasClassIdEditRoute
+  '/admin/ortu/$parentId/edit': typeof AdminOrtuParentIdEditRoute
+  '/admin/siswa/$studentId/edit': typeof AdminSiswaStudentIdEditRoute
+  '/super-admin/admin-sekolah/$adminId/edit': typeof SuperAdminAdminSekolahAdminIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -181,11 +267,23 @@ export interface FileRoutesByTo {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
+  '/super-admin/new': typeof SuperAdminNewRoute
   '/admin': typeof AdminIndexRoute
   '/guru': typeof GuruIndexRoute
   '/ortu': typeof OrtuIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/admin/guru/new': typeof AdminGuruNewRoute
+  '/admin/kelas/new': typeof AdminKelasNewRoute
+  '/admin/ortu/new': typeof AdminOrtuNewRoute
+  '/admin/siswa/new': typeof AdminSiswaNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/super-admin/$schoolId/edit': typeof SuperAdminSchoolIdEditRoute
+  '/super-admin/admin-sekolah/new': typeof SuperAdminAdminSekolahNewRoute
+  '/admin/guru/$teacherId/edit': typeof AdminGuruTeacherIdEditRoute
+  '/admin/kelas/$classId/edit': typeof AdminKelasClassIdEditRoute
+  '/admin/ortu/$parentId/edit': typeof AdminOrtuParentIdEditRoute
+  '/admin/siswa/$studentId/edit': typeof AdminSiswaStudentIdEditRoute
+  '/super-admin/admin-sekolah/$adminId/edit': typeof SuperAdminAdminSekolahAdminIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,11 +304,23 @@ export interface FileRoutesById {
   '/guru/observasi-mingguan': typeof GuruObservasiMingguanRoute
   '/guru/ringkasan': typeof GuruRingkasanRoute
   '/super-admin/admin-sekolah': typeof SuperAdminAdminSekolahRoute
+  '/super-admin/new': typeof SuperAdminNewRoute
   '/admin/': typeof AdminIndexRoute
   '/guru/': typeof GuruIndexRoute
   '/ortu/': typeof OrtuIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/admin/guru_/new': typeof AdminGuruNewRoute
+  '/admin/kelas_/new': typeof AdminKelasNewRoute
+  '/admin/ortu_/new': typeof AdminOrtuNewRoute
+  '/admin/siswa_/new': typeof AdminSiswaNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/super-admin/$schoolId/edit': typeof SuperAdminSchoolIdEditRoute
+  '/super-admin/admin-sekolah_/new': typeof SuperAdminAdminSekolahNewRoute
+  '/admin/guru_/$teacherId/edit': typeof AdminGuruTeacherIdEditRoute
+  '/admin/kelas_/$classId/edit': typeof AdminKelasClassIdEditRoute
+  '/admin/ortu_/$parentId/edit': typeof AdminOrtuParentIdEditRoute
+  '/admin/siswa_/$studentId/edit': typeof AdminSiswaStudentIdEditRoute
+  '/super-admin/admin-sekolah_/$adminId/edit': typeof SuperAdminAdminSekolahAdminIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -232,11 +342,23 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/super-admin/admin-sekolah'
+    | '/super-admin/new'
     | '/admin/'
     | '/guru/'
     | '/ortu/'
     | '/super-admin/'
+    | '/admin/guru/new'
+    | '/admin/kelas/new'
+    | '/admin/ortu/new'
+    | '/admin/siswa/new'
     | '/api/auth/$'
+    | '/super-admin/$schoolId/edit'
+    | '/super-admin/admin-sekolah/new'
+    | '/admin/guru/$teacherId/edit'
+    | '/admin/kelas/$classId/edit'
+    | '/admin/ortu/$parentId/edit'
+    | '/admin/siswa/$studentId/edit'
+    | '/super-admin/admin-sekolah/$adminId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,11 +374,23 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/super-admin/admin-sekolah'
+    | '/super-admin/new'
     | '/admin'
     | '/guru'
     | '/ortu'
     | '/super-admin'
+    | '/admin/guru/new'
+    | '/admin/kelas/new'
+    | '/admin/ortu/new'
+    | '/admin/siswa/new'
     | '/api/auth/$'
+    | '/super-admin/$schoolId/edit'
+    | '/super-admin/admin-sekolah/new'
+    | '/admin/guru/$teacherId/edit'
+    | '/admin/kelas/$classId/edit'
+    | '/admin/ortu/$parentId/edit'
+    | '/admin/siswa/$studentId/edit'
+    | '/super-admin/admin-sekolah/$adminId/edit'
   id:
     | '__root__'
     | '/'
@@ -276,11 +410,23 @@ export interface FileRouteTypes {
     | '/guru/observasi-mingguan'
     | '/guru/ringkasan'
     | '/super-admin/admin-sekolah'
+    | '/super-admin/new'
     | '/admin/'
     | '/guru/'
     | '/ortu/'
     | '/super-admin/'
+    | '/admin/guru_/new'
+    | '/admin/kelas_/new'
+    | '/admin/ortu_/new'
+    | '/admin/siswa_/new'
     | '/api/auth/$'
+    | '/super-admin/$schoolId/edit'
+    | '/super-admin/admin-sekolah_/new'
+    | '/admin/guru_/$teacherId/edit'
+    | '/admin/kelas_/$classId/edit'
+    | '/admin/ortu_/$parentId/edit'
+    | '/admin/siswa_/$studentId/edit'
+    | '/super-admin/admin-sekolah_/$adminId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -442,12 +588,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminAdminSekolahRouteImport
       parentRoute: typeof SuperAdminRouteRoute
     }
+    '/super-admin/new': {
+      id: '/super-admin/new'
+      path: '/new'
+      fullPath: '/super-admin/new'
+      preLoaderRoute: typeof SuperAdminNewRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
+    }
+    '/admin/guru_/new': {
+      id: '/admin/guru_/new'
+      path: '/guru/new'
+      fullPath: '/admin/guru/new'
+      preLoaderRoute: typeof AdminGuruNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/kelas_/new': {
+      id: '/admin/kelas_/new'
+      path: '/kelas/new'
+      fullPath: '/admin/kelas/new'
+      preLoaderRoute: typeof AdminKelasNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/ortu_/new': {
+      id: '/admin/ortu_/new'
+      path: '/ortu/new'
+      fullPath: '/admin/ortu/new'
+      preLoaderRoute: typeof AdminOrtuNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/siswa_/new': {
+      id: '/admin/siswa_/new'
+      path: '/siswa/new'
+      fullPath: '/admin/siswa/new'
+      preLoaderRoute: typeof AdminSiswaNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/super-admin/$schoolId/edit': {
+      id: '/super-admin/$schoolId/edit'
+      path: '/$schoolId/edit'
+      fullPath: '/super-admin/$schoolId/edit'
+      preLoaderRoute: typeof SuperAdminSchoolIdEditRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
+    }
+    '/super-admin/admin-sekolah_/new': {
+      id: '/super-admin/admin-sekolah_/new'
+      path: '/admin-sekolah/new'
+      fullPath: '/super-admin/admin-sekolah/new'
+      preLoaderRoute: typeof SuperAdminAdminSekolahNewRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
+    }
+    '/admin/guru_/$teacherId/edit': {
+      id: '/admin/guru_/$teacherId/edit'
+      path: '/guru/$teacherId/edit'
+      fullPath: '/admin/guru/$teacherId/edit'
+      preLoaderRoute: typeof AdminGuruTeacherIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/kelas_/$classId/edit': {
+      id: '/admin/kelas_/$classId/edit'
+      path: '/kelas/$classId/edit'
+      fullPath: '/admin/kelas/$classId/edit'
+      preLoaderRoute: typeof AdminKelasClassIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/ortu_/$parentId/edit': {
+      id: '/admin/ortu_/$parentId/edit'
+      path: '/ortu/$parentId/edit'
+      fullPath: '/admin/ortu/$parentId/edit'
+      preLoaderRoute: typeof AdminOrtuParentIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/siswa_/$studentId/edit': {
+      id: '/admin/siswa_/$studentId/edit'
+      path: '/siswa/$studentId/edit'
+      fullPath: '/admin/siswa/$studentId/edit'
+      preLoaderRoute: typeof AdminSiswaStudentIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/super-admin/admin-sekolah_/$adminId/edit': {
+      id: '/super-admin/admin-sekolah_/$adminId/edit'
+      path: '/admin-sekolah/$adminId/edit'
+      fullPath: '/super-admin/admin-sekolah/$adminId/edit'
+      preLoaderRoute: typeof SuperAdminAdminSekolahAdminIdEditRouteImport
+      parentRoute: typeof SuperAdminRouteRoute
     }
   }
 }
@@ -460,6 +690,14 @@ interface AdminRouteRouteChildren {
   AdminOrtuRoute: typeof AdminOrtuRoute
   AdminSiswaRoute: typeof AdminSiswaRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminGuruNewRoute: typeof AdminGuruNewRoute
+  AdminKelasNewRoute: typeof AdminKelasNewRoute
+  AdminOrtuNewRoute: typeof AdminOrtuNewRoute
+  AdminSiswaNewRoute: typeof AdminSiswaNewRoute
+  AdminGuruTeacherIdEditRoute: typeof AdminGuruTeacherIdEditRoute
+  AdminKelasClassIdEditRoute: typeof AdminKelasClassIdEditRoute
+  AdminOrtuParentIdEditRoute: typeof AdminOrtuParentIdEditRoute
+  AdminSiswaStudentIdEditRoute: typeof AdminSiswaStudentIdEditRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
@@ -470,6 +708,14 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminOrtuRoute: AdminOrtuRoute,
   AdminSiswaRoute: AdminSiswaRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminGuruNewRoute: AdminGuruNewRoute,
+  AdminKelasNewRoute: AdminKelasNewRoute,
+  AdminOrtuNewRoute: AdminOrtuNewRoute,
+  AdminSiswaNewRoute: AdminSiswaNewRoute,
+  AdminGuruTeacherIdEditRoute: AdminGuruTeacherIdEditRoute,
+  AdminKelasClassIdEditRoute: AdminKelasClassIdEditRoute,
+  AdminOrtuParentIdEditRoute: AdminOrtuParentIdEditRoute,
+  AdminSiswaStudentIdEditRoute: AdminSiswaStudentIdEditRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -510,12 +756,21 @@ const OrtuRouteRouteWithChildren = OrtuRouteRoute._addFileChildren(
 
 interface SuperAdminRouteRouteChildren {
   SuperAdminAdminSekolahRoute: typeof SuperAdminAdminSekolahRoute
+  SuperAdminNewRoute: typeof SuperAdminNewRoute
   SuperAdminIndexRoute: typeof SuperAdminIndexRoute
+  SuperAdminSchoolIdEditRoute: typeof SuperAdminSchoolIdEditRoute
+  SuperAdminAdminSekolahNewRoute: typeof SuperAdminAdminSekolahNewRoute
+  SuperAdminAdminSekolahAdminIdEditRoute: typeof SuperAdminAdminSekolahAdminIdEditRoute
 }
 
 const SuperAdminRouteRouteChildren: SuperAdminRouteRouteChildren = {
   SuperAdminAdminSekolahRoute: SuperAdminAdminSekolahRoute,
+  SuperAdminNewRoute: SuperAdminNewRoute,
   SuperAdminIndexRoute: SuperAdminIndexRoute,
+  SuperAdminSchoolIdEditRoute: SuperAdminSchoolIdEditRoute,
+  SuperAdminAdminSekolahNewRoute: SuperAdminAdminSekolahNewRoute,
+  SuperAdminAdminSekolahAdminIdEditRoute:
+    SuperAdminAdminSekolahAdminIdEditRoute,
 }
 
 const SuperAdminRouteRouteWithChildren = SuperAdminRouteRoute._addFileChildren(

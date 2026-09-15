@@ -17,7 +17,7 @@ function SuperAdminShell() {
       kind: 'link',
       to: '/super-admin',
       href: '/super-admin',
-      label: 'Tambah Sekolah',
+      label: 'Sekolah',
       icon: Building2,
     },
     {

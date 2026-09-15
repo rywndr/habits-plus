@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { SortableTableHeader } from '#/components/common/sortable-table-header'
@@ -22,26 +22,40 @@ import {
 } from '#/components/ui/pagination'
 import type { SortDirection } from '#/hooks/use-sortable-data'
 
-export type Column<T> = {
-  key: string
+type ColumnBase<T> = {
   header: string
   render: (row: T) => ReactNode
-  sortValue?: (row: T) => string | number | null | undefined
   sortable?: boolean
   className?: string
 }
+
+type DirectColumn<T> = ColumnBase<T> & {
+  key: Extract<keyof T, string>
+  sortValue?: never
+}
+
+type DerivedColumn<T> = ColumnBase<T> & {
+  key: string
+  sortValue: (row: T) => string | number | null | undefined
+}
+
+export type Column<T> = DirectColumn<T> | DerivedColumn<T>
 
 type SortState = {
   key: string
   direction: SortDirection
 }
 
-type Props<T> = {
+type EditActionProps<T> =
+  | { editLink: (row: T) => ReactElement; onEdit?: never }
+  | { editLink?: never; onEdit: (row: T) => void }
+  | { editLink?: never; onEdit?: never }
+
+type Props<T> = EditActionProps<T> & {
   rows: Array<T>
   columns: Array<Column<T>>
   filterKey?: keyof T
   toolbar?: ReactNode
-  onEdit?: (row: T) => void
   onDelete?: (row: T) => void
 }
 
@@ -50,6 +64,7 @@ export function DataTable<T extends { id: string }>({
   columns,
   filterKey,
   toolbar,
+  editLink,
   onEdit,
   onDelete,
 }: Props<T>) {
@@ -68,10 +83,14 @@ export function DataTable<T extends { id: string }>({
           const column = columns.find((item) => item.key === sort.key)
           const leftValue = column?.sortValue
             ? column.sortValue(left.row)
-            : String(left.row[sort.key as keyof T] ?? '')
+            : column
+              ? left.row[column.key]
+              : ''
           const rightValue = column?.sortValue
             ? column.sortValue(right.row)
-            : String(right.row[sort.key as keyof T] ?? '')
+            : column
+              ? right.row[column.key]
+              : ''
           const result =
             typeof leftValue === 'number' && typeof rightValue === 'number'
               ? leftValue - rightValue
@@ -89,7 +108,8 @@ export function DataTable<T extends { id: string }>({
   const pageSize = 10
   const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize))
   const visibleRows = sortedRows.slice((page - 1) * pageSize, page * pageSize)
-  const hasActions = Boolean(onEdit ?? onDelete)
+  const hasEditAction = Boolean(editLink ?? onEdit)
+  const hasActions = hasEditAction || Boolean(onDelete)
 
   function toggleSort(key: string) {
     setSort((current) => ({
@@ -142,7 +162,7 @@ export function DataTable<T extends { id: string }>({
                   )}
                 </TableHead>
               ))}
-              {(onEdit ?? onDelete) ? (
+              {hasActions ? (
                 <TableHead className="w-24 text-center text-brand-navy-foreground">
                   Aksi
                 </TableHead>
@@ -167,14 +187,25 @@ export function DataTable<T extends { id: string }>({
                       {c.render(row)}
                     </TableCell>
                   ))}
-                  {(onEdit ?? onDelete) ? (
+                  {hasActions ? (
                     <TableCell>
                       <div className="flex justify-center gap-1">
-                        {onEdit ? (
+                        {editLink ? (
+                          <Button
+                            render={editLink(row)}
+                            nativeButton={false}
+                            size="icon-sm"
+                            variant="ghost"
+                            className="text-brand-orange"
+                          >
+                            <Pencil />
+                          </Button>
+                        ) : onEdit ? (
                           <Button
                             size="icon-sm"
                             variant="ghost"
                             className="text-brand-orange"
+                            aria-label="Edit"
                             onClick={() => onEdit(row)}
                           >
                             <Pencil />
@@ -185,6 +216,7 @@ export function DataTable<T extends { id: string }>({
                             size="icon-sm"
                             variant="ghost"
                             className="text-muted-foreground"
+                            aria-label="Hapus"
                             onClick={() => onDelete(row)}
                           >
                             <Trash2 />

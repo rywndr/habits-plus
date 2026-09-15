@@ -8,7 +8,7 @@ export const Route = createFileRoute('/super-admin/')({
   component: SuperAdminSchoolsRoute,
   staleTime: 30_000,
   pendingComponent: PendingSchoolsTable,
-  staticData: { title: 'Tambah Sekolah' },
+  staticData: { title: 'Sekolah' },
 })
 
 function PendingSchoolsTable() {
