@@ -32,7 +32,7 @@ export function ClassSelect({
       value={value}
       onValueChange={(nextValue) => nextValue && onChange(nextValue)}
     >
-      <SelectTrigger className="w-36 rounded-full bg-card">
+      <SelectTrigger className="w-36 rounded-full bg-card lg:min-w-36">
         <span className="min-w-0 flex-1 truncate text-left">{label}</span>
       </SelectTrigger>
       <SelectContent>

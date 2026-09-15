@@ -1,10 +1,11 @@
+import { ObservationCardsSkeleton } from '#/components/guru/observation-cards-skeleton'
 import { affectsObservations } from '#/lib/route-invalidation'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { SaveButton } from '#/components/common/save-button'
-import { Input } from '#/components/ui/input'
+import { Textarea } from '#/components/ui/textarea'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
@@ -160,7 +161,7 @@ function ObservasiHarian() {
   }
 
   return (
-    <ContentPanel>
+    <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <PageHeader
           title="Observasi Harian"
@@ -183,9 +184,9 @@ function ObservasiHarian() {
               />
             </HeaderFilter>
             <Button
-              variant="secondary"
+              variant="outline"
               size="lg"
-              className="min-h-11 shrink-0 rounded-full px-5"
+              className="min-h-11 shrink-0 rounded-full bg-card px-5"
               onClick={() => setIsExportOpen(true)}
             >
               <Download />
@@ -195,21 +196,26 @@ function ObservasiHarian() {
         </HeaderFilters>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <div className="flex-1">
-            <label className="mb-1 block text-sm">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <label
+              htmlFor="daily-observation-note"
+              className="font-heading text-sm font-medium"
+            >
               Catatan singkat (opsional)
             </label>
             {isDataPending ? (
-              <Skeleton className="h-9 w-full rounded-full" />
+              <Skeleton className="h-20 w-full rounded-2xl" />
             ) : (
-              <Input
+              <Textarea
+                id="daily-observation-note"
+                rows={2}
                 value={note}
                 onChange={(e) => {
                   setNote(e.target.value)
                   setSaveStatus('idle')
                 }}
                 placeholder="Pendekatan instruksi bertahap membantu sebagian siswa mengikuti kegiatan dengan lebih tenang hari ini."
-                className="rounded-full bg-card"
+                className="rounded-2xl bg-card text-base sm:text-sm"
               />
             )}
           </div>
@@ -255,29 +261,32 @@ function ObservasiHarian() {
 
 function ObservationTableSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
-        <div className="flex items-center gap-4 px-4 py-3">
-          <Skeleton className="h-3 w-8" />
-          <Skeleton className="h-3 flex-1" />
-          <Skeleton className="h-3 w-20" />
-          {[...Array(4).keys()].map((i) => (
-            <Skeleton key={i} className="h-3 w-20 bg-brand-navy/15" />
-          ))}
-        </div>
-        <div className="flex flex-col divide-y divide-border/40">
-          {[...Array(8).keys()].map((rowIndex) => (
-            <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
-              <Skeleton className="h-3 w-8" />
-              <Skeleton className="h-3 flex-1" />
-              <Skeleton className="h-3 w-20" />
-              {[...Array(4).keys()].map((cellIndex) => (
-                <Skeleton key={cellIndex} className="h-6 w-20 rounded-full" />
-              ))}
-            </div>
-          ))}
+    <>
+      <ObservationCardsSkeleton kind="daily" />
+      <div className="hidden flex-col gap-3 lg:flex">
+        <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
+          <div className="flex items-center gap-4 px-4 py-3">
+            <Skeleton className="h-3 w-8" />
+            <Skeleton className="h-3 flex-1" />
+            <Skeleton className="h-3 w-20" />
+            {[...Array(4).keys()].map((i) => (
+              <Skeleton key={i} className="h-3 w-20 bg-brand-navy/15" />
+            ))}
+          </div>
+          <div className="flex flex-col divide-y divide-border/40">
+            {[...Array(8).keys()].map((rowIndex) => (
+              <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
+                <Skeleton className="h-3 w-8" />
+                <Skeleton className="h-3 flex-1" />
+                <Skeleton className="h-3 w-20" />
+                {[...Array(4).keys()].map((cellIndex) => (
+                  <Skeleton key={cellIndex} className="h-6 w-20 rounded-full" />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

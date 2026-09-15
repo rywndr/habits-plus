@@ -1,3 +1,4 @@
+import { ObservationCardsSkeleton } from '#/components/guru/observation-cards-skeleton'
 import { affectsWeeklyNotes } from '#/lib/route-invalidation'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
@@ -186,7 +187,7 @@ function ObservasiMingguan() {
   }
 
   return (
-    <ContentPanel>
+    <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <PageHeader
           title="Observasi Mingguan"
@@ -213,9 +214,9 @@ function ObservasiMingguan() {
               />
             </HeaderFilter>
             <Button
-              variant="secondary"
+              variant="outline"
               size="lg"
-              className="min-h-11 shrink-0 rounded-full px-5"
+              className="min-h-11 shrink-0 rounded-full bg-card px-5"
               onClick={() => setIsExportOpen(true)}
             >
               <Download />
@@ -331,24 +332,27 @@ function WeeklyQuestionSkeleton() {
 
 function WeeklyNotesTableSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
-      <div className="flex items-center gap-4 bg-brand-table-header px-4 py-3">
-        {[...Array(6).keys()].map((i) => (
-          <Skeleton
-            key={i}
-            className="h-3 flex-1 bg-brand-navy-foreground/30"
-          />
-        ))}
+    <>
+      <ObservationCardsSkeleton kind="weekly" />
+      <div className="hidden lg:block overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5">
+        <div className="flex items-center gap-4 bg-brand-table-header px-4 py-3">
+          {[...Array(6).keys()].map((i) => (
+            <Skeleton
+              key={i}
+              className="h-3 flex-1 bg-brand-navy-foreground/30"
+            />
+          ))}
+        </div>
+        <div className="flex flex-col divide-y divide-border/40">
+          {[...Array(6).keys()].map((rowIndex) => (
+            <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
+              {[...Array(6).keys()].map((cellIndex) => (
+                <Skeleton key={cellIndex} className="h-3 flex-1" />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-col divide-y divide-border/40">
-        {[...Array(6).keys()].map((rowIndex) => (
-          <div key={rowIndex} className="flex items-center gap-4 px-4 py-4">
-            {[...Array(6).keys()].map((cellIndex) => (
-              <Skeleton key={cellIndex} className="h-3 flex-1" />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
+    </>
   )
 }

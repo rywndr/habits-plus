@@ -392,7 +392,7 @@ function LaporanOrangTua() {
             <Table className="max-sm:block">
               <TableHeader className="max-sm:block">
                 <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
-                  <TableHead className="w-16 text-center sm:w-12">
+                  <TableHead className="w-16 text-center max-sm:h-auto max-sm:min-h-11 sm:w-12">
                     <label className="flex min-h-11 items-center justify-center">
                       <input
                         type="checkbox"
@@ -404,7 +404,7 @@ function LaporanOrangTua() {
                       />
                     </label>
                   </TableHead>
-                  <TableHead className="text-brand-navy-foreground">
+                  <TableHead className="text-brand-navy-foreground max-sm:flex max-sm:min-h-11 max-sm:items-center max-sm:pl-8">
                     Nama
                   </TableHead>
                   <TableHead className="hidden w-36 text-center text-brand-navy-foreground sm:table-cell">

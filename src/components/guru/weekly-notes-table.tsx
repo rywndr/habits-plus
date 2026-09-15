@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import {
   Table,
@@ -10,17 +10,11 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import { Button } from '#/components/ui/button'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '#/components/ui/pagination'
+import { ObservationPagination } from './observation-pagination'
 import { useSortableData } from '#/hooks/use-sortable-data'
 import type { WeeklyNote } from '#/server/tenant-data'
 import {
+  WEEKLY_NOTE_QUESTIONS,
   WeeklyNoteDeleteDialog,
   WeeklyNoteEditDialog,
 } from './weekly-note-dialogs'
@@ -47,6 +41,7 @@ export function WeeklyNotesTable({
   onDelete,
   onEdit,
 }: Props) {
+  const tableRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(1)
   const [editingNote, setEditingNote] = useState<WeeklyNote | null>(null)
   const [deletingNote, setDeletingNote] = useState<WeeklyNote | null>(null)
@@ -64,13 +59,93 @@ export function WeeklyNotesTable({
     setPage((current) => Math.min(current, totalPages))
   }, [totalPages])
 
+  function changePage(nextPage: number) {
+    setPage(nextPage)
+    tableRef.current?.scrollIntoView({ block: 'start' })
+    tableRef.current?.focus({ preventScroll: true })
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5">
-        <Table className="table-fixed">
+    <div
+      ref={tableRef}
+      tabIndex={-1}
+      className="flex min-w-0 scroll-mt-16 flex-col gap-3 outline-none"
+    >
+      <div className="flex items-center justify-between gap-3 lg:hidden">
+        <span className="text-sm text-muted-foreground">
+          {weeklyNotes.length} catatan
+        </span>
+        <SortableTableHeader
+          label="Tanggal"
+          className="mx-0 h-11"
+          direction={getDirection('date')}
+          onClick={() => {
+            toggleSort('date')
+            setPage(1)
+          }}
+        />
+      </div>
+      {!weeklyNotes.length && (
+        <p
+          role="status"
+          className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/5"
+        >
+          Belum ada observasi mingguan untuk pilihan ini.
+        </p>
+      )}
+      <ul
+        className="grid min-w-0 gap-3 lg:hidden"
+        aria-label="Catatan observasi mingguan"
+      >
+        {visibleNotes.map((note) => (
+          <li
+            key={note.id}
+            className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/5"
+          >
+            <h2 className="text-base font-semibold wrap-anywhere">
+              {note.dateLabel}
+            </h2>
+            {showClassColumn && (
+              <p className="mt-1 text-sm text-muted-foreground wrap-anywhere">
+                Kelas {note.className ?? '-'}
+              </p>
+            )}
+            <dl className="mt-4 grid gap-4">
+              {WEEKLY_NOTE_QUESTIONS.map(({ field, label }) => (
+                <div key={field} className="min-w-0">
+                  <dt className="text-sm font-medium">{label}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground wrap-anywhere">
+                    {note[field] || 'Belum diisi.'}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">
+              <Button
+                variant="outline"
+                className="h-11 flex-1"
+                aria-label={`Sunting catatan ${note.dateLabel}${showClassColumn ? ` kelas ${note.className ?? '-'}` : ''}`}
+                onClick={() => setEditingNote(note)}
+              >
+                <Pencil aria-hidden="true" /> Sunting
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-11 text-destructive"
+                aria-label={`Hapus catatan ${note.dateLabel}${showClassColumn ? ` kelas ${note.className ?? '-'}` : ''}`}
+                onClick={() => setDeletingNote(note)}
+              >
+                <Trash2 aria-hidden="true" /> Hapus
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5 lg:block">
+        <Table className="min-w-[720px] table-fixed">
           <colgroup>
             <col className="w-12" />
-            <col className="w-32" />
+            <col className="w-40" />
             {showClassColumn ? <col className="w-20" /> : null}
             <col />
             <col />
@@ -119,14 +194,14 @@ export function WeeklyNotesTable({
                     {note.className ?? '-'}
                   </TableCell>
                 ) : null}
-                <TableCell className="py-3 text-xs leading-snug text-muted-foreground sm:text-sm">
-                  <p className="line-clamp-3 break-words">{note.p1}</p>
+                <TableCell className="py-3 text-sm leading-snug whitespace-normal text-muted-foreground">
+                  <p className="line-clamp-3 wrap-anywhere">{note.p1}</p>
                 </TableCell>
-                <TableCell className="py-3 text-xs leading-snug text-muted-foreground sm:text-sm">
-                  <p className="line-clamp-3 break-words">{note.p2}</p>
+                <TableCell className="py-3 text-sm leading-snug whitespace-normal text-muted-foreground">
+                  <p className="line-clamp-3 wrap-anywhere">{note.p2}</p>
                 </TableCell>
-                <TableCell className="py-3 text-xs leading-snug text-muted-foreground sm:text-sm">
-                  <p className="line-clamp-3 break-words">{note.p3}</p>
+                <TableCell className="py-3 text-sm leading-snug whitespace-normal text-muted-foreground">
+                  <p className="line-clamp-3 wrap-anywhere">{note.p3}</p>
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="flex justify-center gap-1">
@@ -156,46 +231,11 @@ export function WeeklyNotesTable({
         </Table>
       </div>
 
-      {totalPages > 1 ? (
-        <Pagination className="justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(event) => {
-                  event.preventDefault()
-                  setPage((current) => Math.max(1, current - 1))
-                }}
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (n) => (
-                <PaginationItem key={n}>
-                  <PaginationLink
-                    href="#"
-                    isActive={n === page}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      setPage(n)
-                    }}
-                  >
-                    {n}
-                  </PaginationLink>
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(event) => {
-                  event.preventDefault()
-                  setPage((current) => Math.min(totalPages, current + 1))
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      ) : null}
+      <ObservationPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={changePage}
+      />
 
       <WeeklyNoteEditDialog
         note={editingNote}

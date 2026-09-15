@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Input } from '#/components/ui/input'
 import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import {
   Table,
@@ -8,14 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '#/components/ui/pagination'
+import { ObservationPagination } from './observation-pagination'
 import { useSortableData } from '#/hooks/use-sortable-data'
 import { indicatorLabels } from '#/lib/domain'
 import type {
@@ -51,7 +45,22 @@ function getStudent(id: string, students: Array<Student>): Student | undefined {
 }
 
 export function ObservationTable({ students, rows, onRowsChange }: Props) {
+  const tableRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(1)
+  const [query, setQuery] = useState('')
+  const filteredRows = useMemo(() => {
+    const search = query.trim().toLocaleLowerCase('id-ID')
+    return rows.filter((row) => {
+      const student = getStudent(row.studentId, students)
+      return (
+        student &&
+        (!search ||
+          `${student.name} ${student.nisn}`
+            .toLocaleLowerCase('id-ID')
+            .includes(search))
+      )
+    })
+  }, [query, rows, students])
   const sorters = useMemo(
     () => ({
       name: (left: ObservationRow, right: ObservationRow) =>
@@ -70,7 +79,7 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
   const { getDirection, sortedItems, toggleSort } = useSortableData<
     ObservationRow,
     SortKey
-  >(rows, sorters)
+  >(filteredRows, sorters)
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE))
   const visibleRows = sortedItems.slice(
     (page - 1) * PAGE_SIZE,
@@ -95,9 +104,96 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
     )
   }
 
+  function changePage(nextPage: number) {
+    setPage(nextPage)
+    tableRef.current?.scrollIntoView({ block: 'start' })
+    tableRef.current?.focus({ preventScroll: true })
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5">
+    <div
+      ref={tableRef}
+      tabIndex={-1}
+      className="flex min-w-0 scroll-mt-16 flex-col gap-3 outline-none"
+    >
+      <label className="flex flex-col gap-2 text-sm font-medium lg:max-w-sm">
+        Cari siswa
+        <Input
+          type="search"
+          placeholder="Nama atau NISN"
+          value={query}
+          className="h-11 rounded-full bg-card px-4 text-base"
+          onChange={(event) => {
+            setQuery(event.target.value)
+            setPage(1)
+          }}
+        />
+      </label>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 lg:hidden">
+        <span className="text-sm text-muted-foreground">Urutkan:</span>
+        <SortableTableHeader
+          label="Nama"
+          className="mx-0 h-11"
+          direction={getDirection('name')}
+          onClick={() => {
+            toggleSort('name')
+            setPage(1)
+          }}
+        />
+        <SortableTableHeader
+          label="NISN"
+          className="mx-0 h-11"
+          direction={getDirection('nisn')}
+          onClick={() => {
+            toggleSort('nisn')
+            setPage(1)
+          }}
+        />
+      </div>
+      <p role="status" className="text-sm text-muted-foreground">
+        {sortedItems.length
+          ? `${sortedItems.length} siswa`
+          : query.trim()
+            ? 'Tidak ada siswa yang cocok dengan pencarian.'
+            : 'Belum ada siswa di kelas ini.'}
+      </p>
+      <ul className="grid min-w-0 gap-3 lg:hidden" aria-label="Observasi siswa">
+        {visibleRows.map((row) => {
+          const student = getStudent(row.studentId, students)
+          if (!student) return null
+          return (
+            <li
+              key={row.studentId}
+              className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/5"
+            >
+              <h2 className="text-base font-semibold wrap-anywhere">
+                {student.name}
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground wrap-anywhere">
+                NISN {student.nisn}
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {INDICATORS.map((indicator) => (
+                  <div key={indicator} className="flex min-w-0 flex-col gap-2">
+                    <span className="text-sm">
+                      {indicatorLabels[indicator]}
+                    </span>
+                    <ObservationPillSelect
+                      label={`${student.name}: ${indicatorLabels[indicator]}`}
+                      className="min-h-11 w-full min-w-0 text-sm"
+                      value={row.values[indicator]}
+                      onChange={(value) =>
+                        updateCell(row.studentId, indicator, value)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="hidden overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5 lg:block">
         <Table>
           <TableHeader>
             <TableRow className="border-0 hover:bg-transparent">
@@ -152,6 +248,7 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
                   {INDICATORS.map((ind) => (
                     <TableCell key={ind} className="text-center">
                       <ObservationPillSelect
+                        label={`${student.name}: ${indicatorLabels[ind]}`}
                         value={row.values[ind]}
                         onChange={(v) => updateCell(row.studentId, ind, v)}
                       />
@@ -164,46 +261,11 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
         </Table>
       </div>
 
-      {totalPages > 1 ? (
-        <Pagination className="justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(event) => {
-                  event.preventDefault()
-                  setPage((current) => Math.max(1, current - 1))
-                }}
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (n) => (
-                <PaginationItem key={n}>
-                  <PaginationLink
-                    href="#"
-                    isActive={n === page}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      setPage(n)
-                    }}
-                  >
-                    {n}
-                  </PaginationLink>
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(event) => {
-                  event.preventDefault()
-                  setPage((current) => Math.min(totalPages, current + 1))
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      ) : null}
+      <ObservationPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={changePage}
+      />
     </div>
   )
 }

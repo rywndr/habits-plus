@@ -13,6 +13,15 @@ import { Label } from '#/components/ui/label'
 import { Textarea } from '#/components/ui/textarea'
 import type { WeeklyNote } from '#/server/tenant-data'
 
+export const WEEKLY_NOTE_QUESTIONS = [
+  { field: 'p1', label: 'Pendekatan yang digunakan' },
+  { field: 'p2', label: 'Hal yang membantu' },
+  { field: 'p3', label: 'Penyesuaian minggu depan' },
+] satisfies Array<{
+  field: keyof Pick<WeeklyNote, 'p1' | 'p2' | 'p3'>
+  label: string
+}>
+
 type EditValues = {
   p1: string
   p2: string
@@ -64,7 +73,7 @@ export function WeeklyNoteEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl [&_button]:min-h-11">
         <DialogHeader>
           <DialogTitle>Edit observasi mingguan</DialogTitle>
           <DialogDescription>
@@ -73,14 +82,13 @@ export function WeeklyNoteEditDialog({
         </DialogHeader>
 
         <div className="grid gap-4">
-          {(['p1', 'p2', 'p3'] as const).map((field, index) => (
+          {WEEKLY_NOTE_QUESTIONS.map(({ field, label }) => (
             <div key={field} className="grid gap-2">
-              <Label htmlFor={`weekly-note-${field}`}>
-                P{index + 1}
-              </Label>
+              <Label htmlFor={`weekly-note-${field}`}>{label}</Label>
               <Textarea
                 id={`weekly-note-${field}`}
                 rows={3}
+                className="text-base sm:text-sm"
                 value={values[field]}
                 onChange={(event) =>
                   setValues((current) => ({
