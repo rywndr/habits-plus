@@ -21,6 +21,7 @@ import {
   loadObservationPage,
 } from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
+import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { Frequency, Indicator, Student } from '#/server/tenant-data'
 
@@ -120,6 +121,8 @@ function ObservasiHarian() {
   }
 
   async function handleSave() {
+    if (!classId) return
+
     setSaveStatus('saving')
     try {
       await saveDailyObservations({
@@ -195,52 +198,54 @@ function ObservasiHarian() {
           </div>
         </HeaderFilters>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <label
-              htmlFor="daily-observation-note"
-              className="font-heading text-sm font-medium"
-            >
-              Catatan singkat (opsional)
-            </label>
-            {isDataPending ? (
-              <Skeleton className="h-20 w-full rounded-2xl" />
-            ) : (
-              <Textarea
-                id="daily-observation-note"
-                rows={2}
-                value={note}
-                onChange={(e) => {
-                  setNote(e.target.value)
-                  setSaveStatus('idle')
-                }}
-                placeholder="Pendekatan instruksi bertahap membantu sebagian siswa mengikuti kegiatan dengan lebih tenang hari ini."
-                className="rounded-2xl bg-card text-base sm:text-sm"
-              />
-            )}
+        <ClassRequiredContent classId={classId}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <label
+                htmlFor="daily-observation-note"
+                className="font-heading text-sm font-medium"
+              >
+                Catatan singkat (opsional)
+              </label>
+              {isDataPending ? (
+                <Skeleton className="h-20 w-full rounded-2xl" />
+              ) : (
+                <Textarea
+                  id="daily-observation-note"
+                  rows={2}
+                  value={note}
+                  onChange={(e) => {
+                    setNote(e.target.value)
+                    setSaveStatus('idle')
+                  }}
+                  placeholder="Pendekatan instruksi bertahap membantu sebagian siswa mengikuti kegiatan dengan lebih tenang hari ini."
+                  className="rounded-2xl bg-card text-base sm:text-sm"
+                />
+              )}
+            </div>
+            <SaveButton
+              status={saveStatus}
+              size="lg"
+              className="rounded-full px-6"
+              statusClassName="self-end"
+              wrapperClassName="mt-1 self-end sm:mt-7"
+              onClick={handleSave}
+              disabled={isDataPending}
+            />
           </div>
-          <SaveButton
-            status={saveStatus}
-            size="lg"
-            className="rounded-full px-6"
-            statusClassName="self-end"
-            wrapperClassName="mt-1 self-end sm:mt-7"
-            onClick={handleSave}
-            disabled={isDataPending}
-          />
-        </div>
 
-        {isDataPending ? (
-          <ObservationTableSkeleton />
-        ) : (
-          <ObservationTable
-            students={data.students.filter(
-              (student) => student.classId === classId,
-            )}
-            rows={rows}
-            onRowsChange={handleRowsChange}
-          />
-        )}
+          {isDataPending ? (
+            <ObservationTableSkeleton />
+          ) : (
+            <ObservationTable
+              students={data.students.filter(
+                (student) => student.classId === classId,
+              )}
+              rows={rows}
+              onRowsChange={handleRowsChange}
+            />
+          )}
+        </ClassRequiredContent>
 
         <ExportDialog
           title="Export observasi harian"

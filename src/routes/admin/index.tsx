@@ -1,11 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  GraduationCap,
-  Users,
-  BookOpen,
-  UserCircle2,
-  Activity,
-} from 'lucide-react'
+import { GraduationCap, Users, BookOpen, UserCircle2 } from 'lucide-react'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { StatCard } from '#/components/admin/stat-card'

@@ -8,7 +8,8 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { MonthPicker } from '#/components/guru/month-picker'
-import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { ClassSelect } from '#/components/guru/class-select'
+import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import { SummaryRadarChart } from '#/components/guru/summary-radar-chart'
 import { ProgressStripCard } from '#/components/guru/progress-strip-card'
 import { SummaryPageSkeleton } from '#/components/skeletons/summary-page-skeleton'
@@ -58,8 +59,6 @@ function RingkasanBulanan() {
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
-  const isAllClasses = classId === ALL_CLASSES
-
   useEffect(() => {
     setMonth(search.month ?? summary.month)
     setClassId(summary.classId)
@@ -76,7 +75,7 @@ function RingkasanBulanan() {
     const startHref = router.state.location.href
     const nextSearch = {
       month: next.month,
-      classId: next.classId === ALL_CLASSES ? undefined : next.classId,
+      classId: next.classId || undefined,
     }
     try {
       await router.preloadRoute({ to: '/guru/ringkasan', search: nextSearch })
@@ -100,6 +99,8 @@ function RingkasanBulanan() {
   }
 
   async function handleSave() {
+    if (!classId) return
+
     setSaveStatus('saving')
     try {
       await saveMonthlySummary({ data: { month, classId, text } })
@@ -131,66 +132,62 @@ function RingkasanBulanan() {
               classes={summary.classes}
               value={classId}
               onChange={handleClassChange}
-              includeAll
             />
           </HeaderFilter>
         </HeaderFilters>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-sm">Ringkasan dalam bulan</span>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            {isDataPending ? (
-              <Skeleton className="h-20 w-full rounded-2xl" />
-            ) : (
-              <Textarea
-                value={isAllClasses ? '' : text}
-                onChange={(event) => {
-                  setText(event.target.value)
-                  setSaveStatus('idle')
-                }}
-                rows={2}
-                disabled={isAllClasses}
-                placeholder={
-                  isAllClasses
-                    ? 'Pilih satu kelas untuk menulis ringkasan bulanan.'
-                    : 'Tulis ringkasan perkembangan siswa untuk bulan ini.'
-                }
-                className="rounded-2xl bg-card"
-              />
-            )}
-            <SaveButton
-              status={saveStatus}
-              size="lg"
-              className="rounded-full px-6"
-              wrapperClassName="sm:mt-1"
-              onClick={handleSave}
-              disabled={isDataPending || isAllClasses}
-            />
-          </div>
-        </div>
-
-        {isDataPending ? (
-          <SummaryDataSkeleton />
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <SummaryRadarChart data={summary.radar} />
-            <div className="flex flex-col gap-3">
-              {ORDER.map((ind) => (
-                <ProgressStripCard
-                  key={ind}
-                  indicator={ind}
-                  label={indicatorLabels[ind]}
-                  trend={summary.trends[ind] ?? 'tidak-terlihat'}
-                  valueLabel={
-                    summary.averages[ind]
-                      ? frequencyLabels[summary.averages[ind]]
-                      : 'Tidak Terlihat'
-                  }
+        <ClassRequiredContent classId={classId}>
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">Ringkasan dalam bulan</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              {isDataPending ? (
+                <Skeleton className="h-20 w-full rounded-2xl" />
+              ) : (
+                <Textarea
+                  value={text}
+                  onChange={(event) => {
+                    setText(event.target.value)
+                    setSaveStatus('idle')
+                  }}
+                  rows={2}
+                  placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
+                  className="rounded-2xl bg-card"
                 />
-              ))}
+              )}
+              <SaveButton
+                status={saveStatus}
+                size="lg"
+                className="rounded-full px-6"
+                wrapperClassName="sm:mt-1"
+                onClick={handleSave}
+                disabled={isDataPending}
+              />
             </div>
           </div>
-        )}
+
+          {isDataPending ? (
+            <SummaryDataSkeleton />
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+              <SummaryRadarChart data={summary.radar} />
+              <div className="flex flex-col gap-3">
+                {ORDER.map((ind) => (
+                  <ProgressStripCard
+                    key={ind}
+                    indicator={ind}
+                    label={indicatorLabels[ind]}
+                    trend={summary.trends[ind] ?? 'tidak-terlihat'}
+                    valueLabel={
+                      summary.averages[ind]
+                        ? frequencyLabels[summary.averages[ind]]
+                        : 'Tidak Terlihat'
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </ClassRequiredContent>
       </div>
     </ContentPanel>
   )

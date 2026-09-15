@@ -87,7 +87,7 @@ export function SummaryRadarChart({ data }: Props) {
             <PolarRadiusAxis
               angle={45}
               domain={[0, 2]}
-              ticks={[0, 0.5, 1, 1.5, 2]}
+              tickCount={5}
               tickFormatter={(value) => value.toFixed(1)}
               tick={{ fontSize: 10, fill: 'currentColor' }}
               axisLine={false}

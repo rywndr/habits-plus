@@ -20,6 +20,7 @@ import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import { ExportDialog } from '#/components/guru/export-dialog'
 import { downloadWeeklyNotesWorkbook } from '#/components/guru/export-workbooks'
 import { WeeklyQuestionInput } from '#/components/guru/weekly-question-input'
@@ -68,8 +69,6 @@ function ObservasiMingguan() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
-  const isAllClasses = classId === ALL_CLASSES
-
   useEffect(() => {
     setClassId(weeklyNotes.classId)
     setP1(weeklyNotes.selectedNote?.p1 ?? '')
@@ -92,7 +91,7 @@ function ObservasiMingguan() {
     const startHref = router.state.location.href
     const search = {
       weekStart: next.weekStart,
-      classId: next.classId === ALL_CLASSES ? undefined : next.classId,
+      classId: next.classId || undefined,
     }
     try {
       await router.preloadRoute({ to: '/guru/observasi-mingguan', search })
@@ -135,6 +134,8 @@ function ObservasiMingguan() {
   }
 
   async function saveNote() {
+    if (!classId) return
+
     setIsOverwriteOpen(false)
     setSaveStatus('saving')
     try {
@@ -210,7 +211,6 @@ function ObservasiMingguan() {
                 classes={weeklyNotes.classes}
                 value={classId}
                 onChange={handleClassChange}
-                includeAll
               />
             </HeaderFilter>
             <Button
@@ -225,43 +225,38 @@ function ObservasiMingguan() {
           </div>
         </HeaderFilters>
 
-        {isAllClasses ? (
-          <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">
-            Pilih satu kelas untuk menulis observasi mingguan. Tabel di bawah
-            menampilkan catatan dari semua kelas.
-          </p>
-        ) : isDataPending ? (
-          <WeeklyQuestionSkeleton />
-        ) : (
-          <div className="flex flex-col gap-4">
-            <WeeklyQuestionInput
-              index={1}
-              question="Pendekatan apa yang digunakan minggu ini?"
-              code="P1"
-              value={p1}
-              placeholder="Tulis pendekatan yang digunakan minggu ini."
-              onChange={(value) => handleQuestionChange(setP1, value)}
-            />
-            <WeeklyQuestionInput
-              index={2}
-              question="Apa yang terasa membantu?"
-              code="P2"
-              value={p2}
-              placeholder="Tulis hal yang terasa membantu minggu ini."
-              onChange={(value) => handleQuestionChange(setP2, value)}
-            />
-            <WeeklyQuestionInput
-              index={3}
-              question="Apa yang perlu disesuaikan?"
-              code="P3"
-              value={p3}
-              placeholder="Tulis hal yang perlu disesuaikan minggu depan."
-              onChange={(value) => handleQuestionChange(setP3, value)}
-            />
-          </div>
-        )}
+        <ClassRequiredContent classId={classId}>
+          {isDataPending ? (
+            <WeeklyQuestionSkeleton />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <WeeklyQuestionInput
+                index={1}
+                question="Pendekatan apa yang digunakan minggu ini?"
+                code="P1"
+                value={p1}
+                placeholder="Tulis pendekatan yang digunakan minggu ini."
+                onChange={(value) => handleQuestionChange(setP1, value)}
+              />
+              <WeeklyQuestionInput
+                index={2}
+                question="Apa yang terasa membantu?"
+                code="P2"
+                value={p2}
+                placeholder="Tulis hal yang terasa membantu minggu ini."
+                onChange={(value) => handleQuestionChange(setP2, value)}
+              />
+              <WeeklyQuestionInput
+                index={3}
+                question="Apa yang perlu disesuaikan?"
+                code="P3"
+                value={p3}
+                placeholder="Tulis hal yang perlu disesuaikan minggu depan."
+                onChange={(value) => handleQuestionChange(setP3, value)}
+              />
+            </div>
+          )}
 
-        {!isAllClasses && (
           <div className="flex gap-3">
             <SaveButton
               status={saveStatus}
@@ -271,7 +266,17 @@ function ObservasiMingguan() {
               disabled={isDataPending}
             />
           </div>
-        )}
+
+          {isDataPending ? (
+            <WeeklyNotesTableSkeleton />
+          ) : (
+            <WeeklyNotesTable
+              weeklyNotes={weeklyNotes.notes}
+              onEdit={handleEditNote}
+              onDelete={handleDeleteNote}
+            />
+          )}
+        </ClassRequiredContent>
 
         <Dialog open={isOverwriteOpen} onOpenChange={setIsOverwriteOpen}>
           <DialogContent>
@@ -290,17 +295,6 @@ function ObservasiMingguan() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {isDataPending ? (
-          <WeeklyNotesTableSkeleton />
-        ) : (
-          <WeeklyNotesTable
-            weeklyNotes={weeklyNotes.notes}
-            showClassColumn={isAllClasses}
-            onEdit={handleEditNote}
-            onDelete={handleDeleteNote}
-          />
-        )}
 
         <ExportDialog
           title="Export observasi mingguan"

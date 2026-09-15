@@ -65,6 +65,7 @@ function DashboardGuru() {
             setIsNavigating(true)
             void navigate({
               to: '/guru/catat-observasi',
+              search: { classId: undefined, observedAt: undefined },
             }).catch(() => setIsNavigating(false))
           }}
         >

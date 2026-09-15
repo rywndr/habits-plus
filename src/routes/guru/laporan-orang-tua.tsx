@@ -25,6 +25,7 @@ import { PageHeader } from '#/components/shell/page-header'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { DatePicker } from '#/components/guru/date-picker'
 import { ClassSelect } from '#/components/guru/class-select'
+import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
   ParentReportRow,
   isGeneratable,
@@ -66,6 +67,9 @@ export const Route = createFileRoute('/guru/laporan-orang-tua')({
   staticData: { title: 'Laporan Orang Tua' },
 })
 
+type StudentTextById = Partial<Record<string, string>>
+type TextByContext = Partial<Record<string, StudentTextById>>
+
 function LaporanOrangTua() {
   const router = useRouter()
   const navigate = useNavigate()
@@ -81,12 +85,8 @@ function LaporanOrangTua() {
   const [notices, setNotices] = useState<Record<string, string>>({})
   // Drafts and in-progress edits are keyed by week+class so a paid generation
   // survives switching context and coming back.
-  const [draftsByContext, setDraftsByContext] = useState<
-    Record<string, Record<string, string>>
-  >({})
-  const [editsByContext, setEditsByContext] = useState<
-    Record<string, Record<string, string>>
-  >({})
+  const [draftsByContext, setDraftsByContext] = useState<TextByContext>({})
+  const [editsByContext, setEditsByContext] = useState<TextByContext>({})
 
   const drafts = draftsByContext[contextKey] ?? {}
   const edits = editsByContext[contextKey] ?? {}
@@ -126,10 +126,8 @@ function LaporanOrangTua() {
   const savedCount = rows.filter((row) => row.state.kind === 'saved').length
 
   function patchContext(
-    setState: React.Dispatch<
-      React.SetStateAction<Record<string, Record<string, string>>>
-    >,
-    update: (current: Record<string, string>) => Record<string, string>,
+    setState: React.Dispatch<React.SetStateAction<TextByContext>>,
+    update: (current: StudentTextById) => StudentTextById,
   ) {
     setState((prev) => ({
       ...prev,
@@ -364,106 +362,108 @@ function LaporanOrangTua() {
           </HeaderFilter>
         </HeaderFilters>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            {savedCount} dari {rows.length} laporan sudah terkirim
-            {selected.size ? ` · ${selected.size} dipilih` : ''}
-          </p>
-          <Button
-            size="lg"
-            className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
-            disabled={!selected.size || isGenerating}
-            aria-busy={isGenerating}
-            onClick={() => void runGeneration([...selected])}
-          >
-            {isGenerating ? (
-              <LoaderCircle className="animate-spin" />
-            ) : (
-              <Sparkles />
-            )}
-            Buat dengan AI ({selected.size})
-          </Button>
-        </div>
-
-        {isDataPending ? (
-          <ParentReportTableSkeleton />
-        ) : rows.length ? (
-          <div className="min-w-0 rounded-xl bg-card ring-1 ring-foreground/5">
-            <Table className="max-sm:block">
-              <TableHeader className="max-sm:block">
-                <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
-                  <TableHead className="w-16 text-center max-sm:h-auto max-sm:min-h-11 sm:w-12">
-                    <label className="flex min-h-11 items-center justify-center">
-                      <input
-                        type="checkbox"
-                        aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
-                        className="size-5 accent-brand-orange sm:size-4"
-                        checked={allGeneratableSelected}
-                        onChange={toggleSelectAll}
-                        disabled={!generatable.length}
-                      />
-                    </label>
-                  </TableHead>
-                  <TableHead className="text-brand-navy-foreground max-sm:flex max-sm:min-h-11 max-sm:items-center max-sm:pl-8">
-                    Nama
-                  </TableHead>
-                  <TableHead className="hidden w-36 text-center text-brand-navy-foreground sm:table-cell">
-                    Hari terobservasi
-                  </TableHead>
-                  <TableHead className="hidden w-48 text-center text-brand-navy-foreground sm:table-cell">
-                    Status
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="max-sm:block">
-                {rows.map(({ student, state, text }) => (
-                  <ParentReportRow
-                    key={student.id}
-                    student={student}
-                    state={state}
-                    days={data.weekData[student.id] ?? []}
-                    text={text}
-                    notice={notices[student.id]}
-                    isSelected={selected.has(student.id)}
-                    isExpanded={expandedId === student.id}
-                    isSaving={savingId === student.id}
-                    actions={{
-                      onToggleSelect: () =>
-                        setSelected((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(student.id)) next.delete(student.id)
-                          else next.add(student.id)
-                          return next
-                        }),
-                      onToggleExpand: () =>
-                        setExpandedId((prev) =>
-                          prev === student.id ? null : student.id,
-                        ),
-                      onTextChange: (value) => setEdit(student.id, value),
-                      onGenerate: () => void runGeneration([student.id]),
-                      onAcceptDraft: () => void acceptDraft(student.id, text),
-                      onDiscardDraft: () => {
-                        discardDrafts([student.id])
-                        clearEdit(student.id)
-                      },
-                      onSaveManual: () => void saveManual(student.id, text),
-                      onRevoke: () => {
-                        if (state.kind === 'saved') {
-                          void handleRevoke(state.summary.id, student.id)
-                        }
-                      },
-                      onDelete: () => setDeletingId(student.id),
-                    }}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+        <ClassRequiredContent classId={data.classId}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              {savedCount} dari {rows.length} laporan sudah terkirim
+              {selected.size ? ` · ${selected.size} dipilih` : ''}
+            </p>
+            <Button
+              size="lg"
+              className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
+              disabled={!selected.size || isGenerating}
+              aria-busy={isGenerating}
+              onClick={() => void runGeneration([...selected])}
+            >
+              {isGenerating ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                <Sparkles />
+              )}
+              Buat dengan AI ({selected.size})
+            </Button>
           </div>
-        ) : (
-          <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">
-            Belum ada siswa pada kelas ini.
-          </p>
-        )}
+
+          {isDataPending ? (
+            <ParentReportTableSkeleton />
+          ) : rows.length ? (
+            <div className="min-w-0 rounded-xl bg-card ring-1 ring-foreground/5">
+              <Table className="max-sm:block">
+                <TableHeader className="max-sm:block">
+                  <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
+                    <TableHead className="w-16 text-center max-sm:h-auto max-sm:min-h-11 sm:w-12">
+                      <label className="flex min-h-11 items-center justify-center">
+                        <input
+                          type="checkbox"
+                          aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
+                          className="size-5 accent-brand-orange sm:size-4"
+                          checked={allGeneratableSelected}
+                          onChange={toggleSelectAll}
+                          disabled={!generatable.length}
+                        />
+                      </label>
+                    </TableHead>
+                    <TableHead className="text-brand-navy-foreground max-sm:flex max-sm:min-h-11 max-sm:items-center max-sm:pl-8">
+                      Nama
+                    </TableHead>
+                    <TableHead className="hidden w-36 text-center text-brand-navy-foreground sm:table-cell">
+                      Hari terobservasi
+                    </TableHead>
+                    <TableHead className="hidden w-48 text-center text-brand-navy-foreground sm:table-cell">
+                      Status
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="max-sm:block">
+                  {rows.map(({ student, state, text }) => (
+                    <ParentReportRow
+                      key={student.id}
+                      student={student}
+                      state={state}
+                      days={data.weekData[student.id] ?? []}
+                      text={text}
+                      notice={notices[student.id]}
+                      isSelected={selected.has(student.id)}
+                      isExpanded={expandedId === student.id}
+                      isSaving={savingId === student.id}
+                      actions={{
+                        onToggleSelect: () =>
+                          setSelected((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(student.id)) next.delete(student.id)
+                            else next.add(student.id)
+                            return next
+                          }),
+                        onToggleExpand: () =>
+                          setExpandedId((prev) =>
+                            prev === student.id ? null : student.id,
+                          ),
+                        onTextChange: (value) => setEdit(student.id, value),
+                        onGenerate: () => void runGeneration([student.id]),
+                        onAcceptDraft: () => void acceptDraft(student.id, text),
+                        onDiscardDraft: () => {
+                          discardDrafts([student.id])
+                          clearEdit(student.id)
+                        },
+                        onSaveManual: () => void saveManual(student.id, text),
+                        onRevoke: () => {
+                          if (state.kind === 'saved') {
+                            void handleRevoke(state.summary.id, student.id)
+                          }
+                        },
+                        onDelete: () => setDeletingId(student.id),
+                      }}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">
+              Belum ada siswa pada kelas ini.
+            </p>
+          )}
+        </ClassRequiredContent>
       </div>
 
       <Dialog

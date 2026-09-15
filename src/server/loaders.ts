@@ -18,7 +18,6 @@ import {
   getClassWeekObservations,
   getDailyObservationDay,
   getGuruDashboard,
-  getLatestSummary,
   getMonthlySummary,
   getParentProgress,
   getTenantClasses,
@@ -27,8 +26,14 @@ import {
   getWeeklyNotes,
   withTenantCache,
 } from './tenant-data'
-import type { AiSummaryListItem, StudentWeekDayData } from './tenant-data'
+import type {
+  AiSummaryListItem,
+  Frequency,
+  MonthlySummary,
+  StudentWeekDayData,
+} from './tenant-data'
 import { todayIso, weekStartIso } from './date'
+import { resolveSelectedClassId } from '#/lib/class-selection'
 
 import {
   currentUserSchema,
@@ -65,10 +70,10 @@ export type DailyObservationExportRow = {
   studentName: string
   nisn: string
   note: string
-  respons: string
-  interaksi: string
-  partisipasi: string
-  regulasi: string
+  respons: Frequency | ''
+  interaksi: Frequency | ''
+  partisipasi: Frequency | ''
+  regulasi: Frequency | ''
 }
 
 export type WeeklyNoteExportRow = {
@@ -244,16 +249,22 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
       const tenant = teacher.tenant
-      const classId =
-        data.classId && data.classId !== 'all' ? data.classId : undefined
-      const [classes, summary] = await Promise.all([
-        getTenantClasses(tenant, teacher.id),
-        data.month
-          ? getMonthlySummary(tenant, data.month, teacher.id, classId)
-          : getLatestSummary(tenant, teacher.id, classId),
-      ])
+      const classes = await getTenantClasses(tenant, teacher.id)
+      const classId = resolveSelectedClassId(classes, data.classId)
+      const month = data.month ?? todayIso().slice(0, 7)
+      const emptySummary: MonthlySummary = {
+        month,
+        monthLabel: '',
+        text: '',
+        trends: {},
+        averages: {},
+        radar: [],
+      }
+      const summary = classId
+        ? await getMonthlySummary(tenant, month, teacher.id, classId)
+        : emptySummary
 
-      return { ...summary, classes, classId: classId ?? 'all' }
+      return { ...summary, classes, classId }
     }),
   )
 
@@ -273,12 +284,11 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
       const { getAuthenticatedUserByRole } = await import('./auth.server')
       const teacher = await getAuthenticatedUserByRole('guru')
       const tenant = teacher.tenant
-      const classId =
-        data.classId && data.classId !== 'all' ? data.classId : undefined
-      const [classes, notes] = await Promise.all([
-        getTenantClasses(tenant, teacher.id),
-        getWeeklyNotes(tenant, teacher.id, classId),
-      ])
+      const classes = await getTenantClasses(tenant, teacher.id)
+      const classId = resolveSelectedClassId(classes, data.classId)
+      const notes = classId
+        ? await getWeeklyNotes(tenant, teacher.id, classId)
+        : []
       const selectedWeekStart = weekStartIso(
         data.weekStart ? new Date(data.weekStart) : new Date(),
       )
@@ -286,10 +296,8 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
       return {
         notes,
         classes,
-        classId: classId ?? 'all',
+        classId,
         selectedWeekStart,
-        // Notes are per class, so the editor only targets a note when a
-        // specific class is selected ("Semua kelas" is a read-only overview).
         selectedNote: classId
           ? (notes.find((note) => note.date === selectedWeekStart) ?? null)
           : null,
@@ -430,27 +438,13 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
       const observedAt = data.observedAt || todayIso()
       const classes = await getTenantClasses(tenant, teacher.id)
       const classIds = classes.map((item) => item.id)
-
-      const [students, eagerObservation] = await Promise.all([
+      const classId = resolveSelectedClassId(classes, data.classId)
+      const [students, observationDay] = await Promise.all([
         getTenantStudents(tenant, classIds),
-        data.classId
-          ? getDailyObservationDay(tenant, data.classId, observedAt)
-          : Promise.resolve(null),
+        classId
+          ? getDailyObservationDay(tenant, classId, observedAt)
+          : Promise.resolve({ rows: [], note: '' }),
       ])
-
-      const requestedClass = classes.find((item) => item.id === data.classId)
-      const classWithStudents = classes.find((item) =>
-        students.some((student) => student.classId === item.id),
-      )
-      const classId =
-        requestedClass?.id || classWithStudents?.id || classes[0]?.id || ''
-
-      const observationDay =
-        eagerObservation && data.classId === classId
-          ? eagerObservation
-          : classId
-            ? await getDailyObservationDay(tenant, classId, observedAt)
-            : { rows: [], note: '' }
 
       return {
         classes,
@@ -474,10 +468,7 @@ export const loadParentReportPage = createServerFn({ method: 'GET' })
         data.weekStart ? new Date(data.weekStart) : new Date(),
       )
       const classes = await getTenantClasses(tenant, teacher.id)
-      const classId =
-        classes.find((item) => item.id === data.classId)?.id ||
-        classes[0]?.id ||
-        ''
+      const classId = resolveSelectedClassId(classes, data.classId)
 
       if (!classId) {
         const weekData: Record<string, Array<StudentWeekDayData>> = {}
