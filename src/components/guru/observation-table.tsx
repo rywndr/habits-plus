@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Input } from '#/components/ui/input'
+import { SearchInput } from '#/components/common/search-input'
 import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import {
   Table,
@@ -116,15 +116,14 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
       tabIndex={-1}
       className="flex min-w-0 scroll-mt-16 flex-col gap-3 outline-none"
     >
-      <label className="flex flex-col gap-2 text-sm font-medium lg:max-w-sm">
+      <label className="flex w-full flex-col gap-2 text-sm font-medium sm:max-w-sm">
         Cari siswa
-        <Input
-          type="search"
+        <SearchInput
           placeholder="Nama atau NISN"
           value={query}
-          className="h-11 rounded-full bg-card px-4 text-base"
-          onChange={(event) => {
-            setQuery(event.target.value)
+          containerClassName="sm:max-w-none"
+          onValueChange={(nextQuery) => {
+            setQuery(nextQuery)
             setPage(1)
           }}
         />

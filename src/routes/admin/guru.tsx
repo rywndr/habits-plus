@@ -1,13 +1,14 @@
 import { affectsAdminData } from '#/lib/route-invalidation'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Check, ChevronDown, Search, X } from 'lucide-react'
+import { Check, ChevronDown, X } from 'lucide-react'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { DataTable } from '#/components/admin/data-table'
 import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
 import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
+import { SearchInput } from '#/components/common/search-input'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -236,15 +237,12 @@ function ClassAssignmentField({
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 max-w-[90vw] gap-3 p-3">
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Cari kelas..."
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Cari kelas..."
+            containerClassName="sm:max-w-none"
+          />
           <div className="max-h-60 overflow-y-auto pr-1">
             {filteredClasses.length === 0 ? (
               <p className="px-2 py-6 text-center text-sm text-muted-foreground">

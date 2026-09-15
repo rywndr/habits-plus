@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Pencil, Search, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { SortableTableHeader } from '#/components/common/sortable-table-header'
+import { SearchInput } from '#/components/common/search-input'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
 import {
   Table,
   TableBody,
@@ -111,15 +111,12 @@ export function DataTable<T extends { id: string }>({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari..."
-            className="rounded-full bg-card pl-9"
-          />
-        </div>
+        <SearchInput
+          value={q}
+          onValueChange={setQ}
+          placeholder="Cari..."
+          containerClassName="flex-1"
+        />
         {toolbar}
       </div>
 
