@@ -9,6 +9,7 @@ import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
 import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import { SearchInput } from '#/components/common/search-input'
+import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -89,12 +90,12 @@ function KelolaOrtu() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [studentId, setStudentId] = useState('none')
-  const [classFilter, setClassFilter] = useState('all')
+  const [classFilter, setClassFilter] = useState(ALL_CLASSES)
   const [editingParent, setEditingParent] = useState<AppUser | null>(null)
   const [deletingParent, setDeletingParent] = useState<AppUser | null>(null)
   const filteredParents = useMemo(
     () =>
-      classFilter === 'all'
+      classFilter === ALL_CLASSES
         ? parents
         : parents.filter((parent) => {
             const child = students.find(
@@ -145,17 +146,21 @@ function KelolaOrtu() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Kelola Orang Tua" />
+        <PageHeader
+          title="Kelola Orang Tua"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
         <DataTable
           rows={filteredParents}
           columns={columns(students)}
           filterKey="name"
           toolbar={
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <ClassFilterSelect
+              <ClassSelect
                 classes={classes}
                 value={classFilter}
                 onChange={setClassFilter}
+                includeAll
               />
               <AddEntityDialog title="Tambah Orang Tua">
                 <div className="flex flex-col gap-2">
@@ -234,39 +239,6 @@ type StudentSelectProps = {
 
 function classNameOf(id: string, classes: Array<ClassRoom>) {
   return classes.find((klass) => klass.id === id)?.name ?? '-'
-}
-
-type ClassFilterSelectProps = {
-  classes: Array<ClassRoom>
-  value: string
-  onChange: (value: string) => void
-}
-
-function ClassFilterSelect({
-  classes,
-  value,
-  onChange,
-}: ClassFilterSelectProps) {
-  return (
-    <Select
-      value={value}
-      onValueChange={(nextValue) => onChange(nextValue || 'all')}
-    >
-      <SelectTrigger className="w-full bg-card sm:w-44">
-        <span className="min-w-0 flex-1 truncate text-left">
-          {value === 'all' ? 'Semua kelas' : classNameOf(value, classes)}
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Semua kelas</SelectItem>
-        {classes.map((klass) => (
-          <SelectItem key={klass.id} value={klass.id}>
-            {klass.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
 }
 
 function StudentSelect({

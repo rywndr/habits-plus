@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
+import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { DatePicker } from '#/components/guru/date-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
@@ -50,28 +51,34 @@ function BiayaAi() {
   }
 
   return (
-    <ContentPanel>
+    <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
-        <PageHeader title="Riwayat Biaya Ringkasan AI" />
+        <PageHeader
+          title="Riwayat Biaya Ringkasan AI"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-heading font-semibold">Minggu:</span>
+        <HeaderFilters>
+          <HeaderFilter label="Minggu">
             <WeekPicker
               value={data.selectedWeekStart}
               onChange={(weekStart) =>
                 navigateTo({ weekStart, classId: data.classId })
               }
             />
+          </HeaderFilter>
+          <HeaderFilter label="Tanggal acuan">
             <DatePicker
               value={data.selectedWeekStart}
               onChange={(date) =>
                 navigateTo({ weekStart: date, classId: data.classId })
               }
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-semibold">Kelas:</span>
+          </HeaderFilter>
+          <HeaderFilter
+            label="Kelas"
+            className="flex-1 lg:min-w-36 lg:flex-none"
+          >
             <ClassSelect
               classes={data.classes}
               value={data.classId || ALL_CLASSES}
@@ -80,8 +87,8 @@ function BiayaAi() {
               }
               includeAll
             />
-          </div>
-        </div>
+          </HeaderFilter>
+        </HeaderFilters>
 
         <AiCostHistory history={data.history} />
       </div>

@@ -7,6 +7,7 @@ import { DataTable } from '#/components/admin/data-table'
 import type { Column } from '#/components/admin/data-table'
 import { AddEntityDialog } from '#/components/admin/add-entity-dialog'
 import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
+import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
@@ -85,12 +86,12 @@ function KelolaSiswa() {
   const [name, setName] = useState('')
   const [classId, setClassId] = useState(data.classes[0]?.id ?? '')
   const [gender, setGender] = useState<Gender>('L')
-  const [classFilter, setClassFilter] = useState('all')
+  const [classFilter, setClassFilter] = useState(ALL_CLASSES)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null)
   const filteredStudents = useMemo(
     () =>
-      classFilter === 'all'
+      classFilter === ALL_CLASSES
         ? data.students
         : data.students.filter((student) => student.classId === classFilter),
     [classFilter, data.students],
@@ -124,17 +125,21 @@ function KelolaSiswa() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Kelola Siswa" />
+        <PageHeader
+          title="Kelola Siswa"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
         <DataTable
           rows={filteredStudents}
           columns={columns(data.classes)}
           filterKey="name"
           toolbar={
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <ClassFilterSelect
+              <ClassSelect
                 classes={data.classes}
                 value={classFilter}
                 onChange={setClassFilter}
+                includeAll
               />
               <AddEntityDialog
                 title="Tambah Siswa"
@@ -225,31 +230,6 @@ function StudentClassSelect({ classes, value, onChange }: ClassSelectProps) {
         </SelectContent>
       </Select>
     </div>
-  )
-}
-
-function ClassFilterSelect({ classes, value, onChange }: ClassSelectProps) {
-  const selectedClass = classes.find((klass) => klass.id === value)
-
-  return (
-    <Select
-      value={value}
-      onValueChange={(nextValue) => onChange(nextValue || 'all')}
-    >
-      <SelectTrigger className="w-full bg-card sm:w-44">
-        <span className="min-w-0 flex-1 truncate text-left">
-          {value === 'all' ? 'Semua kelas' : (selectedClass?.name ?? 'Kelas')}
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Semua kelas</SelectItem>
-        {classes.map((klass) => (
-          <SelectItem key={klass.id} value={klass.id}>
-            {klass.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }
 

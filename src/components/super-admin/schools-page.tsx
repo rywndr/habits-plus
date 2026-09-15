@@ -99,7 +99,10 @@ export function SchoolsPage({ schools }: Props) {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-6">
-        <PageHeader title="Tambah Sekolah" />
+        <PageHeader
+          title="Tambah Sekolah"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
         <DataTable
           rows={schools}
           columns={columns}

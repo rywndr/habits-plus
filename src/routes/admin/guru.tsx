@@ -117,7 +117,10 @@ function KelolaGuru() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Kelola Guru" />
+        <PageHeader
+          title="Kelola Guru"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
         <DataTable
           rows={data.teachers}
           columns={columns}

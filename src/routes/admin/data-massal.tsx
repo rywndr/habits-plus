@@ -115,7 +115,10 @@ function DataMassal() {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-5">
-        <PageHeader title="Data Massal" />
+        <PageHeader
+          title="Data Massal"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
 
         <TemplatePicker
           mode={mode}

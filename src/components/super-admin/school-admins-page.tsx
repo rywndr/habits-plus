@@ -129,7 +129,10 @@ export function SchoolAdminsPage({ schools, admins }: Props) {
   return (
     <ContentPanel>
       <div className="flex flex-col gap-6">
-        <PageHeader title="Admin Sekolah" />
+        <PageHeader
+          title="Admin Sekolah"
+          className="text-2xl leading-tight sm:text-4xl"
+        />
         <DataTable
           rows={filteredAdmins}
           columns={columns}

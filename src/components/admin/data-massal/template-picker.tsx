@@ -27,11 +27,12 @@ export function TemplatePicker({
 }: Props) {
   return (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <Button
           type="button"
           variant={mode === 'create' ? 'default' : 'outline'}
-          className="gap-2"
+          size="lg"
+          className="min-h-11 gap-2 rounded-full px-5"
           onClick={() => onModeChange('create')}
         >
           <Upload />
@@ -40,7 +41,8 @@ export function TemplatePicker({
         <Button
           type="button"
           variant={mode === 'update' ? 'default' : 'outline'}
-          className="gap-2"
+          size="lg"
+          className="min-h-11 gap-2 rounded-full px-5"
           onClick={() => onModeChange('update')}
         >
           <Pencil />

@@ -27,7 +27,10 @@ function DashboardAdmin() {
     <ContentPanel>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          <PageHeader title="Dashboard Admin" />
+          <PageHeader
+            title="Dashboard Admin"
+            className="text-2xl leading-tight sm:text-4xl"
+          />
           <p className="text-sm text-muted-foreground">
             {dashboard.tenant.name}
           </p>
