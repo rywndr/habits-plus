@@ -261,15 +261,17 @@ function ObservasiMingguan() {
           </div>
         )}
 
-        <div className="flex gap-3">
-          <SaveButton
-            status={saveStatus}
-            size="lg"
-            className="rounded-full px-6"
-            onClick={handleSave}
-            disabled={isDataPending || isAllClasses}
-          />
-        </div>
+        {!isAllClasses && (
+          <div className="flex gap-3">
+            <SaveButton
+              status={saveStatus}
+              size="lg"
+              className="rounded-full px-6"
+              onClick={handleSave}
+              disabled={isDataPending}
+            />
+          </div>
+        )}
 
         <Dialog open={isOverwriteOpen} onOpenChange={setIsOverwriteOpen}>
           <DialogContent>
