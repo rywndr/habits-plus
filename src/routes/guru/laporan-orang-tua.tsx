@@ -22,8 +22,7 @@ import {
 import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
-import { WeekPicker } from '#/components/guru/week-picker'
-import { DatePicker } from '#/components/guru/date-picker'
+import { WeekReferenceFilters } from '#/components/guru/week-reference-filters'
 import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
@@ -332,25 +331,15 @@ function LaporanOrangTua() {
         </div>
 
         <HeaderFilters>
-          <HeaderFilter label="Minggu">
-            <WeekPicker
-              value={data.selectedWeekStart}
-              onChange={(weekStart) =>
-                void navigateTo({ weekStart, classId: data.classId })
-              }
-            />
-          </HeaderFilter>
-          <HeaderFilter label="Tanggal acuan">
-            <DatePicker
-              value={data.selectedWeekStart}
-              onChange={(date) =>
-                void navigateTo({ weekStart: date, classId: data.classId })
-              }
-            />
-          </HeaderFilter>
+          <WeekReferenceFilters
+            value={data.selectedWeekStart}
+            onChange={(weekStart) =>
+              void navigateTo({ weekStart, classId: data.classId })
+            }
+          />
           <HeaderFilter
             label="Kelas"
-            className="flex-1 lg:min-w-36 lg:flex-none"
+            className="flex-1 lg:ml-auto lg:min-w-36 lg:flex-none"
           >
             <ClassSelect
               classes={data.classes}

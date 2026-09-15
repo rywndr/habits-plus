@@ -126,7 +126,7 @@ function RingkasanBulanan() {
           </HeaderFilter>
           <HeaderFilter
             label="Kelas"
-            className="flex-1 lg:min-w-36 lg:flex-none"
+            className="flex-1 lg:ml-auto lg:min-w-36 lg:flex-none"
           >
             <ClassSelect
               classes={summary.classes}

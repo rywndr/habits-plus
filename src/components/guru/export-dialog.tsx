@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
-import { ALL_CLASSES, ClassSelect } from './class-select'
+import { ClassSelect } from './class-select'
 import type { ClassRoom } from '#/server/tenant-data'
 
 type ExportOptions = {
@@ -47,15 +47,20 @@ export function ExportDialog({
 }: Props) {
   const [startDate, setStartDate] = useState(initialStartDate)
   const [endDate, setEndDate] = useState(initialEndDate)
-  const [classId, setClassId] = useState(initialClassId || ALL_CLASSES)
+  const [classId, setClassId] = useState(initialClassId)
   const isRangeInvalid = startDate > endDate
 
   useEffect(() => {
     if (!open) return
     setStartDate(initialStartDate)
     setEndDate(initialEndDate)
-    setClassId(initialClassId || ALL_CLASSES)
+    setClassId(initialClassId)
   }, [initialClassId, initialEndDate, initialStartDate, open])
+
+  function handleExport() {
+    if (!classId || isRangeInvalid) return
+    void onExport({ startDate, endDate, classId })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,7 +77,6 @@ export function ExportDialog({
               classes={classes}
               value={classId}
               onChange={setClassId}
-              includeAll
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -101,15 +105,14 @@ export function ExportDialog({
         </div>
 
         <DialogFooter>
-          <DialogClose render={<Button variant="secondary" />}>
+          <DialogClose render={<Button variant="outline" />}>
             Batal
           </DialogClose>
           <Button
-            onClick={() => void onExport({ startDate, endDate, classId })}
-            disabled={isExporting || isRangeInvalid}
+            onClick={handleExport}
+            disabled={isExporting || isRangeInvalid || !classId}
           >
-            <Download />
-            {isExporting ? 'Mengekspor...' : 'Export XLSX'}
+            {isExporting ? 'Mengekspor...' : 'Export'}
           </Button>
         </DialogFooter>
       </DialogContent>

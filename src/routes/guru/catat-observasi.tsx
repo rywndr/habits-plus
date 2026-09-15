@@ -10,7 +10,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
-import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { ClassSelect } from '#/components/guru/class-select'
 import { ExportDialog } from '#/components/guru/export-dialog'
 import { downloadDailyObservationWorkbook } from '#/components/guru/export-workbooks'
 import { ObservationTable } from '#/components/guru/observation-table'
@@ -152,8 +152,7 @@ function ObservasiHarian() {
         data: {
           startDate: options.startDate,
           endDate: options.endDate,
-          classId:
-            options.classId === ALL_CLASSES ? undefined : options.classId,
+          classId: options.classId,
         },
       })
       downloadDailyObservationWorkbook(exportRows, options)
@@ -253,7 +252,7 @@ function ObservasiHarian() {
           open={isExportOpen}
           onOpenChange={setIsExportOpen}
           classes={data.classes}
-          initialClassId={classId || ALL_CLASSES}
+          initialClassId={classId}
           initialStartDate={observedAt}
           initialEndDate={observedAt}
           isExporting={isExporting}

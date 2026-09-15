@@ -18,8 +18,8 @@ import {
 import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
-import { WeekPicker } from '#/components/guru/week-picker'
-import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
+import { WeekReferenceFilters } from '#/components/guru/week-reference-filters'
+import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import { ExportDialog } from '#/components/guru/export-dialog'
 import { downloadWeeklyNotesWorkbook } from '#/components/guru/export-workbooks'
@@ -176,8 +176,7 @@ function ObservasiMingguan() {
         data: {
           startDate: options.startDate,
           endDate: options.endDate,
-          classId:
-            options.classId === ALL_CLASSES ? undefined : options.classId,
+          classId: options.classId,
         },
       })
       downloadWeeklyNotesWorkbook(exportRows, options)
@@ -196,12 +195,10 @@ function ObservasiMingguan() {
         />
 
         <HeaderFilters>
-          <HeaderFilter label="Minggu">
-            <WeekPicker
-              value={weeklyNotes.selectedWeekStart}
-              onChange={handleWeekChange}
-            />
-          </HeaderFilter>
+          <WeekReferenceFilters
+            value={weeklyNotes.selectedWeekStart}
+            onChange={(value) => void handleWeekChange(value)}
+          />
           <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
             <HeaderFilter
               label="Kelas"
