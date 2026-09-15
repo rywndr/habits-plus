@@ -46,14 +46,17 @@ export function AppSidebar({
   isLoggingOut,
   logoutError,
 }: Props) {
-  const { setOpen, setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   function handleNavigationClick(event: MouseEvent<HTMLDivElement>) {
-    if (!(event.target instanceof Element) || !event.target.closest('a[href]')) {
+    if (
+      !isMobile ||
+      !(event.target instanceof Element) ||
+      !event.target.closest('a[href]')
+    ) {
       return
     }
 
-    setOpen(false)
     setOpenMobile(false)
   }
 
