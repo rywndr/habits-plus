@@ -19,6 +19,7 @@ import type {
   Student,
 } from '#/server/tenant-data'
 import { ObservationPillSelect } from './observation-pill-select'
+import { GuruTableContainer } from './guru-table-container'
 
 const INDICATORS: Array<Indicator> = [
   'respons',
@@ -192,7 +193,7 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
           )
         })}
       </ul>
-      <div className="hidden overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5 lg:block">
+      <GuruTableContainer className="hidden lg:block">
         <Table>
           <TableHeader>
             <TableRow className="border-0 hover:bg-transparent">
@@ -258,7 +259,7 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
             })}
           </TableBody>
         </Table>
-      </div>
+      </GuruTableContainer>
 
       <ObservationPagination
         page={page}

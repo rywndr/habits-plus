@@ -1,7 +1,6 @@
 import { affectsReports } from '#/lib/route-invalidation'
 import { useMemo, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { LoaderCircle, Sparkles } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -25,13 +24,16 @@ import { PageHeader } from '#/components/shell/page-header'
 import { WeekReferenceFilters } from '#/components/guru/week-reference-filters'
 import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
 import { weekLabel } from '#/components/guru/week-picker'
+import { GuruTableContainer } from '#/components/guru/guru-table-container'
+import { SearchInput } from '#/components/common/search-input'
+import { SortableTableHeader } from '#/components/common/sortable-table-header'
 import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
   ParentReportRow,
-  isGeneratable,
   reportRowState,
 } from '#/components/guru/parent-report-row'
+import type { ReportRowState } from '#/components/guru/parent-report-row'
 import {
   ParentReportPageSkeleton,
   ParentReportTableSkeleton,
@@ -44,6 +46,7 @@ import {
   revokeAiSummary,
   saveManualSummaries,
 } from '#/server/actions'
+import { useSortableData } from '#/hooks/use-sortable-data'
 
 export const Route = createFileRoute('/guru/laporan-orang-tua')({
   validateSearch: (search = {}) => ({
@@ -70,6 +73,29 @@ export const Route = createFileRoute('/guru/laporan-orang-tua')({
 
 type StudentTextById = Partial<Record<string, string>>
 type TextByContext = Partial<Record<string, StudentTextById>>
+type ReportSortKey = 'name' | 'observedDays' | 'status'
+
+const collator = new Intl.Collator('id-ID', {
+  numeric: true,
+  sensitivity: 'base',
+})
+
+function reportStatusLabel(state: ReportRowState, observedDays: number) {
+  switch (state.kind) {
+    case 'generating':
+      return 'Membuat'
+    case 'saved':
+      return 'Tersimpan'
+    case 'draft':
+      return 'Draf'
+    case 'empty':
+      return observedDays === 0 ? 'Tanpa observasi' : 'Belum ada'
+    default: {
+      const unhandled: never = state
+      return unhandled
+    }
+  }
+}
 
 function LaporanOrangTua() {
   const router = useRouter()
@@ -78,8 +104,8 @@ function LaporanOrangTua() {
   const contextKey = `${data.selectedWeekStart}:${data.classId}`
 
   const [isDataPending, setIsDataPending] = useState(false)
+  const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set())
   const [savingId, setSavingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -118,13 +144,37 @@ function LaporanOrangTua() {
     }
   })
 
-  const generatable = rows.filter((row) =>
-    isGeneratable(row.student, row.state),
-  )
-  const allGeneratableSelected =
-    generatable.length > 0 &&
-    generatable.every((row) => selected.has(row.student.id))
   const savedCount = rows.filter((row) => row.state.kind === 'saved').length
+  const filteredRows = useMemo(() => {
+    const search = query.trim().toLocaleLowerCase('id-ID')
+    if (!search) return rows
+
+    return rows.filter((row) =>
+      `${row.student.name} ${row.student.nisn}`
+        .toLocaleLowerCase('id-ID')
+        .includes(search),
+    )
+  }, [query, rows])
+  const sorters = useMemo(
+    () => ({
+      name: (left: (typeof rows)[number], right: (typeof rows)[number]) =>
+        collator.compare(left.student.name, right.student.name),
+      observedDays: (
+        left: (typeof rows)[number],
+        right: (typeof rows)[number],
+      ) => left.student.observedDays - right.student.observedDays,
+      status: (left: (typeof rows)[number], right: (typeof rows)[number]) =>
+        collator.compare(
+          reportStatusLabel(left.state, left.student.observedDays),
+          reportStatusLabel(right.state, right.student.observedDays),
+        ),
+    }),
+    [],
+  )
+  const { getDirection, sortedItems, toggleSort } = useSortableData<
+    (typeof rows)[number],
+    ReportSortKey
+  >(filteredRows, sorters)
 
   function patchContext(
     setState: React.Dispatch<React.SetStateAction<TextByContext>>,
@@ -182,7 +232,6 @@ function LaporanOrangTua() {
       if (token !== pendingNavToken.current) return
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/laporan-orang-tua', search })
-      setSelected(new Set())
       setExpandedId(null)
     } catch (error) {
       setIsDataPending(false)
@@ -218,7 +267,6 @@ function LaporanOrangTua() {
         if (draft.error) setNotice(draft.studentId, draft.error)
       }
       for (const skip of result.skipped) setNotice(skip.studentId, skip.reason)
-      setSelected(new Set())
       if (studentIds.length === 1) setExpandedId(studentIds[0])
     } finally {
       setGeneratingIds(new Set())
@@ -306,14 +354,6 @@ function LaporanOrangTua() {
     }
   }
 
-  function toggleSelectAll() {
-    setSelected(
-      allGeneratableSelected
-        ? new Set()
-        : new Set(generatable.map((row) => row.student.id)),
-    )
-  }
-
   const deletingRow = rows.find(
     (row) => row.state.kind === 'saved' && row.student.id === deletingId,
   )
@@ -365,77 +405,98 @@ function LaporanOrangTua() {
         )}
 
         <ClassRequiredContent classId={data.classId}>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              {savedCount} dari {rows.length} laporan sudah terkirim
-              {selected.size ? ` · ${selected.size} dipilih` : ''}
-            </p>
-            <Button
-              size="lg"
-              className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
-              disabled={!selected.size || isGenerating}
-              aria-busy={isGenerating}
-              onClick={() => void runGeneration([...selected])}
-            >
-              {isGenerating ? (
-                <LoaderCircle className="animate-spin" />
-              ) : (
-                <Sparkles />
-              )}
-              Buat dengan AI ({selected.size})
-            </Button>
+          <p className="text-sm text-muted-foreground">
+            {savedCount} dari {rows.length} laporan sudah terkirim
+          </p>
+
+          <label className="flex w-full flex-col gap-2 text-sm font-medium sm:max-w-sm">
+            Cari siswa
+            <SearchInput
+              value={query}
+              placeholder="Nama atau NISN"
+              containerClassName="sm:max-w-none"
+              onValueChange={setQuery}
+            />
+          </label>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:hidden">
+            <span className="text-sm text-muted-foreground">Urutkan:</span>
+            <SortableTableHeader
+              label="Nama"
+              className="mx-0 h-11"
+              direction={getDirection('name')}
+              onClick={() => toggleSort('name')}
+            />
+            <SortableTableHeader
+              label="Hari terobservasi"
+              className="mx-0 h-11"
+              direction={getDirection('observedDays')}
+              onClick={() => toggleSort('observedDays')}
+            />
+            <SortableTableHeader
+              label="Status"
+              className="mx-0 h-11"
+              direction={getDirection('status')}
+              onClick={() => toggleSort('status')}
+            />
           </div>
+
+          <p role="status" className="text-sm text-muted-foreground">
+            {sortedItems.length
+              ? `${sortedItems.length} siswa`
+              : query.trim()
+                ? 'Tidak ada siswa yang cocok dengan pencarian.'
+                : 'Belum ada siswa pada kelas ini.'}
+          </p>
 
           {isDataPending ? (
             <ParentReportTableSkeleton />
           ) : rows.length ? (
-            <div className="min-w-0 rounded-xl bg-card ring-1 ring-foreground/5">
+            <GuruTableContainer>
               <Table className="max-sm:block">
-                <TableHeader className="max-sm:block">
-                  <TableRow className="border-0 bg-brand-table-header hover:bg-brand-table-header max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
-                    <TableHead className="w-16 text-center max-sm:h-auto max-sm:min-h-11 sm:w-12">
-                      <label className="flex min-h-11 items-center justify-center">
-                        <input
-                          type="checkbox"
-                          aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
-                          className="size-5 accent-brand-orange sm:size-4"
-                          checked={allGeneratableSelected}
-                          onChange={toggleSelectAll}
-                          disabled={!generatable.length}
-                        />
-                      </label>
+                <TableHeader className="max-sm:hidden">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="hidden w-12 text-center text-card-foreground sm:table-cell">
+                      No.
                     </TableHead>
-                    <TableHead className="text-brand-navy-foreground max-sm:flex max-sm:min-h-11 max-sm:items-center max-sm:pl-8">
-                      Nama
+                    <TableHead className="text-card-foreground">
+                      <SortableTableHeader
+                        label="Nama"
+                        direction={getDirection('name')}
+                        onClick={() => toggleSort('name')}
+                      />
                     </TableHead>
-                    <TableHead className="hidden w-36 text-center text-brand-navy-foreground sm:table-cell">
-                      Hari terobservasi
+                    <TableHead className="hidden w-36 bg-brand-table-header text-center text-brand-navy-foreground sm:table-cell">
+                      <SortableTableHeader
+                        label="Hari terobservasi"
+                        className="mx-auto"
+                        direction={getDirection('observedDays')}
+                        onClick={() => toggleSort('observedDays')}
+                      />
                     </TableHead>
-                    <TableHead className="hidden w-48 text-center text-brand-navy-foreground sm:table-cell">
-                      Status
+                    <TableHead className="hidden w-48 bg-brand-table-header text-center text-brand-navy-foreground sm:table-cell">
+                      <SortableTableHeader
+                        label="Status"
+                        className="mx-auto"
+                        direction={getDirection('status')}
+                        onClick={() => toggleSort('status')}
+                      />
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="max-sm:block">
-                  {rows.map(({ student, state, text }) => (
+                  {sortedItems.map(({ student, state, text }, index) => (
                     <ParentReportRow
                       key={student.id}
+                      number={index + 1}
                       student={student}
                       state={state}
                       days={data.weekData[student.id] ?? []}
                       text={text}
                       notice={notices[student.id]}
-                      isSelected={selected.has(student.id)}
                       isExpanded={expandedId === student.id}
                       isSaving={savingId === student.id}
                       actions={{
-                        onToggleSelect: () =>
-                          setSelected((prev) => {
-                            const next = new Set(prev)
-                            if (next.has(student.id)) next.delete(student.id)
-                            else next.add(student.id)
-                            return next
-                          }),
                         onToggleExpand: () =>
                           setExpandedId((prev) =>
                             prev === student.id ? null : student.id,
@@ -459,7 +520,7 @@ function LaporanOrangTua() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </GuruTableContainer>
           ) : (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/5">
               Belum ada siswa pada kelas ini.

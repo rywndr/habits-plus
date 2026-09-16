@@ -552,6 +552,7 @@ export const loadParentReportPage = createServerFn({ method: 'GET' })
         students: students.map((student) => ({
           id: student.id,
           name: student.name,
+          nisn: student.nisn,
           gender: student.gender,
           observedDays: weekObservations.get(student.id)?.length ?? 0,
           hasActiveSummary: activeIds.has(student.id),

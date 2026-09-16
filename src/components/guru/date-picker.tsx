@@ -57,7 +57,7 @@ export function DatePicker({ value, onChange, populatedDates = [] }: Props) {
           <Button
             variant="outline"
             size="lg"
-            className="gap-2 rounded-full bg-card"
+            className="w-full max-w-full gap-2 rounded-full bg-card sm:w-56 sm:min-w-56 sm:max-w-56 sm:shrink-0"
           >
             <CalendarIcon className="text-muted-foreground" />
             <span>{formatIndonesianDate(value)}</span>

@@ -18,6 +18,7 @@ import {
   WeeklyNoteDeleteDialog,
   WeeklyNoteEditDialog,
 } from './weekly-note-dialogs'
+import { GuruTableContainer } from './guru-table-container'
 
 type Props = {
   weeklyNotes: Array<WeeklyNote>
@@ -141,7 +142,7 @@ export function WeeklyNotesTable({
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5 lg:block">
+      <GuruTableContainer className="hidden lg:block">
         <Table className="min-w-[720px] table-fixed">
           <colgroup>
             <col className="w-12" />
@@ -229,7 +230,7 @@ export function WeeklyNotesTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </GuruTableContainer>
 
       <ObservationPagination
         page={page}
