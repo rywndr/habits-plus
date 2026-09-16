@@ -11,7 +11,7 @@ import type { Indicator } from '#/server/tenant-data'
 
 type RadarPoint = {
   week: string
-  values: Record<Indicator, number>
+  values: Partial<Record<Indicator, number>>
 }
 
 type Props = {
@@ -37,15 +37,25 @@ function toRows(data: Array<RadarPoint>) {
     const point = data.at(index)
     return {
       axis: `Minggu ke-${index + 1}`,
-      respons: point?.values.respons ?? 0,
-      interaksi: point?.values.interaksi ?? 0,
-      partisipasi: point?.values.partisipasi ?? 0,
-      regulasi: point?.values.regulasi ?? 0,
+      respons: point?.values.respons,
+      interaksi: point?.values.interaksi,
+      partisipasi: point?.values.partisipasi,
+      regulasi: point?.values.regulasi,
     }
   })
 }
 
 export function SummaryRadarChart({ data }: Props) {
+  const hasData = data.some((point) => Object.keys(point.values).length > 0)
+
+  if (!hasData) {
+    return (
+      <div className="flex min-h-72 items-center justify-center p-4 text-sm text-muted-foreground">
+        Belum ada data
+      </div>
+    )
+  }
+
   const rows = toRows(data)
 
   return (

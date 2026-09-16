@@ -60,6 +60,9 @@ function RingkasanBulanan() {
   const [text, setText] = useState(summary.text)
   const [isDataPending, setIsDataPending] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const hasObservationData = summary.radar.some(
+    (point) => Object.keys(point.values).length > 0,
+  )
 
   useEffect(() => {
     setMonth(search.month ?? summary.month)
@@ -148,54 +151,60 @@ function RingkasanBulanan() {
         )}
 
         <ClassRequiredContent classId={classId}>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm">Ringkasan dalam bulan</span>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-              {isDataPending ? (
-                <Skeleton className="h-20 w-full rounded-2xl" />
-              ) : (
-                <Textarea
-                  value={text}
-                  onChange={(event) => {
-                    setText(event.target.value)
-                    setSaveStatus('idle')
-                  }}
-                  rows={2}
-                  placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
-                  className="rounded-2xl bg-card"
-                />
-              )}
-              <SaveButton
-                status={saveStatus}
-                size="lg"
-                className="rounded-full px-6"
-                wrapperClassName="sm:mt-1"
-                onClick={handleSave}
-                disabled={isDataPending}
-              />
-            </div>
-          </div>
-
           {isDataPending ? (
-            <SummaryDataSkeleton />
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-              <SummaryRadarChart data={summary.radar} />
-              <div className="flex flex-col gap-3">
-                {ORDER.map((ind) => (
-                  <ProgressStripCard
-                    key={ind}
-                    indicator={ind}
-                    label={indicatorLabels[ind]}
-                    trend={summary.trends[ind] ?? 'tidak-terlihat'}
-                    valueLabel={
-                      summary.averages[ind]
-                        ? frequencyLabels[summary.averages[ind]]
-                        : 'Tidak Terlihat'
-                    }
-                  />
-                ))}
+            <>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
               </div>
+              <SummaryDataSkeleton />
+            </>
+          ) : hasObservationData ? (
+            <>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm">Ringkasan dalam bulan</span>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <Textarea
+                    value={text}
+                    onChange={(event) => {
+                      setText(event.target.value)
+                      setSaveStatus('idle')
+                    }}
+                    rows={2}
+                    placeholder="Tulis ringkasan perkembangan siswa untuk bulan ini."
+                    className="rounded-2xl bg-card"
+                  />
+                  <SaveButton
+                    status={saveStatus}
+                    size="lg"
+                    className="rounded-full px-6"
+                    wrapperClassName="sm:mt-1"
+                    onClick={handleSave}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+                <SummaryRadarChart data={summary.radar} />
+                <div className="flex flex-col gap-3">
+                  {ORDER.map((ind) => (
+                    <ProgressStripCard
+                      key={ind}
+                      indicator={ind}
+                      label={indicatorLabels[ind]}
+                      trend={summary.trends[ind] ?? 'tidak-terlihat'}
+                      valueLabel={
+                        summary.averages[ind]
+                          ? frequencyLabels[summary.averages[ind]]
+                          : 'Belum Dipantau'
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
+              Belum ada data
             </div>
           )}
         </ClassRequiredContent>

@@ -14,10 +14,11 @@ const options: Array<Frequency> = [
   'terlihat-sesekali',
   'sering',
 ]
+const unmonitoredValue = 'belum-dipantau'
 
 type Props = {
-  value: Frequency
-  onChange: (v: Frequency) => void
+  value: Frequency | null
+  onChange: (v: Frequency | null) => void
   label: string
   className?: string
 }
@@ -30,8 +31,12 @@ export function ObservationPillSelect({
 }: Props) {
   return (
     <Select
-      value={value}
+      value={value ?? unmonitoredValue}
       onValueChange={(nextValue) => {
+        if (nextValue === unmonitoredValue) {
+          onChange(null)
+          return
+        }
         const option = options.find((candidate) => candidate === nextValue)
         if (option) onChange(option)
       }}
@@ -43,9 +48,14 @@ export function ObservationPillSelect({
           className,
         )}
       >
-        <SelectValue>{frequencyLabels[value]}</SelectValue>
+        <SelectValue>
+          {value ? frequencyLabels[value] : 'Belum Dipantau'}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value={unmonitoredValue} className="min-h-11 lg:min-h-0">
+          Belum Dipantau
+        </SelectItem>
         {options.map((opt) => (
           <SelectItem key={opt} value={opt} className="min-h-11 lg:min-h-0">
             {frequencyLabels[opt]}

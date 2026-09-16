@@ -186,18 +186,19 @@ export async function getMonthlySummary(
     {} as Partial<Record<Indicator, { total: number; count: number }>>,
   )
   const averages: Partial<Record<Indicator, Frequency>> = Object.fromEntries(
-    indicators.map((indicator) => {
+    indicators.flatMap((indicator) => {
       const summary = averageByIndicator[indicator]
-      const average = summary ? summary.total / summary.count : 0
+      if (!summary) return []
+      const average = summary.total / summary.count
       const score = Math.max(0, Math.min(2, Math.round(average)))
 
-      return [indicator, scoreFrequency[score]]
+      return [[indicator, scoreFrequency[score]]]
     }),
   )
   const trends: Partial<Record<Indicator, Trend>> = Object.fromEntries(
-    indicators.map((indicator) => {
-      const frequency = averages[indicator] ?? 'tidak-terlihat'
-      return [indicator, trendByFrequency[frequency]]
+    indicators.flatMap((indicator) => {
+      const frequency = averages[indicator]
+      return frequency ? [[indicator, trendByFrequency[frequency]]] : []
     }),
   )
   const weekBuckets = Array.from({ length: 4 }, (_, index) => {
@@ -209,21 +210,20 @@ export async function getMonthlySummary(
     return {
       week: `Minggu ke-${index + 1}`,
       values: Object.fromEntries(
-        indicators.map((indicator) => {
+        indicators.flatMap((indicator) => {
           const indicatorRows = rows.filter(
             (row) => row.indicator === indicator,
           )
+          if (!indicatorRows.length) return []
           const total = indicatorRows.reduce(
             (sum, row) => sum + frequencyScore[row.frequency],
             0,
           )
-          const average = indicatorRows.length
-            ? total / indicatorRows.length
-            : 0
+          const average = total / indicatorRows.length
 
-          return [indicator, Number(average.toFixed(2))]
+          return [[indicator, Number(average.toFixed(2))]]
         }),
-      ) as Record<Indicator, number>,
+      ),
     }
   })
 

@@ -89,7 +89,7 @@ export const saveDailyObservationsSchema = z.strictObject({
         studentId: id,
         values: z.record(
           z.enum(indicatorEnum.enumValues),
-          z.enum(frequencyEnum.enumValues),
+          z.enum(frequencyEnum.enumValues).nullable(),
         ),
       }),
     )

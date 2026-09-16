@@ -94,7 +94,7 @@ export function ObservationTable({ students, rows, onRowsChange }: Props) {
   function updateCell(
     studentId: string,
     indicator: Indicator,
-    value: Frequency,
+    value: Frequency | null,
   ) {
     onRowsChange(
       rows.map((r) =>

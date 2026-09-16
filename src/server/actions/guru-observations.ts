@@ -50,10 +50,32 @@ export const saveDailyObservations = createServerFn({ method: 'POST' })
 
       if (!validRows.length) return
 
+      const observedRows = validRows.filter((row) =>
+        Object.values(row.values).some((frequency) => frequency !== null),
+      )
+      const existingObservations =
+        await getDb().query.dailyObservations.findMany({
+          where: and(
+            eq(dailyObservations.schoolId, tenant.id),
+            eq(dailyObservations.observedAt, observedAt),
+            inArray(dailyObservations.studentId, [...allowedStudentIds]),
+          ),
+          columns: { id: true },
+        })
+      const existingObservationIds = existingObservations.map(({ id }) => id)
+
+      if (existingObservationIds.length) {
+        await getDb()
+          .delete(dailyObservations)
+          .where(inArray(dailyObservations.id, existingObservationIds))
+      }
+
+      if (!observedRows.length) return
+
       const observations = await getDb()
         .insert(dailyObservations)
         .values(
-          validRows.map((row) => ({
+          observedRows.map((row) => ({
             schoolId: tenant.id,
             studentId: row.studentId,
             teacherId: teacher.id,
@@ -61,43 +83,26 @@ export const saveDailyObservations = createServerFn({ method: 'POST' })
             note: data.note?.trim() || null,
           })),
         )
-        .onConflictDoUpdate({
-          target: [dailyObservations.studentId, dailyObservations.observedAt],
-          set: {
-            teacherId: teacher.id,
-            note: data.note?.trim() || null,
-            updatedAt: new Date(),
-          },
-        })
         .returning({
           id: dailyObservations.id,
           studentId: dailyObservations.studentId,
         })
 
-      const observationIds = observations.map((observation) => observation.id)
       const observationIdByStudent = new Map(
         observations.map((observation) => [
           observation.studentId,
           observation.id,
         ]),
       )
-      const scores = validRows.flatMap((row) => {
+      const scores = observedRows.flatMap((row) => {
         const observationId = observationIdByStudent.get(row.studentId)
         if (!observationId) return []
         return (
-          Object.entries(row.values) as Array<[Indicator, Frequency]>
-        ).map(([indicator, frequency]) => ({
-          observationId,
-          indicator,
-          frequency,
-        }))
+          Object.entries(row.values) as Array<[Indicator, Frequency | null]>
+        ).flatMap(([indicator, frequency]) =>
+          frequency === null ? [] : [{ observationId, indicator, frequency }],
+        )
       })
-
-      if (observationIds.length) {
-        await getDb()
-          .delete(observationScores)
-          .where(inArray(observationScores.observationId, observationIds))
-      }
 
       if (scores.length) {
         await getDb().insert(observationScores).values(scores)

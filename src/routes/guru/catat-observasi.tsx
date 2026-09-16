@@ -25,7 +25,7 @@ import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
 import { formatIndonesianDate } from '#/server/date'
 import type { SaveStatus } from '#/components/common/save-button'
-import type { Frequency, Indicator, Student } from '#/server/tenant-data'
+import type { Indicator, Student } from '#/server/tenant-data'
 
 export const Route = createFileRoute('/guru/catat-observasi')({
   validateSearch: (search = {}) => ({
@@ -56,11 +56,11 @@ function getEmptyRows(students: Array<Student>, classId: string) {
     .map((student) => ({
       studentId: student.id,
       values: {
-        respons: 'tidak-terlihat',
-        interaksi: 'tidak-terlihat',
-        partisipasi: 'tidak-terlihat',
-        regulasi: 'tidak-terlihat',
-      } satisfies Record<Indicator, Frequency>,
+        respons: null,
+        interaksi: null,
+        partisipasi: null,
+        regulasi: null,
+      } satisfies Record<Indicator, null>,
     }))
 }
 

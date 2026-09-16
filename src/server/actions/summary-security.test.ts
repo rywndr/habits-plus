@@ -96,7 +96,7 @@ it('rejects malformed IDs, dates, oversized batches and forged ownership', () =>
     }).success,
   ).toBe(false)
 })
-it('requires complete observation scores and valid enum values', () => {
+it('requires complete observation fields and accepts unmonitored values', () => {
   const values = {
     respons: 'sering',
     interaksi: 'sering',
@@ -109,6 +109,7 @@ it('requires complete observation scores and valid enum values', () => {
       rows: [{ studentId: id, values: scores }],
     }).success
   expect(parse(values)).toBe(true)
+  expect(parse({ ...values, respons: null })).toBe(true)
   expect(parse({ ...values, respons: 'unknown' })).toBe(false)
   expect(parse({ respons: 'sering' })).toBe(false)
 })

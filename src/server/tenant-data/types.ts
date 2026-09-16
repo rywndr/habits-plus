@@ -40,7 +40,7 @@ export type Student = {
 
 export type ObservationRow = {
   studentId: string
-  values: Record<Indicator, Frequency>
+  values: Record<Indicator, Frequency | null>
 }
 
 export type ObservationDay = {
@@ -67,6 +67,6 @@ export type MonthlySummary = {
   averages: Partial<Record<Indicator, Frequency>>
   radar: Array<{
     week: string
-    values: Record<Indicator, number>
+    values: Partial<Record<Indicator, number>>
   }>
 }

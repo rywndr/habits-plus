@@ -2,12 +2,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm'
 import { getDb } from '#/db'
 import { dailyObservations, students } from '#/db/schema'
 import { todayIso } from '../date'
-import type {
-  Frequency,
-  Indicator,
-  ObservationDay,
-  Tenant,
-} from './types'
+import type { Frequency, Indicator, ObservationDay, Tenant } from './types'
 
 export async function getDailyObservationDay(
   tenant: Tenant,
@@ -37,12 +32,12 @@ export async function getDailyObservationDay(
     const observation = observations.find(
       (item) => item.studentId === student.id,
     )
-    const values = {
-      respons: 'tidak-terlihat',
-      interaksi: 'tidak-terlihat',
-      partisipasi: 'tidak-terlihat',
-      regulasi: 'tidak-terlihat',
-    } as Record<Indicator, Frequency>
+    const values: Record<Indicator, Frequency | null> = {
+      respons: null,
+      interaksi: null,
+      partisipasi: null,
+      regulasi: null,
+    }
 
     for (const score of observation?.scores ?? []) {
       values[score.indicator] = score.frequency
