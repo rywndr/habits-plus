@@ -60,6 +60,7 @@ function RingkasanBulanan() {
   const [classId, setClassId] = useState(summary.classId)
   const [text, setText] = useState(summary.text)
   const [isDataPending, setIsDataPending] = useState(false)
+  const [navigationError, setNavigationError] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const hasObservationData = summary.radar.some(
     (point) => Object.keys(point.values).length > 0,
@@ -70,6 +71,7 @@ function RingkasanBulanan() {
     setClassId(summary.classId)
     setText(summary.text)
     setIsDataPending(false)
+    setNavigationError(false)
     setSaveStatus('idle')
   }, [search.month, summary.month, summary.text, summary.classId])
 
@@ -77,6 +79,7 @@ function RingkasanBulanan() {
 
   async function navigateTo(next: { month: string; classId: string }) {
     setIsDataPending(true)
+    setNavigationError(false)
     const token = ++pendingNavToken.current
     const startHref = router.state.location.href
     const nextSearch = {
@@ -88,11 +91,13 @@ function RingkasanBulanan() {
       if (token !== pendingNavToken.current) return
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/ringkasan', search: nextSearch })
-    } catch (error) {
-      settleLatestNavigation(token, pendingNavToken.current, () =>
-        setIsDataPending(false),
-      )
-      throw error
+    } catch {
+      settleLatestNavigation(token, pendingNavToken.current, () => {
+        setMonth(search.month ?? summary.month)
+        setClassId(summary.classId)
+        setIsDataPending(false)
+        setNavigationError(true)
+      })
     }
   }
 
@@ -143,6 +148,13 @@ function RingkasanBulanan() {
             />
           </HeaderFilter>
         </HeaderFilters>
+
+        {navigationError && (
+          <p role="alert" className="text-sm text-destructive">
+            Data gagal dimuat. Pilihan dikembalikan ke data sebelumnya. Coba
+            lagi.
+          </p>
+        )}
 
         {classId && !isDataPending && (
           <PeriodAvailabilityNav

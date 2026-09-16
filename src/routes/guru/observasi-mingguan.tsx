@@ -62,22 +62,26 @@ function ObservasiMingguan() {
   const router = useRouter()
   const navigate = useNavigate()
   const weeklyNotes = Route.useLoaderData()
+  const [weekStart, setWeekStart] = useState(weeklyNotes.selectedWeekStart)
   const [classId, setClassId] = useState(weeklyNotes.classId)
   const [p1, setP1] = useState(weeklyNotes.selectedNote?.p1 ?? '')
   const [p2, setP2] = useState(weeklyNotes.selectedNote?.p2 ?? '')
   const [p3, setP3] = useState(weeklyNotes.selectedNote?.p3 ?? '')
   const [isDataPending, setIsDataPending] = useState(false)
+  const [navigationError, setNavigationError] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isOverwriteOpen, setIsOverwriteOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
+    setWeekStart(weeklyNotes.selectedWeekStart)
     setClassId(weeklyNotes.classId)
     setP1(weeklyNotes.selectedNote?.p1 ?? '')
     setP2(weeklyNotes.selectedNote?.p2 ?? '')
     setP3(weeklyNotes.selectedNote?.p3 ?? '')
     setIsDataPending(false)
+    setNavigationError(false)
     setSaveStatus('idle')
   }, [
     weeklyNotes.selectedNote,
@@ -90,6 +94,7 @@ function ObservasiMingguan() {
   async function navigateTo(next: { weekStart: string; classId: string }) {
     setSaveStatus('idle')
     setIsDataPending(true)
+    setNavigationError(false)
     const token = ++pendingNavToken.current
     const startHref = router.state.location.href
     const search = {
@@ -101,22 +106,25 @@ function ObservasiMingguan() {
       if (token !== pendingNavToken.current) return
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/observasi-mingguan', search })
-    } catch (error) {
-      settleLatestNavigation(token, pendingNavToken.current, () =>
-        setIsDataPending(false),
-      )
-      throw error
+    } catch {
+      settleLatestNavigation(token, pendingNavToken.current, () => {
+        setWeekStart(weeklyNotes.selectedWeekStart)
+        setClassId(weeklyNotes.classId)
+        setIsDataPending(false)
+        setNavigationError(true)
+      })
     }
   }
 
-  async function handleWeekChange(weekStart: string) {
-    await navigateTo({ weekStart, classId })
+  async function handleWeekChange(nextWeekStart: string) {
+    setWeekStart(nextWeekStart)
+    await navigateTo({ weekStart: nextWeekStart, classId })
   }
 
   async function handleClassChange(nextClassId: string) {
     setClassId(nextClassId)
     await navigateTo({
-      weekStart: weeklyNotes.selectedWeekStart,
+      weekStart,
       classId: nextClassId,
     })
   }
@@ -201,7 +209,7 @@ function ObservasiMingguan() {
 
         <HeaderFilters>
           <WeekReferenceFilters
-            value={weeklyNotes.selectedWeekStart}
+            value={weekStart}
             onChange={(value) => void handleWeekChange(value)}
           />
           <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
@@ -227,12 +235,21 @@ function ObservasiMingguan() {
           </div>
         </HeaderFilters>
 
+        {navigationError && (
+          <p role="alert" className="text-sm text-destructive">
+            Data gagal dimuat. Pilihan dikembalikan ke data sebelumnya. Coba
+            lagi.
+          </p>
+        )}
+
         {classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={weeklyNotes.availability}
             selectedPeriod={weeklyNotes.selectedWeekStart}
             formatPeriod={weekLabel}
-            onOpenLatest={(weekStart) => void handleWeekChange(weekStart)}
+            onOpenLatest={(latestWeekStart) =>
+              void handleWeekChange(latestWeekStart)
+            }
           />
         )}
 

@@ -38,6 +38,7 @@ export function WeekPicker({ value, onChange }: Props) {
   const [view, setView] = useState(
     () => new Date(selected.getFullYear(), selected.getMonth(), 1),
   )
+  const [isOpen, setIsOpen] = useState(false)
   const days = useMemo(() => {
     const start = startOfMonthGrid(view)
     return Array.from({ length: 42 }, (_, index) => {
@@ -63,7 +64,7 @@ export function WeekPicker({ value, onChange }: Props) {
       >
         <ChevronLeft />
       </Button>
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger
           render={
             <Button
@@ -134,7 +135,10 @@ export function WeekPicker({ value, onChange }: Props) {
                   variant={isSelectedWeek ? 'secondary' : 'ghost'}
                   size="icon-sm"
                   aria-label={`Pilih minggu ${weekLabel(dateWeekStart)}`}
-                  onClick={() => onChange(dateWeekStart)}
+                  onClick={() => {
+                    setIsOpen(false)
+                    onChange(dateWeekStart)
+                  }}
                   className={cn(
                     'mx-auto',
                     isOutside && 'opacity-40',

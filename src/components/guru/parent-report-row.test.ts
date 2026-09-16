@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isGeneratable } from './parent-report-row'
+import { getSelectedGeneratableIds, isGeneratable } from './parent-report-row'
 
 const student = {
   id: 'student-1',
@@ -23,5 +23,24 @@ describe('isGeneratable', () => {
     expect(
       isGeneratable(student, { kind: 'draft', content: 'Draf laporan' }),
     ).toBe(false)
+  })
+})
+
+describe('getSelectedGeneratableIds', () => {
+  it('drops selected IDs that are no longer eligible', () => {
+    const rows = [
+      { student, state: { kind: 'empty' } },
+      {
+        student: { ...student, id: 'student-2', name: 'Bima' },
+        state: { kind: 'draft', content: 'Draf laporan' },
+      },
+    ] satisfies Parameters<typeof getSelectedGeneratableIds>[0]
+
+    expect(
+      getSelectedGeneratableIds(
+        rows,
+        new Set(['student-1', 'student-2', 'student-from-old-context']),
+      ),
+    ).toEqual(['student-1'])
   })
 })

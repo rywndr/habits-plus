@@ -58,6 +58,21 @@ export function isGeneratable(
   return state.kind === 'empty' && student.observedDays > 0
 }
 
+export function getSelectedGeneratableIds(
+  rows: ReadonlyArray<{
+    student: ParentReportStudent
+    state: ReportRowState
+  }>,
+  selected: ReadonlySet<string>,
+) {
+  return rows
+    .filter(
+      (row) =>
+        selected.has(row.student.id) && isGeneratable(row.student, row.state),
+    )
+    .map((row) => row.student.id)
+}
+
 function RowStatus({
   state,
   observedDays,

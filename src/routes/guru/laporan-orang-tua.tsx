@@ -1,6 +1,6 @@
 import { affectsReports } from '#/lib/route-invalidation'
 import { settleLatestNavigation } from '#/lib/navigation-token'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { LoaderCircle, Sparkles } from 'lucide-react'
 import { Button } from '#/components/ui/button'
@@ -33,6 +33,7 @@ import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
   ParentReportRow,
+  getSelectedGeneratableIds,
   isGeneratable,
   reportRowState,
 } from '#/components/guru/parent-report-row'
@@ -106,7 +107,10 @@ function LaporanOrangTua() {
   const data = Route.useLoaderData()
   const contextKey = `${data.selectedWeekStart}:${data.classId}`
 
+  const [weekStart, setWeekStart] = useState(data.selectedWeekStart)
+  const [classId, setClassId] = useState(data.classId)
   const [isDataPending, setIsDataPending] = useState(false)
+  const [navigationError, setNavigationError] = useState(false)
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -118,6 +122,13 @@ function LaporanOrangTua() {
   // survives switching context and coming back.
   const [draftsByContext, setDraftsByContext] = useState<TextByContext>({})
   const [editsByContext, setEditsByContext] = useState<TextByContext>({})
+
+  useEffect(() => {
+    setWeekStart(data.selectedWeekStart)
+    setClassId(data.classId)
+    setSelected(new Set())
+    setNavigationError(false)
+  }, [data.classId, data.selectedWeekStart])
 
   const drafts = draftsByContext[contextKey] ?? {}
   const edits = editsByContext[contextKey] ?? {}
@@ -185,6 +196,8 @@ function LaporanOrangTua() {
   const allGeneratableSelected =
     generatableRows.length > 0 &&
     generatableRows.every((row) => selected.has(row.student.id))
+  const selectedGeneratableIds = getSelectedGeneratableIds(rows, selected)
+  const selectedGeneratableIdSet = new Set(selectedGeneratableIds)
 
   function patchContext(
     setState: React.Dispatch<React.SetStateAction<TextByContext>>,
@@ -232,6 +245,7 @@ function LaporanOrangTua() {
 
   async function navigateTo(next: { weekStart: string; classId: string }) {
     setIsDataPending(true)
+    setNavigationError(false)
     setSelected(new Set())
     const token = ++pendingNavToken.current
     const startHref = router.state.location.href
@@ -244,11 +258,27 @@ function LaporanOrangTua() {
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/laporan-orang-tua', search })
       setExpandedId(null)
+    } catch {
+      settleLatestNavigation(token, pendingNavToken.current, () => {
+        setWeekStart(data.selectedWeekStart)
+        setClassId(data.classId)
+        setNavigationError(true)
+      })
     } finally {
       settleLatestNavigation(token, pendingNavToken.current, () =>
         setIsDataPending(false),
       )
     }
+  }
+
+  function handleWeekChange(nextWeekStart: string) {
+    setWeekStart(nextWeekStart)
+    void navigateTo({ weekStart: nextWeekStart, classId })
+  }
+
+  function handleClassChange(nextClassId: string) {
+    setClassId(nextClassId)
+    void navigateTo({ weekStart, classId: nextClassId })
   }
 
   async function runGeneration(studentIds: Array<string>) {
@@ -396,56 +426,58 @@ function LaporanOrangTua() {
         </div>
 
         <HeaderFilters>
-          <WeekReferenceFilters
-            value={data.selectedWeekStart}
-            onChange={(weekStart) =>
-              void navigateTo({ weekStart, classId: data.classId })
-            }
-          />
+          <WeekReferenceFilters value={weekStart} onChange={handleWeekChange} />
           <HeaderFilter
             label="Kelas"
             className="flex-1 lg:ml-auto lg:min-w-36 lg:flex-none"
           >
             <ClassSelect
               classes={data.classes}
-              value={data.classId}
-              onChange={(classId) =>
-                void navigateTo({ weekStart: data.selectedWeekStart, classId })
-              }
+              value={classId}
+              onChange={handleClassChange}
             />
           </HeaderFilter>
         </HeaderFilters>
 
-        {data.classId && !isDataPending && (
+        {navigationError && (
+          <p role="alert" className="text-sm text-destructive">
+            Data gagal dimuat. Pilihan dikembalikan ke data sebelumnya. Coba
+            lagi.
+          </p>
+        )}
+
+        {classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={data.availability}
             selectedPeriod={data.selectedWeekStart}
             formatPeriod={weekLabel}
-            onOpenLatest={(weekStart) =>
-              void navigateTo({ weekStart, classId: data.classId })
-            }
+            onOpenLatest={handleWeekChange}
           />
         )}
 
-        <ClassRequiredContent classId={data.classId}>
+        <ClassRequiredContent classId={classId}>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               {savedCount} dari {rows.length} laporan sudah terkirim
-              {selected.size ? ` · ${selected.size} dipilih` : ''}
+              {selectedGeneratableIds.length
+                ? ` · ${selectedGeneratableIds.length} dipilih`
+                : ''}
             </p>
             <Button
               size="lg"
               className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
-              disabled={!selected.size || isGenerating || isDataPending}
+              disabled={
+                !selectedGeneratableIds.length || isGenerating || isDataPending
+              }
               aria-busy={isGenerating}
-              onClick={() => void runGeneration([...selected])}
+              onClick={() => void runGeneration(selectedGeneratableIds)}
             >
               {isGenerating ? (
                 <LoaderCircle className="animate-spin" />
               ) : (
                 <Sparkles />
               )}
-              Buat dengan AI ({selected.size})
+              Buat dengan AI ({selectedGeneratableIds.length})
             </Button>
           </div>
 
@@ -542,7 +574,7 @@ function LaporanOrangTua() {
                       days={data.weekData[student.id] ?? []}
                       text={text}
                       notice={notices[student.id]}
-                      isSelected={selected.has(student.id)}
+                      isSelected={selectedGeneratableIdSet.has(student.id)}
                       isExpanded={expandedId === student.id}
                       isSaving={savingId === student.id}
                       actions={{

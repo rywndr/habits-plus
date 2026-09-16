@@ -75,13 +75,17 @@ function ObservasiHarian() {
   const [rows, setRows] = useState(data.rows)
   const [note, setNote] = useState(data.note)
   const [isDataPending, setIsDataPending] = useState(false)
+  const [navigationError, setNavigationError] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [visibleMonth, setVisibleMonth] = useState(observedAt.slice(0, 7))
   const [availabilityByContext, setAvailabilityByContext] = useState<
     Partial<Record<string, ReadonlyArray<string>>>
-  >({})
+  >(() => ({
+    [`${data.classId}:${data.observedAt.slice(0, 7)}`]:
+      data.availability.populatedDates,
+  }))
   const availabilityRequestToken = useRef(0)
 
   useEffect(() => {
@@ -90,6 +94,7 @@ function ObservasiHarian() {
     setRows(data.rows)
     setNote(data.note)
     setIsDataPending(false)
+    setNavigationError(false)
     setAvailabilityByContext((current) => ({
       ...current,
       [`${data.classId}:${data.observedAt.slice(0, 7)}`]:
@@ -110,11 +115,16 @@ function ObservasiHarian() {
       if (token !== pendingNavToken.current) return
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/catat-observasi', search })
-    } catch (error) {
-      settleLatestNavigation(token, pendingNavToken.current, () =>
-        setIsDataPending(false),
-      )
-      throw error
+    } catch {
+      settleLatestNavigation(token, pendingNavToken.current, () => {
+        setClassId(data.classId)
+        setObservedAt(data.observedAt)
+        setVisibleMonth(data.observedAt.slice(0, 7))
+        setRows(data.rows)
+        setNote(data.note)
+        setIsDataPending(false)
+        setNavigationError(true)
+      })
     }
   }
 
@@ -144,6 +154,7 @@ function ObservasiHarian() {
   async function handleClassChange(nextClassId: string) {
     setSaveStatus('idle')
     setIsDataPending(true)
+    setNavigationError(false)
     setClassId(nextClassId)
     availabilityRequestToken.current += 1
     setRows(getEmptyRows(data.students, nextClassId))
@@ -154,6 +165,7 @@ function ObservasiHarian() {
   async function handleDateChange(nextObservedAt: string) {
     setSaveStatus('idle')
     setIsDataPending(true)
+    setNavigationError(false)
     setObservedAt(nextObservedAt)
     setVisibleMonth(nextObservedAt.slice(0, 7))
     setRows(getEmptyRows(data.students, classId))
@@ -246,6 +258,13 @@ function ObservasiHarian() {
             </Button>
           </div>
         </HeaderFilters>
+
+        {navigationError && (
+          <p role="alert" className="text-sm text-destructive">
+            Data gagal dimuat. Pilihan dikembalikan ke data sebelumnya. Coba
+            lagi.
+          </p>
+        )}
 
         {classId && !isDataPending && (
           <PeriodAvailabilityNav
