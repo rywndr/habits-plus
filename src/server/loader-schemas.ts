@@ -45,6 +45,11 @@ export const observationPageSchema = z.strictObject({
   classId,
 })
 
+export const dailyAvailabilityMonthSchema = z.strictObject({
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  classId: z.uuid(),
+})
+
 export const parentReportPageSchema = z.strictObject({
   weekStart: date.optional(),
   classId,

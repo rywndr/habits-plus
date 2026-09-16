@@ -1,6 +1,8 @@
 import { affectsReports } from '#/lib/route-invalidation'
+import { settleLatestNavigation } from '#/lib/navigation-token'
 import { useMemo, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { LoaderCircle, Sparkles } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -31,6 +33,7 @@ import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
   ParentReportRow,
+  isGeneratable,
   reportRowState,
 } from '#/components/guru/parent-report-row'
 import type { ReportRowState } from '#/components/guru/parent-report-row'
@@ -106,6 +109,7 @@ function LaporanOrangTua() {
   const [isDataPending, setIsDataPending] = useState(false)
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set())
   const [savingId, setSavingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -175,6 +179,12 @@ function LaporanOrangTua() {
     (typeof rows)[number],
     ReportSortKey
   >(filteredRows, sorters)
+  const generatableRows = sortedItems.filter((row) =>
+    isGeneratable(row.student, row.state),
+  )
+  const allGeneratableSelected =
+    generatableRows.length > 0 &&
+    generatableRows.every((row) => selected.has(row.student.id))
 
   function patchContext(
     setState: React.Dispatch<React.SetStateAction<TextByContext>>,
@@ -222,6 +232,7 @@ function LaporanOrangTua() {
 
   async function navigateTo(next: { weekStart: string; classId: string }) {
     setIsDataPending(true)
+    setSelected(new Set())
     const token = ++pendingNavToken.current
     const startHref = router.state.location.href
     const search = { weekStart: next.weekStart, classId: next.classId }
@@ -233,11 +244,10 @@ function LaporanOrangTua() {
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/laporan-orang-tua', search })
       setExpandedId(null)
-    } catch (error) {
-      setIsDataPending(false)
-      throw error
     } finally {
-      setIsDataPending(false)
+      settleLatestNavigation(token, pendingNavToken.current, () =>
+        setIsDataPending(false),
+      )
     }
   }
 
@@ -267,6 +277,7 @@ function LaporanOrangTua() {
         if (draft.error) setNotice(draft.studentId, draft.error)
       }
       for (const skip of result.skipped) setNotice(skip.studentId, skip.reason)
+      setSelected(new Set())
       if (studentIds.length === 1) setExpandedId(studentIds[0])
     } finally {
       setGeneratingIds(new Set())
@@ -354,6 +365,18 @@ function LaporanOrangTua() {
     }
   }
 
+  function toggleSelectAll() {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (allGeneratableSelected) {
+        for (const row of generatableRows) next.delete(row.student.id)
+      } else {
+        for (const row of generatableRows) next.add(row.student.id)
+      }
+      return next
+    })
+  }
+
   const deletingRow = rows.find(
     (row) => row.state.kind === 'saved' && row.student.id === deletingId,
   )
@@ -393,7 +416,7 @@ function LaporanOrangTua() {
           </HeaderFilter>
         </HeaderFilters>
 
-        {data.classId && (
+        {data.classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={data.availability}
             selectedPeriod={data.selectedWeekStart}
@@ -405,9 +428,26 @@ function LaporanOrangTua() {
         )}
 
         <ClassRequiredContent classId={data.classId}>
-          <p className="text-sm text-muted-foreground">
-            {savedCount} dari {rows.length} laporan sudah terkirim
-          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              {savedCount} dari {rows.length} laporan sudah terkirim
+              {selected.size ? ` · ${selected.size} dipilih` : ''}
+            </p>
+            <Button
+              size="lg"
+              className="min-h-11 gap-2 rounded-full px-6 sm:min-h-0"
+              disabled={!selected.size || isGenerating || isDataPending}
+              aria-busy={isGenerating}
+              onClick={() => void runGeneration([...selected])}
+            >
+              {isGenerating ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                <Sparkles />
+              )}
+              Buat dengan AI ({selected.size})
+            </Button>
+          </div>
 
           <label className="flex w-full flex-col gap-2 text-sm font-medium sm:max-w-sm">
             Cari siswa
@@ -454,12 +494,21 @@ function LaporanOrangTua() {
           ) : rows.length ? (
             <GuruTableContainer>
               <Table className="max-sm:block">
-                <TableHeader className="max-sm:hidden">
-                  <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="hidden w-12 text-center text-card-foreground sm:table-cell">
-                      No.
+                <TableHeader>
+                  <TableRow className="border-0 hover:bg-transparent max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center">
+                    <TableHead className="w-16 text-center max-sm:h-auto max-sm:min-h-11 sm:w-12">
+                      <label className="flex min-h-11 items-center justify-center">
+                        <input
+                          type="checkbox"
+                          aria-label="Pilih semua siswa yang bisa dibuat dengan AI"
+                          className="size-5 accent-brand-orange sm:size-4"
+                          checked={allGeneratableSelected}
+                          onChange={toggleSelectAll}
+                          disabled={!generatableRows.length}
+                        />
+                      </label>
                     </TableHead>
-                    <TableHead className="text-card-foreground">
+                    <TableHead className="text-card-foreground max-sm:flex max-sm:min-h-11 max-sm:items-center max-sm:pl-8">
                       <SortableTableHeader
                         label="Nama"
                         direction={getDirection('name')}
@@ -485,18 +534,25 @@ function LaporanOrangTua() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className="max-sm:block">
-                  {sortedItems.map(({ student, state, text }, index) => (
+                  {sortedItems.map(({ student, state, text }) => (
                     <ParentReportRow
                       key={student.id}
-                      number={index + 1}
                       student={student}
                       state={state}
                       days={data.weekData[student.id] ?? []}
                       text={text}
                       notice={notices[student.id]}
+                      isSelected={selected.has(student.id)}
                       isExpanded={expandedId === student.id}
                       isSaving={savingId === student.id}
                       actions={{
+                        onToggleSelect: () =>
+                          setSelected((current) => {
+                            const next = new Set(current)
+                            if (next.has(student.id)) next.delete(student.id)
+                            else next.add(student.id)
+                            return next
+                          }),
                         onToggleExpand: () =>
                           setExpandedId((prev) =>
                             prev === student.id ? null : student.id,

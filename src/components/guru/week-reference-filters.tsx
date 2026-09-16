@@ -1,4 +1,3 @@
-import { DatePicker } from './date-picker'
 import { HeaderFilter } from './header-filters'
 import { WeekPicker } from './week-picker'
 
@@ -12,9 +11,6 @@ export function WeekReferenceFilters({ value, onChange }: Props) {
     <>
       <HeaderFilter label="Minggu">
         <WeekPicker value={value} onChange={onChange} />
-      </HeaderFilter>
-      <HeaderFilter label="Tanggal acuan">
-        <DatePicker value={value} onChange={onChange} />
       </HeaderFilter>
     </>
   )

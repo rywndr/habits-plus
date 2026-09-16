@@ -10,7 +10,7 @@ export function GuruTableContainer({ children, className }: Props) {
   return (
     <div
       className={cn(
-        'min-w-0 overflow-hidden rounded-xl bg-card ring-1 ring-foreground/5',
+        'min-w-0 overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/5',
         className,
       )}
     >

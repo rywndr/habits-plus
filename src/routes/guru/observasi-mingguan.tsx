@@ -1,5 +1,6 @@
 import { ObservationCardsSkeleton } from '#/components/guru/observation-cards-skeleton'
 import { affectsWeeklyNotes } from '#/lib/route-invalidation'
+import { settleLatestNavigation } from '#/lib/navigation-token'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
@@ -101,7 +102,9 @@ function ObservasiMingguan() {
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/observasi-mingguan', search })
     } catch (error) {
-      setIsDataPending(false)
+      settleLatestNavigation(token, pendingNavToken.current, () =>
+        setIsDataPending(false),
+      )
       throw error
     }
   }
@@ -224,7 +227,7 @@ function ObservasiMingguan() {
           </div>
         </HeaderFilters>
 
-        {classId && (
+        {classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={weeklyNotes.availability}
             selectedPeriod={weeklyNotes.selectedWeekStart}

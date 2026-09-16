@@ -1,6 +1,7 @@
 import { ObservationCardsSkeleton } from '#/components/guru/observation-cards-skeleton'
 import { affectsObservations } from '#/lib/route-invalidation'
-import { useEffect, useRef, useState } from 'react'
+import { settleLatestNavigation } from '#/lib/navigation-token'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
@@ -18,6 +19,7 @@ import { ObservationPageSkeleton } from '#/components/skeletons/observation-page
 import { saveDailyObservations } from '#/server/actions'
 import {
   loadDailyObservationExport,
+  loadDailyAvailabilityMonth,
   loadObservationPage,
 } from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
@@ -76,6 +78,11 @@ function ObservasiHarian() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [visibleMonth, setVisibleMonth] = useState(observedAt.slice(0, 7))
+  const [availabilityByContext, setAvailabilityByContext] = useState<
+    Partial<Record<string, ReadonlyArray<string>>>
+  >({})
+  const availabilityRequestToken = useRef(0)
 
   useEffect(() => {
     setClassId(data.classId)
@@ -83,6 +90,11 @@ function ObservasiHarian() {
     setRows(data.rows)
     setNote(data.note)
     setIsDataPending(false)
+    setAvailabilityByContext((current) => ({
+      ...current,
+      [`${data.classId}:${data.observedAt.slice(0, 7)}`]:
+        data.availability.populatedDates,
+    }))
   }, [data.classId, data.note, data.observedAt, data.rows])
 
   const pendingNavToken = useRef(0)
@@ -99,15 +111,41 @@ function ObservasiHarian() {
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/catat-observasi', search })
     } catch (error) {
-      setIsDataPending(false)
+      settleLatestNavigation(token, pendingNavToken.current, () =>
+        setIsDataPending(false),
+      )
       throw error
     }
   }
+
+  const handleVisibleMonthChange = useCallback(
+    (month: string) => {
+      setVisibleMonth(month)
+      if (!classId || isDataPending) return
+
+      const key = `${classId}:${month}`
+      if (availabilityByContext[key]) return
+
+      const token = ++availabilityRequestToken.current
+      void loadDailyAvailabilityMonth({ data: { classId, month } }).then(
+        (dates) => {
+          if (token !== availabilityRequestToken.current) return
+          setAvailabilityByContext((current) => ({
+            ...current,
+            [key]: dates,
+          }))
+        },
+        () => undefined,
+      )
+    },
+    [availabilityByContext, classId, isDataPending],
+  )
 
   async function handleClassChange(nextClassId: string) {
     setSaveStatus('idle')
     setIsDataPending(true)
     setClassId(nextClassId)
+    availabilityRequestToken.current += 1
     setRows(getEmptyRows(data.students, nextClassId))
     setNote('')
     await navigateToSearch({ classId: nextClassId, observedAt })
@@ -117,6 +155,7 @@ function ObservasiHarian() {
     setSaveStatus('idle')
     setIsDataPending(true)
     setObservedAt(nextObservedAt)
+    setVisibleMonth(nextObservedAt.slice(0, 7))
     setRows(getEmptyRows(data.students, classId))
     setNote('')
     await navigateToSearch({ classId, observedAt: nextObservedAt })
@@ -177,7 +216,12 @@ function ObservasiHarian() {
             <DatePicker
               value={observedAt}
               onChange={handleDateChange}
-              populatedDates={data.availability.populatedDates}
+              populatedDates={
+                isDataPending
+                  ? []
+                  : (availabilityByContext[`${classId}:${visibleMonth}`] ?? [])
+              }
+              onVisibleMonthChange={handleVisibleMonthChange}
             />
           </HeaderFilter>
           <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
@@ -203,7 +247,7 @@ function ObservasiHarian() {
           </div>
         </HeaderFilters>
 
-        {classId && (
+        {classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={data.availability}
             selectedPeriod={observedAt}

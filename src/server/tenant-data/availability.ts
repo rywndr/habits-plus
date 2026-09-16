@@ -13,6 +13,35 @@ import type { Tenant } from './types'
 
 const RECENT_PERIOD_LIMIT = 8
 
+export function observationMonthRange(month: string) {
+  return {
+    start: monthStartIso(month),
+    end: nextMonthStartIso(month),
+  }
+}
+
+export async function getDailyAvailabilityForMonth(
+  tenant: Tenant,
+  classId: string,
+  month: string,
+) {
+  const range = observationMonthRange(month)
+  const rows = await getDb()
+    .selectDistinct({ period: dailyObservations.observedAt })
+    .from(dailyObservations)
+    .innerJoin(students, eq(dailyObservations.studentId, students.id))
+    .where(
+      and(
+        eq(dailyObservations.schoolId, tenant.id),
+        eq(students.classId, classId),
+        gte(dailyObservations.observedAt, range.start),
+        lt(dailyObservations.observedAt, range.end),
+      ),
+    )
+
+  return rows.map((row) => row.period)
+}
+
 async function getRecentObservationDates(
   tenant: Tenant,
   classId: string,
@@ -37,24 +66,11 @@ export async function getDailyAvailability(
   classId: string,
   selectedDate: string,
 ): Promise<PeriodAvailability & { populatedDates: Array<string> }> {
-  const monthStart = monthStartIso(selectedDate.slice(0, 7))
-  const monthEnd = nextMonthStartIso(selectedDate.slice(0, 7))
   const [recentRows, monthRows] = await Promise.all([
     getRecentObservationDates(tenant, classId, RECENT_PERIOD_LIMIT),
-    getDb()
-      .selectDistinct({ period: dailyObservations.observedAt })
-      .from(dailyObservations)
-      .innerJoin(students, eq(dailyObservations.studentId, students.id))
-      .where(
-        and(
-          eq(dailyObservations.schoolId, tenant.id),
-          eq(students.classId, classId),
-          gte(dailyObservations.observedAt, monthStart),
-          lt(dailyObservations.observedAt, monthEnd),
-        ),
-      ),
+    getDailyAvailabilityForMonth(tenant, classId, selectedDate.slice(0, 7)),
   ])
-  const populatedDates = monthRows.map((row) => row.period)
+  const populatedDates = monthRows
 
   return {
     ...buildPeriodAvailability({

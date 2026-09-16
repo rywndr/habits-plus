@@ -17,6 +17,7 @@ import {
   getAiGenerationHistory,
   getClassWeekObservations,
   getDailyAvailability,
+  getDailyAvailabilityForMonth,
   getDailyObservationDay,
   getGuruDashboard,
   getMonthlySummary,
@@ -46,6 +47,7 @@ import {
   weeklyNotesSchema,
   exportRangeSchema,
   observationPageSchema,
+  dailyAvailabilityMonthSchema,
   parentReportPageSchema,
 } from './loader-schemas'
 
@@ -502,6 +504,21 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
         classId,
         availability,
       }
+    }),
+  )
+
+export const loadDailyAvailabilityMonth = createServerFn({ method: 'GET' })
+  .validator(dailyAvailabilityMonthSchema)
+  .handler(({ data }) =>
+    withTenantCache(async () => {
+      const { getAuthenticatedUserByRole } = await import('./auth.server')
+      const teacher = await getAuthenticatedUserByRole('guru')
+      const classes = await getTenantClasses(teacher.tenant, teacher.id)
+      const classId = resolveSelectedClassId(classes, data.classId)
+
+      if (!classId) return []
+
+      return getDailyAvailabilityForMonth(teacher.tenant, classId, data.month)
     }),
   )
 

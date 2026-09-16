@@ -15,6 +15,7 @@ type Props = {
   value: string
   onChange: (value: string) => void
   populatedDates?: ReadonlyArray<string>
+  onVisibleMonthChange?: (month: string) => void
 }
 
 function startOfMonthGrid(date: Date) {
@@ -24,7 +25,12 @@ function startOfMonthGrid(date: Date) {
   return first
 }
 
-export function DatePicker({ value, onChange, populatedDates = [] }: Props) {
+export function DatePicker({
+  value,
+  onChange,
+  populatedDates = [],
+  onVisibleMonthChange,
+}: Props) {
   const selected = new Date(value)
   const [view, setView] = useState(
     () => new Date(selected.getFullYear(), selected.getMonth(), 1),
@@ -45,6 +51,11 @@ export function DatePicker({ value, onChange, populatedDates = [] }: Props) {
   useEffect(() => {
     setView(new Date(selected.getFullYear(), selected.getMonth(), 1))
   }, [selected.getFullYear(), selected.getMonth()])
+
+  useEffect(() => {
+    const month = `${view.getFullYear()}-${String(view.getMonth() + 1).padStart(2, '0')}`
+    onVisibleMonthChange?.(month)
+  }, [onVisibleMonthChange, view])
 
   function moveMonth(offset: number) {
     setView(new Date(view.getFullYear(), view.getMonth() + offset, 1))

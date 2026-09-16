@@ -51,6 +51,13 @@ export function reportRowState(input: {
   return { kind: 'empty' }
 }
 
+export function isGeneratable(
+  student: ParentReportStudent,
+  state: ReportRowState,
+) {
+  return state.kind === 'empty' && student.observedDays > 0
+}
+
 function RowStatus({
   state,
   observedDays,
@@ -90,6 +97,7 @@ function RowStatus({
 }
 
 type Actions = {
+  onToggleSelect: () => void
   onToggleExpand: () => void
   onTextChange: (value: string) => void
   onGenerate: () => void
@@ -101,39 +109,54 @@ type Actions = {
 }
 
 type Props = {
-  number: number
   student: ParentReportStudent
   state: ReportRowState
   days: Array<StudentWeekDayData>
   text: string
   notice: string | undefined
+  isSelected: boolean
   isExpanded: boolean
   isSaving: boolean
   actions: Actions
 }
 
 export function ParentReportRow({
-  number,
   student,
   state,
   days,
   text,
   notice,
+  isSelected,
   isExpanded,
   isSaving,
   actions,
 }: Props) {
   const detailId = `laporan-${student.id}`
+  const selectable = isGeneratable(student, state)
   const busy = isSaving || state.kind === 'generating'
   const trimmed = text.trim()
 
   return (
     <Fragment>
-      <TableRow className={cn('max-sm:block', isExpanded && 'bg-muted/30')}>
-        <TableCell className="hidden text-center text-muted-foreground sm:table-cell">
-          {number}
+      <TableRow
+        className={cn(
+          'max-sm:grid max-sm:grid-cols-[4rem_minmax(0,1fr)] max-sm:items-center',
+          isExpanded && 'bg-muted/30',
+        )}
+      >
+        <TableCell className="text-center">
+          <label className="flex min-h-11 items-center justify-center">
+            <input
+              type="checkbox"
+              aria-label={`Pilih ${student.name}`}
+              className="size-5 accent-brand-orange sm:size-4"
+              checked={isSelected}
+              onChange={actions.onToggleSelect}
+              disabled={!selectable}
+            />
+          </label>
         </TableCell>
-        <TableCell className="whitespace-normal max-sm:block">
+        <TableCell className="whitespace-normal">
           <button
             type="button"
             aria-expanded={isExpanded}

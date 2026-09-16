@@ -1,4 +1,5 @@
 import { affectsMonthlySummary } from '#/lib/route-invalidation'
+import { settleLatestNavigation } from '#/lib/navigation-token'
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { Textarea } from '#/components/ui/textarea'
@@ -88,7 +89,9 @@ function RingkasanBulanan() {
       if (router.state.location.href !== startHref) return
       await navigate({ to: '/guru/ringkasan', search: nextSearch })
     } catch (error) {
-      setIsDataPending(false)
+      settleLatestNavigation(token, pendingNavToken.current, () =>
+        setIsDataPending(false),
+      )
       throw error
     }
   }
@@ -141,7 +144,7 @@ function RingkasanBulanan() {
           </HeaderFilter>
         </HeaderFilters>
 
-        {classId && (
+        {classId && !isDataPending && (
           <PeriodAvailabilityNav
             availability={summary.availability}
             selectedPeriod={month}
@@ -180,6 +183,7 @@ function RingkasanBulanan() {
                     className="rounded-full px-6"
                     wrapperClassName="sm:mt-1"
                     onClick={handleSave}
+                    disabled={isDataPending}
                   />
                 </div>
               </div>
