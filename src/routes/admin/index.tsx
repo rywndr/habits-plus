@@ -3,14 +3,14 @@ import { GraduationCap, Users, BookOpen, UserCircle2 } from 'lucide-react'
 import { ContentPanel } from '#/components/shell/content-panel'
 import { PageHeader } from '#/components/shell/page-header'
 import { StatCard } from '#/components/admin/stat-card'
-import { AdminDashboardSkeleton } from '#/components/skeletons/admin-dashboard-skeleton'
+import { DashboardSkeleton } from '#/components/skeletons/dashboard-skeleton'
 import { loadAdminDashboard } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/')({
   loader: () => loadAdminDashboard(),
   component: DashboardAdmin,
   staleTime: 30_000,
-  pendingComponent: AdminDashboardSkeleton,
+  pendingComponent: DashboardSkeleton,
   staticData: { title: 'Dashboard Admin' },
 })
 

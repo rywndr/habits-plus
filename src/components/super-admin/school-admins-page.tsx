@@ -26,7 +26,7 @@ const columns: Array<Column<SuperAdminSchoolAdmin>> = [
   { key: 'email', header: 'Email', render: (admin) => admin.email },
   {
     key: 'schoolName',
-    header: 'Sekolah',
+    header: 'Tenant',
     render: (admin) => admin.schoolName,
     sortValue: (admin) => admin.schoolName,
   },
@@ -51,7 +51,7 @@ export function SchoolAdminsPage({ schools, admins }: SchoolAdminsPageProps) {
     <ContentPanel>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Admin Sekolah"
+          title="Tenant Admins"
           className="text-2xl leading-tight sm:text-4xl"
         />
         <DataTable
@@ -66,14 +66,14 @@ export function SchoolAdminsPage({ schools, admins }: SchoolAdminsPageProps) {
                 onChange={setFilterSchoolId}
               />
               <AddEntityLink
-                link={<Link to="/super-admin/admin-sekolah/new" />}
+                link={<Link to="/super-admin/tenant-admins/new" />}
                 label="Tambah admin"
               />
             </div>
           }
           editLink={(admin) => (
             <Link
-              to="/super-admin/admin-sekolah/$adminId/edit"
+              to="/super-admin/tenant-admins/$adminId/edit"
               params={{ adminId: admin.id }}
               aria-label={`Edit ${admin.name}`}
             />
@@ -82,7 +82,7 @@ export function SchoolAdminsPage({ schools, admins }: SchoolAdminsPageProps) {
         />
         <DeleteEntityDialog
           entity={deletingAdmin}
-          title="Hapus admin sekolah?"
+          title="Hapus tenant admin?"
           description={(admin) => (
             <>
               Akun {admin?.name} untuk {admin?.schoolName} akan dihapus.
@@ -114,11 +114,11 @@ function SchoolFilter({ schools, value, onChange }: SchoolFilterProps) {
     >
       <SelectTrigger className="min-h-11 w-full rounded-full bg-card sm:w-64">
         <span className="min-w-0 flex-1 truncate text-left">
-          {value === 'all' ? 'Semua sekolah' : selectedSchool?.name}
+          {value === 'all' ? 'Semua tenant' : selectedSchool?.name}
         </span>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">Semua sekolah</SelectItem>
+        <SelectItem value="all">Semua tenant</SelectItem>
         {schools.map((school) => (
           <SelectItem key={school.id} value={school.id}>
             {school.name}

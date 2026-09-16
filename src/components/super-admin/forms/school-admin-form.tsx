@@ -47,7 +47,7 @@ export function SchoolAdminForm({
 
   return (
     <>
-      <FormField label="Sekolah" className="sm:col-span-2">
+      <FormField label="Tenant" className="sm:col-span-2">
         <Select
           value={values.schoolId}
           onValueChange={(schoolId) => {
@@ -56,7 +56,7 @@ export function SchoolAdminForm({
         >
           <SelectTrigger className="w-full">
             <span className="min-w-0 flex-1 truncate text-left">
-              {selectedSchool?.name ?? 'Pilih sekolah'}
+              {selectedSchool?.name ?? 'Pilih tenant'}
             </span>
           </SelectTrigger>
           <SelectContent>

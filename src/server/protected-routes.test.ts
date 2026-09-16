@@ -6,7 +6,7 @@ import {
   loadAdminDashboard,
   loadGuruDashboard,
   loadParentProgress,
-  loadSuperAdminSchools,
+  loadSuperAdminDashboard,
 } from '#/server/loaders'
 
 vi.mock('#/server/loaders')
@@ -20,7 +20,7 @@ it.each([
   { role: 'admin', loader: loadAdminDashboard },
   { role: 'guru', loader: loadGuruDashboard },
   { role: 'ortu', loader: loadParentProgress },
-  { role: 'super-admin', loader: loadSuperAdminSchools },
+  { role: 'super-admin', loader: loadSuperAdminDashboard },
 ] as const)(
   'does not block $role child loaders on authentication',
   async ({ role, loader }) => {

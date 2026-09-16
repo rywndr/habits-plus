@@ -14,7 +14,8 @@ const adminDataRoutes: Array<RouteId> = [
 ]
 const superAdminDataRoutes: Array<RouteId> = [
   '/super-admin/',
-  '/super-admin/admin-sekolah',
+  '/super-admin/tenants',
+  '/super-admin/tenant-admins',
 ]
 const observationRoutes: Array<RouteId> = [
   '/guru/',

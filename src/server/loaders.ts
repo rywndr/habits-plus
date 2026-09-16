@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { and, asc, between, eq, inArray } from 'drizzle-orm'
+import { and, asc, between, count, eq, inArray, ne } from 'drizzle-orm'
 import { getDb } from '#/db'
 import {
   classes as classTable,
@@ -147,6 +147,24 @@ export const loadSuperAdminSchools = createServerFn({ method: 'GET' }).handler(
 
       return (await fetchSuperAdminSchools()).schools
     }),
+)
+
+export const loadSuperAdminDashboard = createServerFn({
+  method: 'GET',
+}).handler(() =>
+  withTenantCache(async (): Promise<{ tenantCount: number }> => {
+    const { getAuthenticatedUserByRole } = await import('./auth.server')
+    await getAuthenticatedUserByRole('super-admin')
+
+    const [tenantCount] = await getDb()
+      .select({ value: count() })
+      .from(schools)
+      .where(ne(schools.slug, 'platform'))
+
+    return {
+      tenantCount: tenantCount.value,
+    }
+  }),
 )
 
 export const loadSuperAdminSchoolAdmins = createServerFn({

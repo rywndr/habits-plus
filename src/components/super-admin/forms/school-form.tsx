@@ -20,7 +20,7 @@ export function schoolFormValues(school?: SuperAdminSchool): SchoolFormValues {
 export function SchoolForm({ values, onChange, idPrefix }: SchoolFormProps) {
   return (
     <>
-      <FormField htmlFor={`${idPrefix}-name`} label="Nama Sekolah">
+      <FormField htmlFor={`${idPrefix}-name`} label="Nama Tenant">
         <Input
           id={`${idPrefix}-name`}
           name="name"

@@ -3,12 +3,12 @@ import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
 import { SchoolAdminsPage } from '#/components/super-admin/school-admins-page'
 import { loadSuperAdminSchoolAdmins } from '#/server/loaders'
 
-export const Route = createFileRoute('/super-admin/admin-sekolah')({
+export const Route = createFileRoute('/super-admin/tenant-admins')({
   loader: () => loadSuperAdminSchoolAdmins(),
   component: SchoolAdminsRoute,
   staleTime: 30_000,
   pendingComponent: PendingAdminTable,
-  staticData: { title: 'Admin Sekolah' },
+  staticData: { title: 'Tenant Admins' },
 })
 
 function PendingAdminTable() {

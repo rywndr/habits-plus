@@ -16,7 +16,7 @@ type SchoolsPageProps = {
 
 function schoolColumns(): Array<Column<SuperAdminSchool>> {
   return [
-    { key: 'name', header: 'Nama Sekolah', render: (school) => school.name },
+    { key: 'name', header: 'Nama Tenant', render: (school) => school.name },
     { key: 'region', header: 'Wilayah', render: (school) => school.region },
     {
       key: 'adminCount',
@@ -44,7 +44,7 @@ export function SchoolsPage({ schools }: SchoolsPageProps) {
     <ContentPanel>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Sekolah"
+          title="Tenants"
           className="text-2xl leading-tight sm:text-4xl"
         />
         <DataTable
@@ -53,14 +53,14 @@ export function SchoolsPage({ schools }: SchoolsPageProps) {
           filterKey="name"
           toolbar={
             <AddEntityLink
-              link={<Link to="/super-admin/new" />}
-              label="Tambah sekolah"
+              link={<Link to="/super-admin/tenants/new" />}
+              label="Tambah tenant"
             />
           }
           editLink={(school) => (
             <Link
-              to="/super-admin/$schoolId/edit"
-              params={{ schoolId: school.id }}
+              to="/super-admin/tenants/$tenantId/edit"
+              params={{ tenantId: school.id }}
               aria-label={`Edit ${school.name}`}
             />
           )}
@@ -68,9 +68,9 @@ export function SchoolsPage({ schools }: SchoolsPageProps) {
         />
         <DeleteEntityDialog
           entity={deletingSchool}
-          title="Hapus sekolah?"
+          title="Hapus tenant?"
           description={(school) => (
-            <>Data sekolah {school?.name} akan dihapus dari sistem.</>
+            <>Data tenant {school?.name} akan dihapus dari sistem.</>
           )}
           onClose={() => setDeletingSchool(null)}
           onDelete={handleDelete}

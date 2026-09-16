@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
-import { Building2, ShieldPlus } from 'lucide-react'
+import { Building2, Home, ShieldPlus } from 'lucide-react'
 import { AppShell } from '#/components/shell/app-shell'
 import type { NavEntry } from '#/components/shell/sidebar-nav-item'
 import { loadCurrentUser } from '#/server/loaders'
@@ -17,14 +17,21 @@ function SuperAdminShell() {
       kind: 'link',
       to: '/super-admin',
       href: '/super-admin',
-      label: 'Sekolah',
+      label: 'Dashboard',
+      icon: Home,
+    },
+    {
+      kind: 'link',
+      to: '/super-admin/tenants',
+      href: '/super-admin/tenants',
+      label: 'Tenants',
       icon: Building2,
     },
     {
       kind: 'link',
-      to: '/super-admin/admin-sekolah',
-      href: '/super-admin/admin-sekolah',
-      label: 'Admin Sekolah',
+      to: '/super-admin/tenant-admins',
+      href: '/super-admin/tenant-admins',
+      label: 'Tenant Admins',
       icon: ShieldPlus,
     },
   ]

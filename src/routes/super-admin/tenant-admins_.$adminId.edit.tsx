@@ -20,7 +20,7 @@ import { loadSuperAdminSchoolAdmins } from '#/server/loaders'
 import type { SuperAdminSchool, SuperAdminSchoolAdmin } from '#/server/loaders'
 
 export const Route = createFileRoute(
-  '/super-admin/admin-sekolah_/$adminId/edit',
+  '/super-admin/tenant-admins_/$adminId/edit',
 )({
   loader: async ({ params: { adminId } }) => {
     const data = await loadSuperAdminSchoolAdmins()
@@ -34,11 +34,11 @@ export const Route = createFileRoute(
   pendingComponent: EntityFormPageSkeleton,
   notFoundComponent: () => (
     <EntityNotFoundPage
-      entityLabel="Admin sekolah"
-      backLink={<Link to="/super-admin/admin-sekolah" />}
+      entityLabel="Tenant admin"
+      backLink={<Link to="/super-admin/tenant-admins" />}
     />
   ),
-  staticData: { title: 'Edit Admin Sekolah' },
+  staticData: { title: 'Edit Tenant Admin' },
 })
 
 function EditSchoolAdminRoute() {
@@ -70,14 +70,14 @@ function EditSchoolAdminForm({ admin, schools }: EditSchoolAdminFormProps) {
       },
     })
     await router.invalidate({ filter: affectsSuperAdminData })
-    await navigate({ to: '/super-admin/admin-sekolah' })
+    await navigate({ to: '/super-admin/tenant-admins' })
   }
 
   return (
     <EntityFormPage
       title={`Edit ${admin.name}`}
-      description="Perbarui sekolah, profil akun, atau kata sandi admin. Biarkan kata sandi kosong untuk mempertahankan kata sandi lama."
-      cancelLink={<Link to="/super-admin/admin-sekolah" />}
+      description="Perbarui tenant, profil akun, atau kata sandi admin. Biarkan kata sandi kosong untuk mempertahankan kata sandi lama."
+      cancelLink={<Link to="/super-admin/tenant-admins" />}
       onSubmit={handleSubmit}
       submitDisabled={!values.schoolId}
     >

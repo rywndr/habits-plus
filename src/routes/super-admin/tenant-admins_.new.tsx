@@ -12,11 +12,11 @@ import { affectsSuperAdminData } from '#/lib/route-invalidation'
 import { createSchoolAdmin } from '#/server/actions'
 import { loadSuperAdminSchools } from '#/server/loaders'
 
-export const Route = createFileRoute('/super-admin/admin-sekolah_/new')({
+export const Route = createFileRoute('/super-admin/tenant-admins_/new')({
   loader: () => loadSuperAdminSchools(),
   component: NewSchoolAdminRoute,
   pendingComponent: EntityFormPageSkeleton,
-  staticData: { title: 'Tambah Admin Sekolah' },
+  staticData: { title: 'Tambah Tenant Admin' },
 })
 
 function NewSchoolAdminRoute() {
@@ -28,14 +28,14 @@ function NewSchoolAdminRoute() {
   async function handleSubmit() {
     await createSchoolAdmin({ data: values })
     await router.invalidate({ filter: affectsSuperAdminData })
-    await navigate({ to: '/super-admin/admin-sekolah' })
+    await navigate({ to: '/super-admin/tenant-admins' })
   }
 
   return (
     <EntityFormPage
-      title="Tambah Admin Sekolah"
-      description="Buat akun admin untuk sekolah yang sudah terdaftar. Satu sekolah dapat memiliki lebih dari satu admin."
-      cancelLink={<Link to="/super-admin/admin-sekolah" />}
+      title="Tambah Tenant Admin"
+      description="Buat akun admin untuk tenant yang sudah terdaftar. Satu tenant dapat memiliki lebih dari satu admin."
+      cancelLink={<Link to="/super-admin/tenant-admins" />}
       onSubmit={handleSubmit}
       submitDisabled={!values.schoolId}
     >

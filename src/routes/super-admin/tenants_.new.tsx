@@ -8,9 +8,9 @@ import {
 import { affectsSuperAdminData } from '#/lib/route-invalidation'
 import { createSchool } from '#/server/actions'
 
-export const Route = createFileRoute('/super-admin/new')({
+export const Route = createFileRoute('/super-admin/tenants_/new')({
   component: NewSchoolRoute,
-  staticData: { title: 'Tambah Sekolah' },
+  staticData: { title: 'Tambah Tenant' },
 })
 
 function slugify(value: string) {
@@ -34,14 +34,14 @@ function NewSchoolRoute() {
       },
     })
     await router.invalidate({ filter: affectsSuperAdminData })
-    await navigate({ to: '/super-admin' })
+    await navigate({ to: '/super-admin/tenants' })
   }
 
   return (
     <EntityFormPage
-      title="Tambah Sekolah"
-      description="Daftarkan sekolah sebagai tenant baru. Akun admin sekolah dapat dibuat setelah sekolah tersimpan."
-      cancelLink={<Link to="/super-admin" />}
+      title="Tambah Tenant"
+      description="Daftarkan tenant baru. Akun tenant admin dapat dibuat setelah tenant tersimpan."
+      cancelLink={<Link to="/super-admin/tenants" />}
       onSubmit={handleSubmit}
     >
       <SchoolForm values={values} onChange={setValues} idPrefix="new-school" />
