@@ -16,14 +16,17 @@ import {
   getAdminDashboard,
   getAiGenerationHistory,
   getClassWeekObservations,
+  getDailyAvailability,
   getDailyObservationDay,
   getGuruDashboard,
   getMonthlySummary,
   getParentProgress,
+  getReportWeekAvailability,
   getTenantClasses,
   getTenantStudents,
   getTenantUsers,
   getWeeklyNotes,
+  getMonthlyAvailability,
   withTenantCache,
 } from './tenant-data'
 import type {
@@ -34,6 +37,7 @@ import type {
 } from './tenant-data'
 import { todayIso, weekStartIso } from './date'
 import { resolveSelectedClassId } from '#/lib/class-selection'
+import { buildPeriodAvailability } from '#/lib/period-availability'
 
 import {
   currentUserSchema,
@@ -282,7 +286,15 @@ export const loadLatestSummary = createServerFn({ method: 'GET' })
         ? await getMonthlySummary(tenant, month, teacher.id, classId)
         : emptySummary
 
-      return { ...summary, classes, classId }
+      const availability = classId
+        ? await getMonthlyAvailability(tenant, teacher.id, classId, month)
+        : buildPeriodAvailability({
+            selectedPeriod: month,
+            selectedHasData: false,
+            populatedPeriods: [],
+          })
+
+      return { ...summary, classes, classId, availability }
     }),
   )
 
@@ -319,6 +331,13 @@ export const loadWeeklyNotes = createServerFn({ method: 'GET' })
         selectedNote: classId
           ? (notes.find((note) => note.date === selectedWeekStart) ?? null)
           : null,
+        availability: buildPeriodAvailability({
+          selectedPeriod: selectedWeekStart,
+          selectedHasData: notes.some(
+            (note) => note.date === selectedWeekStart,
+          ),
+          populatedPeriods: notes.map((note) => note.date),
+        }),
       }
     }),
   )
@@ -457,11 +476,21 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
       const classes = await getTenantClasses(tenant, teacher.id)
       const classIds = classes.map((item) => item.id)
       const classId = resolveSelectedClassId(classes, data.classId)
-      const [students, observationDay] = await Promise.all([
+      const [students, observationDay, availability] = await Promise.all([
         getTenantStudents(tenant, classIds),
         classId
           ? getDailyObservationDay(tenant, classId, observedAt)
           : Promise.resolve({ rows: [], note: '' }),
+        classId
+          ? getDailyAvailability(tenant, classId, observedAt)
+          : Promise.resolve({
+              ...buildPeriodAvailability({
+                selectedPeriod: observedAt,
+                selectedHasData: false,
+                populatedPeriods: [],
+              }),
+              populatedDates: [],
+            }),
       ])
 
       return {
@@ -471,6 +500,7 @@ export const loadObservationPage = createServerFn({ method: 'GET' })
         note: observationDay.note,
         observedAt,
         classId,
+        availability,
       }
     }),
   )
@@ -498,14 +528,21 @@ export const loadParentReportPage = createServerFn({ method: 'GET' })
           students: [],
           weekData,
           summaries,
+          availability: buildPeriodAvailability({
+            selectedPeriod: selectedWeekStart,
+            selectedHasData: false,
+            populatedPeriods: [],
+          }),
         }
       }
 
-      const [students, weekObservations, summaries] = await Promise.all([
-        getTenantStudents(tenant, [classId]),
-        getClassWeekObservations(tenant, classId, selectedWeekStart),
-        getActiveAiSummaries(tenant, classId, selectedWeekStart),
-      ])
+      const [students, weekObservations, summaries, availability] =
+        await Promise.all([
+          getTenantStudents(tenant, [classId]),
+          getClassWeekObservations(tenant, classId, selectedWeekStart),
+          getActiveAiSummaries(tenant, classId, selectedWeekStart),
+          getReportWeekAvailability(tenant, classId, selectedWeekStart),
+        ])
       const activeIds = new Set(summaries.map((item) => item.studentId))
 
       return {
@@ -521,6 +558,10 @@ export const loadParentReportPage = createServerFn({ method: 'GET' })
         })),
         weekData: Object.fromEntries(weekObservations),
         summaries,
+        availability: {
+          ...availability,
+          selectedHasData: weekObservations.size > 0 || summaries.length > 0,
+        },
       }
     }),
   )

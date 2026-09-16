@@ -18,6 +18,8 @@ import { loadLatestSummary } from '#/server/loaders'
 import { saveMonthlySummary } from '#/server/actions'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { Indicator } from '#/server/tenant-data'
+import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
+import { formatIndonesianMonth } from '#/server/date'
 
 export const Route = createFileRoute('/guru/ringkasan')({
   validateSearch: (search = {}) => ({
@@ -135,6 +137,15 @@ function RingkasanBulanan() {
             />
           </HeaderFilter>
         </HeaderFilters>
+
+        {classId && (
+          <PeriodAvailabilityNav
+            availability={summary.availability}
+            selectedPeriod={month}
+            formatPeriod={formatIndonesianMonth}
+            onOpenLatest={(latestMonth) => void handleMonthChange(latestMonth)}
+          />
+        )}
 
         <ClassRequiredContent classId={classId}>
           <div className="flex flex-col gap-2">

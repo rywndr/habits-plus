@@ -7,7 +7,7 @@ type Props = {
   onChange: (value: string) => void
 }
 
-function weekLabel(value: string) {
+export function weekLabel(value: string) {
   const start = weekStartIso(new Date(value))
   const end = weekEndIso(start)
   return new Intl.DateTimeFormat('id-ID', {

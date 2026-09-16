@@ -22,6 +22,8 @@ import {
 } from '#/server/loaders'
 import { DatePicker } from '#/components/guru/date-picker'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
+import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
+import { formatIndonesianDate } from '#/server/date'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { Frequency, Indicator, Student } from '#/server/tenant-data'
 
@@ -172,7 +174,11 @@ function ObservasiHarian() {
 
         <HeaderFilters>
           <HeaderFilter label="Tanggal">
-            <DatePicker value={observedAt} onChange={handleDateChange} />
+            <DatePicker
+              value={observedAt}
+              onChange={handleDateChange}
+              populatedDates={data.availability.populatedDates}
+            />
           </HeaderFilter>
           <div className="flex min-w-0 items-end gap-3 lg:ml-auto">
             <HeaderFilter
@@ -196,6 +202,15 @@ function ObservasiHarian() {
             </Button>
           </div>
         </HeaderFilters>
+
+        {classId && (
+          <PeriodAvailabilityNav
+            availability={data.availability}
+            selectedPeriod={observedAt}
+            formatPeriod={formatIndonesianDate}
+            onOpenLatest={(date) => void handleDateChange(date)}
+          />
+        )}
 
         <ClassRequiredContent classId={classId}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">

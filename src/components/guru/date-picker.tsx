@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import {
@@ -14,6 +14,7 @@ const DAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 type Props = {
   value: string
   onChange: (value: string) => void
+  populatedDates?: ReadonlyArray<string>
 }
 
 function startOfMonthGrid(date: Date) {
@@ -23,7 +24,7 @@ function startOfMonthGrid(date: Date) {
   return first
 }
 
-export function DatePicker({ value, onChange }: Props) {
+export function DatePicker({ value, onChange, populatedDates = [] }: Props) {
   const selected = new Date(value)
   const [view, setView] = useState(
     () => new Date(selected.getFullYear(), selected.getMonth(), 1),
@@ -36,6 +37,14 @@ export function DatePicker({ value, onChange }: Props) {
       return date
     })
   }, [view])
+  const populatedDateSet = useMemo(
+    () => new Set(populatedDates),
+    [populatedDates],
+  )
+
+  useEffect(() => {
+    setView(new Date(selected.getFullYear(), selected.getMonth(), 1))
+  }, [selected.getFullYear(), selected.getMonth()])
 
   function moveMonth(offset: number) {
     setView(new Date(view.getFullYear(), view.getMonth() + offset, 1))
@@ -100,6 +109,7 @@ export function DatePicker({ value, onChange }: Props) {
             const isWeekend = date.getDay() === 0 || date.getDay() === 6
             const isOutside = date.getMonth() !== view.getMonth()
             const isSelected = iso === value
+            const isPopulated = populatedDateSet.has(iso)
 
             return (
               <Button
@@ -109,12 +119,21 @@ export function DatePicker({ value, onChange }: Props) {
                 size="icon-sm"
                 onClick={() => onChange(iso)}
                 className={cn(
-                  'mx-auto',
+                  'relative mx-auto',
                   isOutside && 'opacity-40',
                   isWeekend && !isSelected && 'text-destructive',
                 )}
               >
                 {date.getDate()}
+                {isPopulated && (
+                  <span
+                    aria-label="Ada data"
+                    className={cn(
+                      'absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-brand-orange',
+                      isSelected && 'bg-primary-foreground',
+                    )}
+                  />
+                )}
               </Button>
             )
           })}

@@ -29,6 +29,8 @@ import { WeeklyNotesSkeleton } from '#/components/skeletons/weekly-notes-skeleto
 import { deleteWeeklyNote, saveWeeklyNote } from '#/server/actions'
 import { loadWeeklyNotes, loadWeeklyNotesExport } from '#/server/loaders'
 import { weekEndIso } from '#/server/date'
+import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
+import { weekLabel } from '#/components/guru/week-picker'
 import type { SaveStatus } from '#/components/common/save-button'
 import type { WeeklyNote } from '#/server/tenant-data'
 
@@ -221,6 +223,15 @@ function ObservasiMingguan() {
             </Button>
           </div>
         </HeaderFilters>
+
+        {classId && (
+          <PeriodAvailabilityNav
+            availability={weeklyNotes.availability}
+            selectedPeriod={weeklyNotes.selectedWeekStart}
+            formatPeriod={weekLabel}
+            onOpenLatest={(weekStart) => void handleWeekChange(weekStart)}
+          />
+        )}
 
         <ClassRequiredContent classId={classId}>
           {isDataPending ? (

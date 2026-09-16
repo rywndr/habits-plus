@@ -14,4 +14,13 @@ describe('resolveSelectedClassId', () => {
       expect(resolveSelectedClassId(classes, requestedClassId)).toBe('')
     },
   )
+
+  it.each([undefined, '', 'all', 'unknown'])(
+    'selects the only available class for %s',
+    (requestedClassId) => {
+      expect(
+        resolveSelectedClassId([{ id: 'class-a' }], requestedClassId),
+      ).toBe('class-a')
+    },
+  )
 })

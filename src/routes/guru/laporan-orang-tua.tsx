@@ -23,6 +23,8 @@ import { ContentPanel } from '#/components/shell/content-panel'
 import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { PageHeader } from '#/components/shell/page-header'
 import { WeekReferenceFilters } from '#/components/guru/week-reference-filters'
+import { PeriodAvailabilityNav } from '#/components/guru/period-availability-nav'
+import { weekLabel } from '#/components/guru/week-picker'
 import { ClassSelect } from '#/components/guru/class-select'
 import { ClassRequiredContent } from '#/components/guru/class-required-content'
 import {
@@ -350,6 +352,17 @@ function LaporanOrangTua() {
             />
           </HeaderFilter>
         </HeaderFilters>
+
+        {data.classId && (
+          <PeriodAvailabilityNav
+            availability={data.availability}
+            selectedPeriod={data.selectedWeekStart}
+            formatPeriod={weekLabel}
+            onOpenLatest={(weekStart) =>
+              void navigateTo({ weekStart, classId: data.classId })
+            }
+          />
+        )}
 
         <ClassRequiredContent classId={data.classId}>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
