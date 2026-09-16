@@ -112,7 +112,7 @@ function SchoolFilter({ schools, value, onChange }: SchoolFilterProps) {
         if (schoolId) onChange(schoolId)
       }}
     >
-      <SelectTrigger className="w-full bg-card sm:w-64">
+      <SelectTrigger className="min-h-11 w-full rounded-full bg-card sm:w-64">
         <span className="min-w-0 flex-1 truncate text-left">
           {value === 'all' ? 'Semua sekolah' : selectedSchool?.name}
         </span>
