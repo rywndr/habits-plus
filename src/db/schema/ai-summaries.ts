@@ -74,7 +74,9 @@ export const aiGenerationLogs = pgTable('ai_generation_logs', {
   promptTokens: integer('prompt_tokens').notNull(),
   cachedTokens: integer('cached_tokens').notNull().default(0),
   completionTokens: integer('completion_tokens').notNull(),
-  costUsd: doublePrecision('cost_usd').notNull(),
+  // Historical estimates are retained, but new generations do not calculate
+  // price from application-owned constants.
+  costUsd: doublePrecision('cost_usd'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),

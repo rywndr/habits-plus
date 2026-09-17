@@ -5,9 +5,9 @@ import { HeaderFilter, HeaderFilters } from '#/components/guru/header-filters'
 import { WeekPicker } from '#/components/guru/week-picker'
 import { DatePicker } from '#/components/guru/date-picker'
 import { ALL_CLASSES, ClassSelect } from '#/components/guru/class-select'
-import { AiCostHistory } from '#/components/admin/ai-cost-history'
+import { AiUsageHistory } from '#/components/admin/ai-cost-history'
 import { DataTableSkeleton } from '#/components/skeletons/data-table-skeleton'
-import { loadAiCostHistory } from '#/server/loaders'
+import { loadAiUsageHistory } from '#/server/loaders'
 
 export const Route = createFileRoute('/admin/biaya-ai')({
   validateSearch: (search = {}) => ({
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/admin/biaya-ai')({
     classId: search.classId,
   }),
   loader: ({ deps }) =>
-    loadAiCostHistory({
+    loadAiUsageHistory({
       data: {
         weekStart: deps.weekStart,
         classId: deps.classId,
@@ -29,11 +29,11 @@ export const Route = createFileRoute('/admin/biaya-ai')({
   component: BiayaAi,
   staleTime: 30_000,
   pendingComponent: PendingBiayaAi,
-  staticData: { title: 'Biaya AI' },
+  staticData: { title: 'Penggunaan AI' },
 })
 
 function PendingBiayaAi() {
-  return <DataTableSkeleton columns={6} rows={6} showToolbarButton={false} />
+  return <DataTableSkeleton columns={8} rows={6} showToolbarButton={false} />
 }
 
 function BiayaAi() {
@@ -54,7 +54,7 @@ function BiayaAi() {
     <ContentPanel className="min-w-0">
       <div className="flex flex-col gap-5">
         <PageHeader
-          title="Riwayat Biaya Ringkasan AI"
+          title="Riwayat Penggunaan AI"
           className="text-2xl leading-tight sm:text-4xl"
         />
 
@@ -90,7 +90,7 @@ function BiayaAi() {
           </HeaderFilter>
         </HeaderFilters>
 
-        <AiCostHistory history={data.history} />
+        <AiUsageHistory history={data.history} />
       </div>
     </ContentPanel>
   )

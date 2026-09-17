@@ -297,14 +297,16 @@ function LaporanOrangTua() {
       patchContext(setDraftsByContext, (current) => {
         const next = { ...current }
         for (const draft of result.drafts) {
-          if (draft.content) next[draft.studentId] = draft.content
+          if (draft.kind === 'success') {
+            next[draft.studentId] = draft.content
+          }
         }
         return next
       })
       // A regenerated draft replaces whatever the teacher had in the box.
       for (const draft of result.drafts) {
-        if (draft.content) clearEdit(draft.studentId)
-        if (draft.error) setNotice(draft.studentId, draft.error)
+        if (draft.kind === 'success') clearEdit(draft.studentId)
+        else setNotice(draft.studentId, draft.error)
       }
       for (const skip of result.skipped) setNotice(skip.studentId, skip.reason)
       setSelected(new Set())

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   currentUserSchema,
-  aiCostHistorySchema,
+  aiUsageHistorySchema,
   monthlySummarySchema,
   weeklyNotesSchema,
   exportRangeSchema,
@@ -16,7 +16,7 @@ describe('GET boundary schemas', () => {
   it.each([
     { schema: currentUserSchema, valid: { role: 'guru' } },
     {
-      schema: aiCostHistorySchema,
+      schema: aiUsageHistorySchema,
       valid: { weekStart: '2026-09-14', classId: id },
     },
     {
@@ -44,7 +44,7 @@ describe('GET boundary schemas', () => {
     },
   )
 
-  it.each([aiCostHistorySchema, weeklyNotesSchema, parentReportPageSchema])(
+  it.each([aiUsageHistorySchema, weeklyNotesSchema, parentReportPageSchema])(
     'rejects invalid week dates',
     (schema) => {
       for (const weekStart of ['2026-02-30', 'yesterday', '', 123, {}]) {
@@ -57,7 +57,7 @@ describe('GET boundary schemas', () => {
   it('checks role, IDs, month, observation date and export ordering', () => {
     expect(currentUserSchema.safeParse({ role: 'owner' }).success).toBe(false)
     for (const schema of [
-      aiCostHistorySchema,
+      aiUsageHistorySchema,
       monthlySummarySchema,
       weeklyNotesSchema,
       observationPageSchema,

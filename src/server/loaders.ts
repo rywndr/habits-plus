@@ -42,7 +42,7 @@ import { buildPeriodAvailability } from '#/lib/period-availability'
 
 import {
   currentUserSchema,
-  aiCostHistorySchema,
+  aiUsageHistorySchema,
   monthlySummarySchema,
   weeklyNotesSchema,
   exportRangeSchema,
@@ -225,8 +225,8 @@ export const loadTenantStudents = createServerFn({ method: 'GET' }).handler(
     }),
 )
 
-export const loadAiCostHistory = createServerFn({ method: 'GET' })
-  .validator(aiCostHistorySchema)
+export const loadAiUsageHistory = createServerFn({ method: 'GET' })
+  .validator(aiUsageHistorySchema)
   .handler(({ data }) =>
     withTenantCache(async () => {
       const { getAuthenticatedUserByRole } = await import('./auth.server')

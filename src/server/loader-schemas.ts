@@ -11,7 +11,7 @@ export const currentUserSchema = z.strictObject({
   role: z.enum(roleEnum.enumValues),
 })
 
-export const aiCostHistorySchema = z.strictObject({
+export const aiUsageHistorySchema = z.strictObject({
   weekStart: date.optional(),
   classId: classFilter,
 })

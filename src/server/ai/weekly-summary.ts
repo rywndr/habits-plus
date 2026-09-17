@@ -22,12 +22,19 @@ export type WeekContext = {
   studentNames: Array<string>
 }
 
-export type GeneratedDraft = {
-  studentId: string
-  content?: string
-  error?: string
-  usage: DeepseekUsage
-}
+export type GeneratedDraft =
+  | {
+      kind: 'success'
+      studentId: string
+      content: string
+      usage: DeepseekUsage
+    }
+  | {
+      kind: 'failure'
+      studentId: string
+      error: string
+      usage: DeepseekUsage
+    }
 
 const INDICATOR_CODES: Array<[Indicator, string]> = [
   ['respons', 'R'],
@@ -126,13 +133,26 @@ async function generateOne(
   context: WeekContext,
 ): Promise<GeneratedDraft> {
   try {
-    const { content, usage } = await createChatCompletion([
+    const result = await createChatCompletion([
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: encodeStudentWeek(student, context) },
     ])
-    return { studentId: student.studentId, content, usage }
+    return result.kind === 'success'
+      ? {
+          kind: 'success',
+          studentId: student.studentId,
+          content: result.content,
+          usage: result.usage,
+        }
+      : {
+          kind: 'failure',
+          studentId: student.studentId,
+          error: result.error,
+          usage: result.usage,
+        }
   } catch (error) {
     return {
+      kind: 'failure',
       studentId: student.studentId,
       error: error instanceof Error ? error.message : 'Gagal menghubungi API.',
       usage: emptyUsage(),

@@ -92,7 +92,6 @@ export const generateAiSummaries = createServerFn({ method: 'POST' })
         promptTokens: usage.promptTokens,
         cachedTokens: usage.cachedTokens,
         completionTokens: usage.completionTokens,
-        costUsd: usage.costUsd,
       })
 
       return { drafts, skipped }

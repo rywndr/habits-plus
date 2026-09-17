@@ -47,10 +47,10 @@ export type AiGenerationHistoryEntry = {
   weekStart: string
   className: string | null
   studentCount: number
+  model: string
   promptTokens: number
   cachedTokens: number
   completionTokens: number
-  costUsd: number
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('id-ID', {
@@ -190,10 +190,10 @@ export async function getAiGenerationHistory(
       weekStart: aiGenerationLogs.weekStart,
       className: classes.name,
       studentCount: aiGenerationLogs.studentCount,
+      model: aiGenerationLogs.model,
       promptTokens: aiGenerationLogs.promptTokens,
       cachedTokens: aiGenerationLogs.cachedTokens,
       completionTokens: aiGenerationLogs.completionTokens,
-      costUsd: aiGenerationLogs.costUsd,
     })
     .from(aiGenerationLogs)
     .leftJoin(classes, eq(aiGenerationLogs.classId, classes.id))

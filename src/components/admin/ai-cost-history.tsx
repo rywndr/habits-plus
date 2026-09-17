@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Coins, Cpu, Layers, Users } from 'lucide-react'
+import { Cpu, Database, Layers, Users } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import { TablePagination } from '#/components/common/table-pagination'
-import { formatUsd } from '#/lib/format'
 import type { LucideIcon } from 'lucide-react'
 import type { AiGenerationHistoryEntry } from '#/server/tenant-data'
 
@@ -46,12 +45,19 @@ function StatCard({
   )
 }
 
-export function AiCostHistory({ history }: Props) {
+export function AiUsageHistory({ history }: Props) {
   const [page, setPage] = useState(1)
 
-  const totalUsd = history.reduce((sum, entry) => sum + entry.costUsd, 0)
-  const totalTokens = history.reduce(
-    (sum, entry) => sum + entry.promptTokens + entry.completionTokens,
+  const inputTokens = history.reduce(
+    (sum, entry) => sum + entry.promptTokens,
+    0,
+  )
+  const cachedTokens = history.reduce(
+    (sum, entry) => sum + entry.cachedTokens,
+    0,
+  )
+  const outputTokens = history.reduce(
+    (sum, entry) => sum + entry.completionTokens,
     0,
   )
   const totalStudents = history.reduce(
@@ -70,9 +76,9 @@ export function AiCostHistory({ history }: Props) {
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={Coins}
-          label="Total biaya"
-          value={formatUsd(totalUsd)}
+          icon={Cpu}
+          label="Total token"
+          value={tokenFormatter.format(inputTokens + outputTokens)}
         />
         <StatCard
           icon={Layers}
@@ -83,16 +89,16 @@ export function AiCostHistory({ history }: Props) {
           icon={Users}
           label="Ringkasan dibuat"
           value={tokenFormatter.format(totalStudents)}
-          hint={
-            totalStudents
-              ? `~${formatUsd(totalUsd / totalStudents)} per ringkasan`
-              : undefined
-          }
         />
         <StatCard
-          icon={Cpu}
-          label="Total token"
-          value={tokenFormatter.format(totalTokens)}
+          icon={Database}
+          label="Token input"
+          value={tokenFormatter.format(inputTokens)}
+          hint={
+            cachedTokens
+              ? `${tokenFormatter.format(cachedTokens)} dari cache`
+              : undefined
+          }
         />
       </div>
 
@@ -112,14 +118,17 @@ export function AiCostHistory({ history }: Props) {
               <TableHead className="text-center text-brand-navy-foreground">
                 Siswa
               </TableHead>
+              <TableHead className="text-brand-navy-foreground">
+                Model
+              </TableHead>
               <TableHead className="text-center text-brand-navy-foreground">
                 Token in
               </TableHead>
               <TableHead className="text-center text-brand-navy-foreground">
-                Token out
+                Cache
               </TableHead>
-              <TableHead className="text-right text-brand-navy-foreground">
-                Biaya
+              <TableHead className="text-center text-brand-navy-foreground">
+                Token out
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -127,7 +136,7 @@ export function AiCostHistory({ history }: Props) {
             {visibleEntries.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-6 text-center text-muted-foreground"
                 >
                   Belum ada riwayat generate.
@@ -148,23 +157,17 @@ export function AiCostHistory({ history }: Props) {
                   <TableCell className="text-center text-sm">
                     {entry.studentCount}
                   </TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs">
+                    {entry.model}
+                  </TableCell>
                   <TableCell className="text-center text-sm">
                     {tokenFormatter.format(entry.promptTokens)}
-                    {entry.cachedTokens > 0 ? (
-                      <span
-                        className="text-xs text-muted-foreground"
-                        title="Token dari cache (lebih murah)"
-                      >
-                        {' '}
-                        ({tokenFormatter.format(entry.cachedTokens)} cache)
-                      </span>
-                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-center text-sm">
+                    {tokenFormatter.format(entry.cachedTokens)}
                   </TableCell>
                   <TableCell className="text-center text-sm">
                     {tokenFormatter.format(entry.completionTokens)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-medium">
-                    {formatUsd(entry.costUsd)}
                   </TableCell>
                 </TableRow>
               ))

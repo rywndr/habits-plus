@@ -20,6 +20,7 @@ export default [
   },
   {
     ignores: [
+      '.output/**',
       'eslint.config.js',
       'prettier.config.js',
       'src/components/ui/**',
